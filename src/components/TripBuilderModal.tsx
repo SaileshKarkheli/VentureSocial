@@ -1,0 +1,658 @@
+import React, { useState, useRef } from 'react';
+import { createPortal } from 'react-dom';
+import { motion, AnimatePresence } from 'motion/react';
+import { 
+  X, 
+  Map as MapIcon, 
+  Bed, 
+  Car, 
+  Plane, 
+  Bike, 
+  Camera, 
+  Sparkles, 
+  Plus,
+  Navigation,
+  ChevronRight,
+  ExternalLink,
+  Trash2,
+  Copy,
+  Utensils,
+  MapPin,
+  Image as ImageIcon,
+  Upload
+} from 'lucide-react';
+import SmartImage from './SmartImage';
+import SearchBox from './SearchBox';
+
+interface TripBuilderModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+type TransportMode = 'Rental' | 'Flights' | 'Own';
+
+interface RouteItem {
+  id: string;
+  title: string;
+  link: string;
+  type: 'hotel' | 'transport' | 'activity' | 'dining';
+  coordinates?: { lat: number; lng: number };
+}
+
+interface TripState {
+  transportMode: TransportMode;
+  budget: number;
+  routeSummary: RouteItem[];
+  destination: string;
+  dayTitle: string;
+  images: string[];
+}
+
+const EXPERT_ITINERARIES = [
+  {
+    destination: 'Nashville, TN',
+    dayTitle: 'Day 1: Music City Arrival',
+    routeSummary: [
+      { id: 'e1', title: 'Nashville International Airport', link: 'https://flynashville.com/', type: 'transport' as const },
+      { id: 'e2', title: 'The Hermitage Hotel', link: 'https://www.thehermitagehotel.com/', type: 'hotel' as const },
+      { id: 'e3', title: 'Broadway Honky Tonk Central', link: 'https://honkytonkcentral.com/', type: 'activity' as const },
+      { id: 'e4', title: 'Hattie B\'s Hot Chicken', link: 'https://hattiebs.com/', type: 'dining' as const },
+    ],
+    budget: 1500,
+    transportMode: 'Rental' as const,
+    images: ['https://images.unsplash.com/photo-1541844053589-3462d48979e2?auto=format&fit=crop&w=800&q=80']
+  }
+];
+
+export default function TripBuilderModal({ isOpen, onClose }: TripBuilderModalProps) {
+  interface DayState {
+    id: string;
+    title: string;
+    transportMode: TransportMode;
+    budget: number;
+    routeSummary: RouteItem[];
+    images: string[];
+  }
+
+  const createEmptyDay = (index: number): DayState => ({
+    id: `day-${index + 1}`,
+    title: `Day ${index + 1}`,
+    transportMode: 'Rental',
+    budget: 0,
+    routeSummary: [],
+    images: []
+  });
+
+  const [destination, setDestination] = useState('');
+  const [days, setDays] = useState<DayState[]>([createEmptyDay(0)]);
+  const [currentDayIndex, setCurrentDayIndex] = useState(0);
+
+  const activeDay = days[currentDayIndex];
+
+  const updateActiveDay = (updater: (prev: DayState) => DayState) => {
+    setDays(prev => {
+      const newDays = [...prev];
+      newDays[currentDayIndex] = updater(newDays[currentDayIndex]);
+      return newDays;
+    });
+  };
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const addRouteItem = (title: string, link: string, type: RouteItem['type']) => {
+    const newItem: RouteItem = {
+      id: Math.random().toString(36).substr(2, 9),
+      title,
+      link,
+      type
+    };
+    
+    updateActiveDay(prev => ({
+      ...prev,
+      routeSummary: [...prev.routeSummary, newItem],
+      budget: prev.budget + (type === 'hotel' ? 200 : type === 'transport' ? 100 : 50)
+    }));
+  };
+
+  const removeRouteItem = (dayIndex: number, itemId: string) => {
+    setDays(prev => {
+      const newDays = [...prev];
+      newDays[dayIndex] = {
+        ...newDays[dayIndex],
+        routeSummary: newDays[dayIndex].routeSummary.filter(item => item.id !== itemId)
+      };
+      return newDays;
+    });
+  };
+
+  const handleRemix = () => {
+    const randomItinerary = EXPERT_ITINERARIES[Math.floor(Math.random() * EXPERT_ITINERARIES.length)];
+    setDestination(randomItinerary.destination);
+    setDays([{
+      id: 'day-1',
+      title: randomItinerary.dayTitle,
+      transportMode: randomItinerary.transportMode,
+      budget: randomItinerary.budget,
+      routeSummary: [...randomItinerary.routeSummary],
+      images: [...randomItinerary.images]
+    }]);
+    setCurrentDayIndex(0);
+  };
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files) {
+      const newImages = Array.from(files).map((file: File) => URL.createObjectURL(file));
+      updateActiveDay(prev => ({ ...prev, images: [...prev.images, ...newImages] }));
+    }
+  };
+
+  const [stayCategory, setStayCategory] = useState<'Hotel' | 'Villa' | 'Airbnb'>('Hotel');
+  const [showManualEntry, setShowManualEntry] = useState<RouteItem['type'] | null>(null);
+  const [manualItem, setManualItem] = useState({ title: '', link: '' });
+
+  const handleManualAdd = (type: RouteItem['type']) => {
+    if (!manualItem.title) return;
+    addRouteItem(manualItem.title, manualItem.link || '#', type);
+    setManualItem({ title: '', link: '' });
+    setShowManualEntry(null);
+  };
+
+  const totalBudget = days.reduce((sum, day) => sum + day.budget, 0);
+  const allRouteItems = days.flatMap(d => d.routeSummary);
+
+  return createPortal(
+    <AnimatePresence>
+      {isOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-8">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={onClose}
+            className="absolute inset-0 bg-[#0A192F]/60 backdrop-blur-sm"
+          />
+
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+          className="relative w-full max-w-6xl bg-white rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col md:flex-row h-[90vh]"
+        >
+          {/* Left Side: Builder Form (2/3) */}
+          <div className="flex-[2] overflow-y-auto p-8 md:p-12 space-y-10 custom-scrollbar bg-white">
+            <div className="flex items-center justify-between">
+              <div className="space-y-4 w-full mr-8">
+                <div className="flex items-center gap-3">
+                  <h2 className="text-3xl font-display font-bold text-[#0A192F]">Trip Builder</h2>
+                  <button 
+                    onClick={handleRemix}
+                    className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-orange-500/10 text-orange-600 text-[10px] font-bold uppercase tracking-wider hover:bg-orange-500/20 transition-all border border-orange-500/20"
+                  >
+                    <Copy size={12} />
+                    Remix Expert Itinerary
+                  </button>
+                </div>
+                <div className="flex items-center gap-2 text-zinc-400">
+                  <MapPin size={16} />
+                  <input 
+                    type="text" 
+                    placeholder="Enter Destination (e.g. Venice, Italy)"
+                    value={destination}
+                    onChange={(e) => setDestination(e.target.value)}
+                    className="bg-transparent border-none focus:ring-0 p-0 text-sm font-medium text-[#0A192F] placeholder:text-zinc-300 w-64 md:w-96"
+                  />
+                </div>
+                
+                {/* Day Timeline */}
+                <div className="flex gap-3 overflow-x-auto pb-2 pt-2 custom-scrollbar items-center">
+                  {days.map((day, idx) => (
+                    <button 
+                      key={day.id} 
+                      onClick={() => setCurrentDayIndex(idx)}
+                      className={`px-5 py-2.5 rounded-xl font-bold text-sm transition-all whitespace-nowrap shadow-sm border ${idx === currentDayIndex ? 'bg-orange-500 text-white border-orange-500' : 'bg-white text-zinc-400 border-zinc-200 hover:border-orange-500 hover:text-orange-500'}`}
+                    >
+                      {day.title}
+                    </button>
+                  ))}
+                  <button 
+                    onClick={() => {
+                      setDays(prev => [...prev, createEmptyDay(prev.length)]);
+                      setCurrentDayIndex(days.length);
+                    }}
+                    className="px-5 py-2.5 rounded-xl font-bold text-sm bg-orange-500/10 text-orange-500 hover:bg-orange-500/20 transition-all whitespace-nowrap flex items-center gap-2 border border-orange-500/10"
+                  >
+                    <Plus size={16} /> Add Day
+                  </button>
+                </div>
+              </div>
+              <button 
+                onClick={onClose}
+                className="p-3 rounded-full bg-zinc-100 text-zinc-400 hover:bg-rose-500/10 hover:text-rose-500 transition-all self-start"
+              >
+                <X size={24} />
+              </button>
+            </div>
+
+            {/* Form Sections (Pillars) */}
+            <div className="space-y-12">
+              {/* Transport Pillar */}
+              <section className="space-y-6">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3 text-[#0A192F]">
+                    <div className="p-2.5 rounded-xl bg-orange-500/10 text-orange-500 shadow-sm">
+                      <Navigation size={20} />
+                    </div>
+                    <h3 className="font-bold uppercase tracking-widest text-[11px]">Transport Mode</h3>
+                  </div>
+                  <button 
+                    onClick={() => setShowManualEntry(showManualEntry === 'transport' ? null : 'transport')}
+                    className="text-[10px] font-bold text-zinc-400 hover:text-orange-500 transition-colors uppercase tracking-widest"
+                  >
+                    {showManualEntry === 'transport' ? 'Cancel' : 'Add Manually'}
+                  </button>
+                </div>
+                
+                {showManualEntry === 'transport' ? (
+                  <ManualEntryForm 
+                    value={manualItem} 
+                    onChange={setManualItem} 
+                    onAdd={() => handleManualAdd('transport')} 
+                    placeholder="e.g. Private Shuttle"
+                  />
+                ) : (
+                  <>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                      {[
+                        { id: 'Rental', icon: Car, label: 'Rental Car' },
+                        { id: 'Flights', icon: Plane, label: 'Flight' },
+                        { id: 'Own', icon: Bike, label: 'Own Vehicle' }
+                      ].map((mode) => (
+                        <button
+                          key={mode.id}
+                          onClick={() => updateActiveDay(prev => ({ ...prev, transportMode: mode.id as TransportMode }))}
+                          className={`flex items-center justify-center gap-3 px-6 py-4 rounded-2xl font-bold transition-all border ${
+                            activeDay.transportMode === mode.id 
+                              ? 'bg-[#0A192F] text-white border-[#0A192F] shadow-lg' 
+                              : 'bg-white border-zinc-200 text-zinc-500 hover:border-orange-500'
+                          }`}
+                        >
+                          <mode.icon size={20} />
+                          <span className="text-sm">{mode.label}</span>
+                        </button>
+                      ))}
+                    </div>
+                    <SearchBox 
+                      placeholder={`Search ${activeDay.transportMode} Details...`} 
+                      context={`${activeDay.transportMode.toLowerCase()} in ${destination}`}
+                      onSelect={(res) => addRouteItem(res.title, res.link, 'transport')}
+                    />
+                  </>
+                )}
+              </section>
+
+              {/* Stay Pillar */}
+              <section className="space-y-6">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3 text-[#0A192F]">
+                    <div className="p-2.5 rounded-xl bg-orange-500/10 text-orange-500 shadow-sm">
+                      <Bed size={20} />
+                    </div>
+                    <h3 className="font-bold uppercase tracking-widest text-[11px]">Stay Details</h3>
+                  </div>
+                  <button 
+                    onClick={() => setShowManualEntry(showManualEntry === 'hotel' ? null : 'hotel')}
+                    className="text-[10px] font-bold text-zinc-400 hover:text-orange-500 transition-colors uppercase tracking-widest"
+                  >
+                    {showManualEntry === 'hotel' ? 'Cancel' : 'Add Manually'}
+                  </button>
+                </div>
+
+                {showManualEntry === 'hotel' ? (
+                  <ManualEntryForm 
+                    value={manualItem} 
+                    onChange={setManualItem} 
+                    onAdd={() => handleManualAdd('hotel')} 
+                    placeholder="e.g. Luxury Villa"
+                  />
+                ) : (
+                    <div className="space-y-4">
+                      <div className="flex flex-wrap gap-2">
+                        {['Hotel', 'Villa', 'Airbnb'].map((cat) => (
+                          <button
+                            key={cat}
+                            onClick={() => setStayCategory(cat as any)}
+                            className={`px-4 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider border transition-all ${
+                              stayCategory === cat 
+                                ? 'bg-orange-500 border-orange-500 text-white shadow-lg shadow-orange-500/20' 
+                                : 'bg-zinc-50 border-zinc-100 text-zinc-400 hover:border-orange-500/30'
+                            }`}
+                          >
+                            {cat}s
+                          </button>
+                        ))}
+                      </div>
+                      <SearchBox 
+                        placeholder={`Search ${stayCategory}s, Resorts, or Boutique Stays...`} 
+                        context={`${stayCategory.toLowerCase()} in ${destination}`}
+                        onSelect={(res) => addRouteItem(res.title, res.link, 'hotel')}
+                      />
+                      <div className="flex flex-wrap gap-2">
+                        {['Luxury', 'Boutique', 'Budget', 'Beachfront', 'Mountain'].map((tag) => (
+                          <span key={tag} className="text-[9px] font-medium text-zinc-400 bg-zinc-100 px-2 py-1 rounded-md">
+                            #{tag}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </section>
+
+                {/* Dining Pillar */}
+                <section className="space-y-6">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3 text-[#0A192F]">
+                      <div className="p-2.5 rounded-xl bg-orange-500/10 text-orange-500 shadow-sm">
+                        <Utensils size={20} />
+                      </div>
+                      <h3 className="font-bold uppercase tracking-widest text-[11px]">Dining</h3>
+                    </div>
+                    <button 
+                      onClick={() => setShowManualEntry(showManualEntry === 'dining' ? null : 'dining')}
+                      className="text-[10px] font-bold text-zinc-400 hover:text-orange-500 transition-colors uppercase tracking-widest"
+                    >
+                      {showManualEntry === 'dining' ? 'Cancel' : 'Add Manually'}
+                    </button>
+                  </div>
+
+                  {showManualEntry === 'dining' ? (
+                    <ManualEntryForm 
+                      value={manualItem} 
+                      onChange={setManualItem} 
+                      onAdd={() => handleManualAdd('dining')} 
+                      placeholder="e.g. Local Bistro"
+                    />
+                  ) : (
+                    <div className="space-y-3">
+                      <SearchBox 
+                        placeholder="Search Restaurants, Cafes, or Bars..." 
+                        context={`restaurant in ${destination}`}
+                        onSelect={(res) => addRouteItem(res.title, res.link, 'dining')}
+                      />
+                      <div className="flex flex-wrap gap-2">
+                        {['Fine Dining', 'Street Food', 'Vegan', 'Seafood', 'Rooftop'].map((tag) => (
+                          <span key={tag} className="text-[9px] font-medium text-zinc-400 bg-zinc-100 px-2 py-1 rounded-md">
+                            #{tag}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </section>
+
+                {/* Activities Pillar */}
+                <section className="space-y-6">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3 text-[#0A192F]">
+                      <div className="p-2.5 rounded-xl bg-orange-500/10 text-orange-500 shadow-sm">
+                        <Camera size={20} />
+                      </div>
+                      <h3 className="font-bold uppercase tracking-widest text-[11px]">Activities</h3>
+                    </div>
+                    <button 
+                      onClick={() => setShowManualEntry(showManualEntry === 'activity' ? null : 'activity')}
+                      className="text-[10px] font-bold text-zinc-400 hover:text-orange-500 transition-colors uppercase tracking-widest"
+                    >
+                      {showManualEntry === 'activity' ? 'Cancel' : 'Add Manually'}
+                    </button>
+                  </div>
+
+                  {showManualEntry === 'activity' ? (
+                    <ManualEntryForm 
+                      value={manualItem} 
+                      onChange={setManualItem} 
+                      onAdd={() => handleManualAdd('activity')} 
+                      placeholder="e.g. Sunset Cruise"
+                    />
+                  ) : (
+                    <div className="space-y-3">
+                      <SearchBox 
+                        placeholder="Search Tours, Landmarks, or Experiences..." 
+                        context={`activity tour in ${destination}`}
+                        onSelect={(res) => addRouteItem(res.title, res.link, 'activity')}
+                      />
+                      <div className="flex flex-wrap gap-2">
+                        {['Museums', 'Hiking', 'Nightlife', 'Shopping', 'Workshops'].map((tag) => (
+                          <span key={tag} className="text-[9px] font-medium text-zinc-400 bg-zinc-100 px-2 py-1 rounded-md">
+                            #{tag}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </section>
+
+              {/* Add Images Section */}
+              <section className="space-y-6">
+                <div className="flex items-center gap-3 text-[#0A192F]">
+                  <div className="p-2.5 rounded-xl bg-orange-500/10 text-orange-500 shadow-sm">
+                    <ImageIcon size={20} />
+                  </div>
+                  <h3 className="font-bold uppercase tracking-widest text-[11px]">Add Images</h3>
+                </div>
+                
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                  {activeDay.images.map((img, idx) => (
+                    <div key={idx} className="relative aspect-square rounded-2xl overflow-hidden group">
+                      <img src={img} alt="Uploaded" className="w-full h-full object-cover" />
+                      <button 
+                        onClick={() => updateActiveDay(prev => ({ ...prev, images: prev.images.filter((_, i) => i !== idx) }))}
+                        className="absolute top-2 right-2 p-1.5 bg-rose-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <X size={12} />
+                      </button>
+                    </div>
+                  ))}
+                  <button 
+                    onClick={() => fileInputRef.current?.click()}
+                    className="aspect-square rounded-2xl border-2 border-dashed border-zinc-200 flex flex-col items-center justify-center gap-2 text-zinc-400 hover:border-orange-500 hover:text-orange-500 transition-all bg-zinc-50"
+                  >
+                    <Upload size={24} />
+                    <span className="text-[10px] font-bold uppercase tracking-wider">Upload</span>
+                  </button>
+                  <input 
+                    type="file" 
+                    ref={fileInputRef} 
+                    onChange={handleImageUpload} 
+                    multiple 
+                    accept="image/*" 
+                    className="hidden" 
+                  />
+                </div>
+              </section>
+            </div>
+
+            <div className="pt-10 flex flex-col sm:flex-row items-center justify-between border-t border-zinc-100 gap-4">
+              <div className="flex flex-col items-center sm:items-start">
+                <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Total Trip Budget</span>
+                <span className="text-3xl font-display font-bold text-[#0A192F]">${totalBudget}</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <button 
+                  onClick={() => {
+                    if (currentDayIndex === days.length - 1) {
+                      setDays(prev => [...prev, createEmptyDay(prev.length)]);
+                    }
+                    setCurrentDayIndex(prev => prev + 1);
+                  }}
+                  className="bg-zinc-100 text-[#0A192F] font-bold px-6 py-4 rounded-xl hover:bg-zinc-200 transition-all flex items-center gap-2 group whitespace-nowrap"
+                >
+                  {currentDayIndex === days.length - 1 ? 'Save & Add Next Day' : 'Next Day'}
+                  <ChevronRight size={18} className="group-hover:translate-x-1 transition-transform" />
+                </button>
+                <button 
+                  onClick={onClose}
+                  className="bg-orange-500 text-white font-bold px-8 py-4 rounded-xl shadow-xl hover:bg-orange-600 transition-all flex items-center gap-2 whitespace-nowrap"
+                >
+                  Finish Trip
+                  <Sparkles size={18} />
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Side: Map & Summary (1/3) */}
+          <div className="w-full md:w-[400px] bg-zinc-50 relative group overflow-hidden border-l border-zinc-100 flex-shrink-0">
+            <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1524661135-423995f22d0b?auto=format&fit=crop&w=800&q=80')] bg-cover bg-center opacity-10 grayscale group-hover:grayscale-0 transition-all duration-1000" />
+            
+            <div className="relative z-10 h-full flex flex-col p-8">
+              <div className="flex items-center gap-3 bg-white p-4 rounded-2xl shadow-xl border border-zinc-100 mb-8">
+                <div className="p-2 rounded-lg bg-orange-500/10 text-orange-500">
+                  <MapIcon size={20} />
+                </div>
+                <div>
+                  <h4 className="font-bold text-[#0A192F] text-sm">Trip Map</h4>
+                  <p className="text-[10px] text-zinc-400">Visualizing route in {destination || 'Selected Location'}</p>
+                </div>
+              </div>
+
+              {/* Route Visualization (Mock) */}
+              <div className="flex-[0.8] flex flex-col items-center justify-start relative mb-4">
+                <div className="w-full h-[250px] relative">
+                  <svg className="absolute inset-0 w-full h-full" viewBox="0 0 400 300">
+                    <motion.path
+                      d="M 100 50 Q 200 100 150 200 T 250 300"
+                      fill="none"
+                      stroke="#F97316"
+                      strokeWidth="3"
+                      strokeDasharray="6 6"
+                      initial={{ pathLength: 0 }}
+                      animate={{ pathLength: 1 }}
+                      transition={{ duration: 3, repeat: Infinity }}
+                    />
+                    {allRouteItems.map((_, i) => (
+                      <circle 
+                        key={i}
+                        cx={100 + (i * 15)} 
+                        cy={50 + (i * 40)} 
+                        r="4" 
+                        fill={i === 0 ? "#F97316" : "#CBD5E1"} 
+                        className="shadow-lg"
+                      />
+                    ))}
+                  </svg>
+                  
+                  {allRouteItems.slice(0, 3).map((item, i) => (
+                    <div 
+                      key={item.id}
+                      style={{ top: `${40 + (i * 40)}px`, left: `${80 + (i * 10)}px` }}
+                      className="absolute px-2 py-1 bg-white/90 backdrop-blur-md rounded-lg shadow-lg border border-zinc-100 text-[9px] font-bold text-[#0A192F] max-w-[120px] truncate"
+                    >
+                      {item.title}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="bg-white p-6 rounded-[2.5rem] shadow-xl border border-zinc-100 flex flex-col flex-1 min-h-0">
+                <h5 className="font-bold text-[#0A192F] text-[10px] uppercase tracking-widest opacity-60 mb-4 shrink-0">Complete Route Summary</h5>
+                <div className="overflow-y-auto custom-scrollbar pr-2 flex-1">
+                  {days.map((day, dIdx) => (
+                    <div key={day.id} className="mb-6 last:mb-2">
+                      <div className="flex items-center justify-between mb-3">
+                        <h6 className="font-bold text-orange-500 text-xs uppercase tracking-widest">{day.title}</h6>
+                        <span className="text-[10px] font-bold text-zinc-400">${day.budget}</span>
+                      </div>
+                      
+                      {day.routeSummary.length === 0 ? (
+                        <p className="text-[10px] text-zinc-400 italic py-2 pl-2 border-l-2 border-zinc-100">No items added to {day.title} yet.</p>
+                      ) : (
+                        <div className="space-y-3">
+                          {day.routeSummary.map((item, idx) => (
+                            <div key={item.id} className="flex items-start justify-between group/item">
+                              <div className="flex gap-3">
+                                <div className="flex flex-col items-center">
+                                  <div className={`w-2 h-2 rounded-full border-2 mt-1 ${
+                                    item.type === 'hotel' ? 'border-orange-500 bg-orange-500' : 
+                                    item.type === 'transport' ? 'border-blue-400 bg-blue-400' : 
+                                    item.type === 'dining' ? 'border-yellow-400 bg-yellow-400' :
+                                    'border-emerald-400 bg-emerald-400'
+                                  }`} />
+                                  {idx !== day.routeSummary.length - 1 && (
+                                    <div className="w-0.5 h-6 bg-zinc-100 my-0.5" />
+                                  )}
+                                </div>
+                                <div className="flex flex-col">
+                                  <span className="text-xs text-[#0A192F] font-bold line-clamp-1 leading-none mb-1">{item.title}</span>
+                                  <span className="text-[9px] text-zinc-400 uppercase tracking-tighter">{item.type}</span>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2 opacity-0 group-hover/item:opacity-100 transition-opacity">
+                                <a href={item.link} target="_blank" rel="noopener noreferrer" className="text-zinc-400 hover:text-orange-500">
+                                  <ExternalLink size={12} />
+                                </a>
+                                <button onClick={() => removeRouteItem(dIdx, item.id)} className="text-zinc-400 hover:text-rose-500">
+                                  <Trash2 size={12} />
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+      </div>
+      )}
+    </AnimatePresence>,
+    document.body
+  );
+}
+
+function ManualEntryForm({ value, onChange, onAdd, placeholder }: { 
+  value: { title: string, link: string }, 
+  onChange: (val: any) => void, 
+  onAdd: () => void,
+  placeholder: string
+}) {
+  return (
+    <motion.div 
+      initial={{ opacity: 0, y: -10 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="p-6 bg-zinc-50 rounded-2xl border border-zinc-100 space-y-4"
+    >
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="space-y-1">
+          <label className="text-[9px] font-bold text-zinc-400 uppercase tracking-widest ml-1">Name / Title</label>
+          <input 
+            type="text" 
+            placeholder={placeholder}
+            value={value.title}
+            onChange={(e) => onChange({ ...value, title: e.target.value })}
+            className="w-full bg-white border-zinc-200 rounded-xl py-3 px-4 text-sm font-medium focus:ring-2 focus:ring-orange-500 transition-all"
+          />
+        </div>
+        <div className="space-y-1">
+          <label className="text-[9px] font-bold text-zinc-400 uppercase tracking-widest ml-1">Website Link (Optional)</label>
+          <input 
+            type="text" 
+            placeholder="https://..."
+            value={value.link}
+            onChange={(e) => onChange({ ...value, link: e.target.value })}
+            className="w-full bg-white border-zinc-200 rounded-xl py-3 px-4 text-sm font-medium focus:ring-2 focus:ring-orange-500 transition-all"
+          />
+        </div>
+      </div>
+      <button 
+        onClick={onAdd}
+        className="w-full bg-[#0A192F] text-white font-bold py-3 rounded-xl hover:bg-navy/90 transition-all text-xs uppercase tracking-widest"
+      >
+        Add to Itinerary
+      </button>
+    </motion.div>
+  );
+}
