@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { SavedItem, TimelineEvent, Post, User } from './types';
+import { supabase } from './supabaseClient';
 
 export interface MyTrip {
   id: string;
@@ -93,6 +94,19 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const isAuthenticated = !!user;
 
+  // Supabase Auth Integration
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ? { id: session.user.id, name: session.user.user_metadata?.name || 'User', email: session.user.email || '', avatar: '', bio: '' } : null);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ? { id: session.user.id, name: session.user.user_metadata?.name || 'User', email: session.user.email || '', avatar: '', bio: '' } : null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
   // Data States
   const [publicPosts, setPublicPosts] = useState<Post[]>([]);
   const [isLoadingFeed, setIsLoadingFeed] = useState(true);
@@ -126,28 +140,23 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const login = async (email: string, pass: string) => {
-    const res = await fetch('/api/auth/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password: pass })
-    });
-    if (!res.ok) throw new Error('Login failed');
-    const data = await res.json();
-    setUser(data.user);
+    const { error } = await supabase.auth.signInWithPassword({ email, password: pass });
+    if (error) throw error;
   };
 
   const register = async (name: string, email: string, pass: string) => {
-    const res = await fetch('/api/auth/register', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, email, password: pass })
+    const { error } = await supabase.auth.signUp({
+      email,
+      password: pass,
+      options: { data: { name } }
     });
-    if (!res.ok) throw new Error('Registration failed');
-    const data = await res.json();
-    setUser(data.user);
+    if (error) throw error;
   };
 
-  const logout = () => setUser(null);
+  const logout = async () => {
+    await supabase.auth.signOut();
+    setUser(null);
+  };
 
   const [savedItems, setSavedItems] = useState<SavedItem[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
