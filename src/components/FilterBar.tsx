@@ -1,10 +1,9 @@
 import React from 'react';
-import { Star, ChevronDown, X, Clock, MapPin } from 'lucide-react';
+import { Star, ChevronDown, X, Clock, MapPin, Bed, Utensils, Plane, Camera } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { motion, AnimatePresence } from 'motion/react';
 
-const ACTIVITIES = ['Hiking', 'Skiing', 'Paragliding', 'Museum', 'Foodie'];
-const HOTEL_TYPES = ['Boutique', 'Resort', 'Budget', 'Luxury'];
+const CATEGORIES = ['Hotel', 'Restaurant', 'Transport', 'Activity'];
 const RATINGS = [5, 4, 3, 2, 1];
 const DURATIONS = ['1-3 Days', '4-7 Days', '8-14 Days', '14+ Days'];
 const LOCATIONS = ['Paris', 'Tokyo', 'New York', 'London', 'Rome', 'Bali'];
@@ -12,21 +11,12 @@ const LOCATIONS = ['Paris', 'Tokyo', 'New York', 'London', 'Rome', 'Bali'];
 export default function FilterBar() {
   const { filters, setFilters, sortBy, setSortBy } = useApp();
 
-  const toggleActivity = (activity: string) => {
+  const toggleCategory = (category: string) => {
     setFilters(prev => ({
       ...prev,
-      activities: prev.activities.includes(activity)
-        ? prev.activities.filter(a => a !== activity)
-        : [...prev.activities, activity]
-    }));
-  };
-
-  const toggleHotelType = (type: string) => {
-    setFilters(prev => ({
-      ...prev,
-      hotelTypes: prev.hotelTypes.includes(type)
-        ? prev.hotelTypes.filter(t => t !== type)
-        : [...prev.hotelTypes, type]
+      activities: prev.activities.includes(category)
+        ? prev.activities.filter(a => a !== category)
+        : [...prev.activities, category]
     }));
   };
 
@@ -55,7 +45,6 @@ export default function FilterBar() {
   const activeFiltersCount = 
     (filters.minStars > 0 ? 1 : 0) + 
     filters.activities.length + 
-    filters.hotelTypes.length + 
     (filters.duration ? 1 : 0) + 
     (filters.location ? 1 : 0);
 
@@ -149,25 +138,7 @@ export default function FilterBar() {
           </div>
         </div>
 
-        {/* Hotel Type Filter */}
-        <div className="relative group">
-          <button className="flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-zinc-200 text-sm font-bold text-[#0A192F] hover:border-orange-500 transition-all whitespace-nowrap">
-            Hotel Type
-            <ChevronDown size={16} />
-          </button>
-          <div className="absolute top-full left-0 mt-2 w-48 bg-white rounded-2xl shadow-xl border border-zinc-100 py-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
-            {HOTEL_TYPES.map(type => (
-              <button
-                key={type}
-                onClick={() => toggleHotelType(type)}
-                className={`w-full text-left px-4 py-2 text-sm hover:bg-zinc-50 flex items-center justify-between ${filters.hotelTypes.includes(type) ? 'text-orange-500 font-bold' : 'text-zinc-600'}`}
-              >
-                {type}
-                {filters.hotelTypes.includes(type) && <X size={14} />}
-              </button>
-            ))}
-          </div>
-        </div>
+        {/* Hotel Type Removed - Rolled into Global Categories */}
 
         {/* Price Range Filter */}
         <div className="flex items-center gap-3 bg-white border border-zinc-200 rounded-full px-4 py-1.5 whitespace-nowrap">
@@ -233,20 +204,24 @@ export default function FilterBar() {
         )}
       </AnimatePresence>
 
-      {/* Quick Activity Add */}
-      <div className="flex flex-wrap gap-2 px-2">
-        <span className="text-xs font-bold text-zinc-400 uppercase tracking-widest self-center mr-2">Quick Add:</span>
-        {ACTIVITIES.map(activity => (
+      {/* Absolute Categories Enforced */}
+      <div className="flex flex-wrap gap-2 px-2 pb-2">
+        <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest self-center mr-2">Module Categories:</span>
+        {CATEGORIES.map(category => (
           <button
-            key={activity}
-            onClick={() => toggleActivity(activity)}
-            className={`px-3 py-1 rounded-full text-xs font-bold transition-all border ${
-              filters.activities.includes(activity)
-                ? 'bg-orange-500 border-orange-500 text-white'
-                : 'bg-zinc-100 border-transparent text-zinc-500 hover:border-orange-500/30'
+            key={category}
+            onClick={() => toggleCategory(category)}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all border ${
+              filters.activities.includes(category)
+                ? 'bg-[#0A192F] border-[#0A192F] text-orange-500 shadow-md scale-[1.02]'
+                : 'bg-white border-zinc-200 text-[#0A192F] hover:border-orange-500 shadow-sm'
             }`}
           >
-            {activity}
+            {category === 'Hotel' && <Bed size={14} className={filters.activities.includes(category) ? 'text-orange-500' : 'text-zinc-400'}/>}
+            {category === 'Restaurant' && <Utensils size={14} className={filters.activities.includes(category) ? 'text-orange-500' : 'text-zinc-400'}/>}
+            {category === 'Transport' && <Plane size={14} className={filters.activities.includes(category) ? 'text-orange-500' : 'text-zinc-400'}/>}
+            {category === 'Activity' && <Camera size={14} className={filters.activities.includes(category) ? 'text-orange-500' : 'text-zinc-400'}/>}
+            {category}
           </button>
         ))}
       </div>

@@ -29,11 +29,15 @@ export default function Search() {
 
       return matchesSearch && matchesStars && matchesActivities && matchesHotelType && matchesPrice;
     })
-    .sort((a, b) => {
-      if (sortBy === 'Most Liked') return b.likes - a.likes;
-      if (sortBy === 'Highest Rated') return b.rating - a.rating;
-      if (sortBy === 'Price: Low to High') return a.price - b.price;
-      return 0;
+    .sort((a: any, b: any) => {
+      // Phase 4 Engagement Score Algorithm (1/2/5/10) - Strictly via Supabase Schemas
+      const getScore = (p: any) => {
+        const likes = typeof p.likes === 'number' ? p.likes : p.likes?.[0]?.count || 0;
+        const comments = typeof p.comments === 'number' ? p.comments : p.comments?.[0]?.count || 0;
+        const remixes = p.remix_stats?.[0]?.count || p.remixes || 0;
+        return (likes * 1) + (comments * 2) + (remixes * 5) + ((p.rating || 5) * 10);
+      };
+      return getScore(b) - getScore(a); // Always sort highest Engagement Score to the absolute top
     });
 
   return (
@@ -90,10 +94,19 @@ export default function Search() {
                       </div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-4 text-sm text-zinc-500 font-medium">
-                    <div className="flex items-center gap-1"><Heart size={14}/> {post.likes}</div>
-                    <div className="flex items-center gap-1"><MessageCircle size={14}/> {post.comments}</div>
-                    <div className="flex items-center gap-1"><Star size={14} className="text-orange-500"/> {post.rating}</div>
+                  <div className="flex items-center gap-4 mt-1">
+                    <div className="flex items-center gap-1 text-sm text-zinc-500 font-medium"><Heart size={14}/> {typeof post.likes === 'number' ? post.likes : (post as any).likes?.[0]?.count || 0}</div>
+                    <div className="flex items-center gap-1 text-sm text-zinc-500 font-medium"><MessageCircle size={14}/> {typeof post.comments === 'number' ? post.comments : (post as any).comments?.[0]?.count || 0}</div>
+                    
+                    {/* Executive Social Proof Badges natively hooked to Supabase Arrays */}
+                    <div className="flex items-center gap-2 ml-auto">
+                      <span className="flex items-center gap-1 px-2.5 py-0.5 bg-orange-500 text-white rounded-md text-xs font-bold shadow-sm">
+                        <Star size={12} className="fill-white" /> {post.rating || 5}.0
+                      </span>
+                      <span className="flex items-center gap-1 px-2.5 py-0.5 bg-[#0A192F] text-orange-500 rounded-md text-xs font-bold shadow-sm border border-[#0A192F]">
+                        {(post as any).remix_stats?.[0]?.count || (post as any).remixes || 0} Remixes
+                      </span>
+                    </div>
                   </div>
                 </motion.div>
               ))
@@ -229,7 +242,7 @@ export default function Search() {
                                             const isAdded = customTripSpots.some(s => s.description === day.stay.name);
                                             return (
                                               <button
-                                                onClick={(e) => { e.stopPropagation(); toggleCustomSpot({ description: day.stay.name, url: day.stay.image, day: day.day }); }}
+                                                onClick={(e) => { e.stopPropagation(); toggleCustomSpot({ description: day.stay.name, url: day.stay.image, day: day.day, category: 'Hotel' } as any); }}
                                                 className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all ${isAdded ? 'bg-zinc-800 text-white hover:bg-zinc-700' : 'bg-orange-500 text-white shadow-lg shadow-orange-500/20 hover:bg-orange-400'}`}
                                               >
                                                 {isAdded ? <Check size={16}/> : <Plus size={16}/>} {isAdded ? 'Added' : 'Add Check-In'}
@@ -260,7 +273,7 @@ export default function Search() {
                                             const isAdded = customTripSpots.some(s => s.description === day.dining.name);
                                             return (
                                               <button
-                                                onClick={(e) => { e.stopPropagation(); toggleCustomSpot({ description: day.dining.name, url: day.dining.image, day: day.day }); }}
+                                                onClick={(e) => { e.stopPropagation(); toggleCustomSpot({ description: day.dining.name, url: day.dining.image, day: day.day, category: 'Restaurant' } as any); }}
                                                 className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all ${isAdded ? 'bg-zinc-800 text-white hover:bg-zinc-700' : 'bg-orange-500 text-white shadow-lg shadow-orange-500/20 hover:bg-orange-400'}`}
                                               >
                                                 {isAdded ? <Check size={16}/> : <Plus size={16}/>} {isAdded ? 'Added' : 'Add Dining'}
@@ -287,7 +300,7 @@ export default function Search() {
                                           <div className="relative h-48">
                                             <SmartImage src={activity.image} alt={activity.name} locationName={activity.name} className="w-full h-full object-cover" />
                                             <button
-                                              onClick={(e) => { e.stopPropagation(); toggleCustomSpot({ description: activity.name, url: activity.image, day: day.day }); }}
+                                              onClick={(e) => { e.stopPropagation(); toggleCustomSpot({ description: activity.name, url: activity.image, day: day.day, category: 'Activity' } as any); }}
                                               className={`absolute top-4 right-4 flex items-center gap-2 px-3 py-1.5 rounded-xl text-sm font-bold transition-all ${isAdded ? 'bg-zinc-800 text-white hover:bg-zinc-700' : 'bg-orange-500 text-white shadow-lg shadow-orange-500/20 hover:bg-orange-400'}`}
                                             >
                                               {isAdded ? <Check size={14}/> : <Plus size={14}/>} {isAdded ? 'Added' : 'Add Activity'}

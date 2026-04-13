@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, ShoppingBag, Plane, Car, CreditCard, CheckCircle2, ChevronRight, Trash2, CheckSquare, Square, MapPin } from 'lucide-react';
+import { X, ShoppingBag, Plane, Car, CreditCard, CheckCircle2, ChevronRight, Trash2, CheckSquare, Square, MapPin, Bed, Utensils, Camera, Clock } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { getHaversineDistance } from '../utils/geo';
 
@@ -11,7 +11,7 @@ interface CheckoutModalProps {
 }
 
 export default function CheckoutModal({ isOpen, onClose }: CheckoutModalProps) {
-  const { cartItems, removeFromCart, flights, rentalCars, clearCart, customTripSpots, clearCustomTrip } = useApp();
+  const { cartItems, removeFromCart, flights, rentalCars, clearCart, customTripSpots, clearCustomTrip, toggleCustomSpot } = useApp();
   
   // Local state for selected add-ons per trip
   // Keyed by cartItem (post) ID
@@ -21,6 +21,7 @@ export default function CheckoutModal({ isOpen, onClose }: CheckoutModalProps) {
   const [travelersMap, setTravelersMap] = useState<Record<string, number>>({});
   const [isProcessing, setIsProcessing] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [isSplitDays, setIsSplitDays] = useState(false);
 
   if (!isOpen) return null;
 
@@ -54,29 +55,34 @@ export default function CheckoutModal({ isOpen, onClose }: CheckoutModalProps) {
     // Add custom built trip
     if (customTripSpots.length > 0) {
       const customTravelers = travelersMap['custom-trip'] || 1;
-      total += (customTripSpots.length * 150) * customTravelers; // $150 per custom spot
+      total += (customTripSpots.length * 150) * customTravelers; // Base tickets are linear
     }
 
     cartItems.forEach(item => {
       const deselected = deselectedInclusions[item.id] || [];
       const travelersCount = travelersMap[item.id] || 1;
-      let itemBaseCost = item.price;
+      
+      let hotelBase = item.price * 0.5;
+      let ticketBase = item.price * 0.5;
       
       deselected.forEach(dId => {
         if (dId.startsWith('loc-')) {
-          itemBaseCost -= (item.price * 0.2); // Each location is 20%
+          hotelBase -= (item.price * 0.1); 
+          ticketBase -= (item.price * 0.1);
         } else if (dId.startsWith('act-')) {
-          itemBaseCost -= (item.price * 0.1); // Each activity is 10%
+          ticketBase -= (item.price * 0.1); 
         }
       });
 
-      // Itinerary base cost is PER TRAVELER
-      total += (itemBaseCost * travelersCount);
+      // Hotel Math: 1-2 people = 1 room. 3-4 = 2 rooms, etc.
+      const hotelCost = Math.ceil(travelersCount / 2) * Math.max(0, hotelBase);
+      // Tickets Math: Standard travelers * base_price
+      const ticketCost = travelersCount * Math.max(0, ticketBase);
+      total += hotelCost + ticketCost;
 
       const flightId = selectedFlights[item.id];
       if (flightId) {
         const flight = flights.find(f => f.id === flightId);
-        // Flights are PER TRAVELER
         if (flight) total += (flight.price * travelersCount);
       }
 
@@ -84,7 +90,7 @@ export default function CheckoutModal({ isOpen, onClose }: CheckoutModalProps) {
       if (carId) {
         const car = rentalCars.find(c => c.id === carId);
         if (car) {
-          // Assume average trip is 4 days to calculate rental total
+          // Rentals: FIXED base price regardless of travelers
           total += (car.pricePerDay * 4); 
         }
       }
@@ -146,28 +152,46 @@ export default function CheckoutModal({ isOpen, onClose }: CheckoutModalProps) {
       </div>
     );
   } else {
-    // Generate Proximity Sorted Custom Trip
-    const sortedCustomSpots = [...customTripSpots];
-    if (sortedCustomSpots.length > 1) {
-      // Basic greedy algo to sort by physical proximity
-      for (let i = 0; i < sortedCustomSpots.length - 1; i++) {
+    // Generating Contextual Clever Human Planner Path
+    const DURATION_MAP: Record<string, number> = {
+      'Hotel': 0, 'Restaurant': 1.5, 'Activity': 3, 'Transport': 0.5
+    };
+
+    let processedSpots = [...customTripSpots];
+    let totalDuration = 0;
+
+    if (processedSpots.length > 1) {
+      const hotels = processedSpots.filter(s => (s as any).category === 'Hotel');
+      const others = processedSpots.filter(s => (s as any).category !== 'Hotel');
+
+      // Greedy Geographical Clustering for everything non-hotel
+      for (let i = 0; i < others.length - 1; i++) {
         let closestIndex = i + 1;
         let minDistance = Infinity;
-        const currentCoords = sortedCustomSpots[i].coordinates || { lat: 0, lng: 0 };
-        
-        for (let j = i + 1; j < sortedCustomSpots.length; j++) {
-          const nextCoords = sortedCustomSpots[j].coordinates || { lat: 0, lng: 0 };
+        const currentCoords = others[i].coordinates || { lat: 0, lng: 0 };
+        for (let j = i + 1; j < others.length; j++) {
+          const nextCoords = others[j].coordinates || { lat: 0, lng: 0 };
           const dist = getHaversineDistance(currentCoords.lat, currentCoords.lng, nextCoords.lat, nextCoords.lng);
-          if (dist < minDistance) {
-            minDistance = dist;
-            closestIndex = j;
-          }
+          if (dist < minDistance) { minDistance = dist; closestIndex = j; }
         }
-        // Swap
-        const temp = sortedCustomSpots[i + 1];
-        sortedCustomSpots[i + 1] = sortedCustomSpots[closestIndex];
-        sortedCustomSpots[closestIndex] = temp;
+        const temp = others[i + 1]; others[i + 1] = others[closestIndex]; others[closestIndex] = temp;
       }
+
+      processedSpots = [];
+      // Executive Rule: Hotel must act as Terminal Bounds. Pin Start/End locations cleanly.
+      if (hotels.length > 0) processedSpots.push(hotels[0]);
+      processedSpots.push(...others);
+      if (hotels.length > 1) processedSpots.push(hotels[1]);
+    }
+
+    // Temporal Calculation Sweep
+    processedSpots.forEach(s => totalDuration += (DURATION_MAP[(s as any).category] || 3));
+    if (processedSpots.length > 1) totalDuration += ((processedSpots.length - 1) * 0.5); // Average 30m travel buffer
+
+    let dayMapping = [processedSpots];
+    if (isSplitDays && processedSpots.length > 1) {
+      const mid = Math.ceil(processedSpots.length / 2);
+      dayMapping = [processedSpots.slice(0, mid), processedSpots.slice(mid)];
     }
 
     // Determine total
@@ -179,8 +203,7 @@ export default function CheckoutModal({ isOpen, onClose }: CheckoutModalProps) {
         <div className="flex-1 overflow-y-auto p-6 md:p-8 custom-scrollbar">
           <div className="max-w-2xl mx-auto space-y-12 pb-24">
             
-            {/* Render Custom Built Trip Here */}
-            {sortedCustomSpots.length > 0 && (
+            {processedSpots.length > 0 && (
               <div className="space-y-8 pb-8 border-b-2 border-zinc-100 border-dashed">
                 <div className="bg-orange-500/10 border-2 border-orange-500 rounded-[2rem] p-6 flex flex-col items-start relative overflow-hidden group">
                   <div className="absolute top-0 right-0 p-8 text-orange-500 opacity-20 transform -translate-y-4 right-0 group-hover:scale-110 transition-transform"><CheckSquare size={120} /></div>
@@ -194,6 +217,28 @@ export default function CheckoutModal({ isOpen, onClose }: CheckoutModalProps) {
                   </div>
 
                   <button onClick={() => clearCustomTrip()} className="text-orange-600/70 hover:text-orange-600 font-bold text-sm flex items-center gap-1 z-10"><Trash2 size={16}/> Clear custom trip</button>
+
+                  {/* Clever Human Planner Overstuffing Alert Container */}
+                  {!isSplitDays && totalDuration > 9 && (
+                    <div className="mt-6 w-full animate-in fade-in slide-in-from-bottom-2 duration-300">
+                      <div className="bg-white border-2 border-[#0A192F] p-4 flex flex-col md:flex-row items-center justify-between gap-4 z-10 shadow-lg relative" style={{ borderRadius: '0' }}>
+                        <div className="absolute top-0 left-0 w-1.5 h-full bg-orange-500"></div>
+                        <div className="flex-1 px-4">
+                          <h4 className="font-bold text-orange-600 uppercase tracking-widest text-xs flex items-center gap-1 mb-1">
+                            <Clock size={12} className="text-orange-500" /> Clever Tip: Overstuffing Detected
+                          </h4>
+                          <p className="text-[#0A192F] text-sm font-bold">This day is getting packed ({totalDuration} hrs estimated). Want to push the excess buffer to Day 2?</p>
+                        </div>
+                        <button 
+                          onClick={() => setIsSplitDays(true)}
+                          className="bg-[#0A192F] text-white px-6 py-3 font-bold text-sm hover:bg-black transition-colors whitespace-nowrap shadow-md border border-transparent"
+                          style={{ borderRadius: '0' }}
+                        >
+                          Split into Core Days
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Google Maps Visual Routing Component */}
@@ -206,7 +251,7 @@ export default function CheckoutModal({ isOpen, onClose }: CheckoutModalProps) {
                     scrolling="no" 
                     marginHeight={0} 
                     marginWidth={0} 
-                    src={`https://maps.google.com/maps?q=${encodeURIComponent(sortedCustomSpots[0].description)}&t=&z=10&ie=UTF8&iwloc=&output=embed`}
+                    src={`https://maps.google.com/maps?q=${encodeURIComponent(processedSpots[0].description)}&t=&z=10&ie=UTF8&iwloc=&output=embed`}
                     className="absolute inset-0 opacity-80 mix-blend-multiply filter grayscale contrast-125"
                   />
                   <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-white to-transparent pointer-events-none" />
@@ -216,25 +261,44 @@ export default function CheckoutModal({ isOpen, onClose }: CheckoutModalProps) {
                   </div>
                 </div>
                 
-                <div className="space-y-4">
-                  <div className="flex items-center gap-2 text-[#0A192F] ml-2">
-                    <CheckSquare size={20} className="text-orange-500" />
-                    <h4 className="font-bold text-lg">Proximity Sorted Travel Path</h4>
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                    {sortedCustomSpots.map((spot, idx) => (
-                      <div key={idx} className="p-4 rounded-2xl border-2 border-orange-500 bg-orange-500/5 shadow-md relative overflow-hidden">
-                        <div className="absolute top-2 right-2 text-white font-bold bg-orange-500 rounded-lg px-2 py-0.5 text-xs z-10">
-                          Stop {idx + 1}
-                        </div>
-                        <div className="h-20 mb-3 -mx-2 -mt-2">
-                          <img src={spot.url} className="w-full h-full object-cover rounded-t-xl" alt="Location" />
-                        </div>
-                        <h5 className="font-bold mb-1 line-clamp-1 text-[#0A192F]">{spot.description}</h5>
-                        <span className="text-orange-500 font-bold">{formatPrice(150)}</span>
+                <div className="space-y-12">
+                  {dayMapping.map((daySpots, dayIndex) => (
+                    <div key={dayIndex} className="space-y-4">
+                      <div className="flex items-center gap-2 text-[#0A192F] ml-2">
+                        <CheckSquare size={20} className="text-orange-500" />
+                        <h4 className="font-bold text-lg">Proximity Sorted Travel Path {dayMapping.length > 1 ? `- Focus Day ${dayIndex + 1}` : ''}</h4>
                       </div>
-                    ))}
-                  </div>
+                      <div className="relative flex flex-wrap gap-6 items-center content-center py-6">
+                        {/* Linear Connection Path */}
+                        {daySpots.length > 1 && (
+                          <div className="absolute top-1/2 left-8 right-8 h-1 -translate-y-1/2 bg-transparent border-t-2 border-dashed border-orange-500/40 z-0 hidden md:block"></div>
+                        )}
+                        
+                        {daySpots.map((spot, idx) => (
+                          <div key={idx} className="p-4 rounded-2xl border-2 border-orange-500 bg-orange-500/5 shadow-md relative overflow-hidden group z-10 w-48 shrink-0 hover:scale-[1.02] transition-transform bg-white">
+                            <button 
+                              onClick={(e) => { e.stopPropagation(); toggleCustomSpot(spot); }}
+                              className="absolute top-2 left-2 w-7 h-7 bg-white rounded-full flex items-center justify-center text-rose-500 hover:bg-rose-500 hover:text-white shadow-lg z-20 transition-all font-bold opacity-0 group-hover:opacity-100 border border-zinc-100"
+                            >
+                              <X size={14} />
+                            </button>
+                            <div className="absolute top-2 right-2 text-white font-bold bg-orange-500 rounded-lg px-2 py-0.5 text-xs z-10 shadow-sm border border-orange-600">
+                              Stop {idx + 1}
+                            </div>
+                            <div className="h-24 mb-3 -mx-2 -mt-2 relative">
+                              <img src={spot.url} className="w-full h-full object-cover rounded-t-xl" alt="Location" />
+                              <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent"></div>
+                            </div>
+                            <h5 className="font-bold text-sm mb-1 line-clamp-1 text-[#0A192F]">{spot.description}</h5>
+                            <div className="flex items-center justify-between mt-1">
+                              <span className="text-orange-500 font-bold text-sm">{formatPrice(150)}</span>
+                              {(spot as any).category && <span className="text-zinc-500 text-[9px] font-bold uppercase tracking-widest bg-zinc-100 px-1.5 py-0.5 rounded-md border border-zinc-200">{(spot as any).category}</span>}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
             )}
@@ -250,7 +314,15 @@ export default function CheckoutModal({ isOpen, onClose }: CheckoutModalProps) {
                     <div className="flex items-start justify-between">
                       <div>
                         <h3 className="text-xl font-display font-bold text-[#0A192F]">{item.location} Itinerary</h3>
-                        <p className="text-sm text-zinc-500">Curated by {item.user}</p>
+                        <p className="text-sm text-zinc-500 mb-2">Curated by {item.user}</p>
+                        
+                        {/* 4 Active Core Categories strictly enforced natively by visual logic */}
+                        <div className="flex flex-wrap gap-2">
+                          <span className="flex items-center gap-1 border border-zinc-200 bg-white text-[10px] font-bold uppercase tracking-widest text-[#0A192F] px-2 py-0.5 rounded-md"><Bed size={10} className="text-orange-500"/> Hotel</span>
+                          <span className="flex items-center gap-1 border border-zinc-200 bg-white text-[10px] font-bold uppercase tracking-widest text-[#0A192F] px-2 py-0.5 rounded-md"><Utensils size={10} className="text-orange-500"/> Restaurant</span>
+                          <span className="flex items-center gap-1 border border-zinc-200 bg-white text-[10px] font-bold uppercase tracking-widest text-[#0A192F] px-2 py-0.5 rounded-md"><Plane size={10} className="text-orange-500"/> Transport</span>
+                          <span className="flex items-center gap-1 border border-zinc-200 bg-white text-[10px] font-bold uppercase tracking-widest text-[#0A192F] px-2 py-0.5 rounded-md"><Camera size={10} className="text-orange-500"/> Activity</span>
+                        </div>
                       </div>
                       <div className="text-right hidden md:block">
                         <span className="font-bold text-xl text-[#0A192F]">{formatPrice(item.price)} <span className="text-sm text-zinc-500 font-medium">/ person</span></span>
@@ -385,9 +457,16 @@ export default function CheckoutModal({ isOpen, onClose }: CheckoutModalProps) {
 
                 {/* Car Rental Selection */}
                 <div className="space-y-4">
-                  <div className="flex items-center gap-2 text-[#0A192F] ml-2">
-                    <Car size={20} className="text-orange-500" />
-                    <h4 className="font-bold text-lg">Add Rental Car (4 Days)</h4>
+                  <div className="flex items-center justify-between text-[#0A192F] ml-2">
+                    <div className="flex items-center gap-2">
+                      <Car size={20} className="text-orange-500" />
+                      <h4 className="font-bold text-lg">Add Rental Car (4 Days)</h4>
+                    </div>
+                    {(travelersMap[item.id] || 1) > 4 && (
+                      <span className="text-[10px] uppercase tracking-wider font-bold text-orange-600 bg-orange-50 px-2.5 py-1 rounded-md border border-orange-200">
+                        Note: SUV/Van recommended for groups 5+
+                      </span>
+                    )}
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     {rentalCars.map(car => {
@@ -433,21 +512,28 @@ export default function CheckoutModal({ isOpen, onClose }: CheckoutModalProps) {
               const car = cId ? rentalCars.find(c => c.id === cId) : null;
 
               const deselected = deselectedInclusions[item.id] || [];
-              let currentBaseCost = item.price;
+              let hotelBase = item.price * 0.5;
+              let ticketBase = item.price * 0.5;
               
               deselected.forEach(dId => {
                 if (dId.startsWith('loc-')) {
-                  currentBaseCost -= (item.price * 0.2);
+                  hotelBase -= (item.price * 0.1);
+                  ticketBase -= (item.price * 0.1);
                 } else if (dId.startsWith('act-')) {
-                  currentBaseCost -= (item.price * 0.1);
+                  ticketBase -= (item.price * 0.1);
                 }
               });
+
+              const hotelCost = Math.ceil(flightsCount / 2) * Math.max(0, hotelBase);
+              const ticketCost = flightsCount * Math.max(0, ticketBase);
+              const totalTripCost = hotelCost + ticketCost;
+              const totalCarCost = car ? (car.pricePerDay * 4) : 0;
 
               return (
                 <div key={`summary-${item.id}`} className="space-y-4 pb-6 border-b border-zinc-200 last:border-0 p-4 bg-white rounded-2xl shadow-sm">
                   <div className="flex justify-between items-start">
                     <span className="font-bold text-[#0A192F] text-sm leading-tight pr-4">{item.location} Trip (x{flightsCount})</span>
-                    <span className="font-bold text-zinc-500 shrink-0">{formatPrice(currentBaseCost * flightsCount)}</span>
+                    <span className="font-bold text-zinc-500 shrink-0">{formatPrice(totalTripCost)}</span>
                   </div>
                   {flight && (
                     <div className="flex justify-between items-center text-sm">
@@ -458,7 +544,7 @@ export default function CheckoutModal({ isOpen, onClose }: CheckoutModalProps) {
                   {car && (
                     <div className="flex justify-between items-center text-sm">
                       <span className="text-zinc-500 flex items-center gap-1.5"><Car size={14}/> Car (4 days)</span>
-                      <span className="font-bold text-zinc-700">{formatPrice(car.pricePerDay * 4)}</span>
+                      <span className="font-bold text-zinc-700">{formatPrice(totalCarCost)}</span>
                     </div>
                   )}
                 </div>
@@ -466,13 +552,16 @@ export default function CheckoutModal({ isOpen, onClose }: CheckoutModalProps) {
             })}
 
             {/* Custom Trip Summary Addition */}
-            {sortedCustomSpots.length > 0 && (
+            {processedSpots.length > 0 && (
               <div className="space-y-4 pb-6 border-b border-zinc-200 p-4 bg-orange-50/50 rounded-2xl border border-orange-200 shadow-sm">
                 <div className="flex justify-between items-start">
                   <span className="font-bold text-orange-600 text-sm leading-tight pr-4">Custom Remixed Journey (x{travelersMap['custom-trip'] || 1})</span>
-                  <span className="font-bold text-orange-600 shrink-0">{formatPrice(sortedCustomSpots.length * 150 * (travelersMap['custom-trip'] || 1))}</span>
+                  <span className="font-bold text-orange-600 shrink-0">{formatPrice(processedSpots.length * 150 * (travelersMap['custom-trip'] || 1))}</span>
                 </div>
-                <div className="text-xs font-bold text-orange-600/70 uppercase tracking-widest">{sortedCustomSpots.length} Seamless Stops</div>
+                <div className="flex items-center justify-between">
+                  <div className="text-[10px] font-bold text-orange-600/70 uppercase tracking-widest">{processedSpots.length} Checkpoints</div>
+                  <div className="text-[10px] font-bold text-[#0A192F] uppercase tracking-widest">{dayMapping.length} Days Assigned</div>
+                </div>
               </div>
             )}
 

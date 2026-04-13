@@ -24,29 +24,30 @@ export default function Home() {
   // Home feed shows all posts (Social Discovery) + Recommendation Engine Sorting
   const homePosts = [...publicPosts]
     .filter(post => feedMode === 'Discover' || followedUsers.includes(post.user))
-    .sort((a, b) => {
+    .sort((a: any, b: any) => {
+       // Priority 0: Followed users ALWAYS float to the absolute top of the Discover feed
+       const aFollowed = followedUsers.includes(a.user) ? 1 : 0;
+       const bFollowed = followedUsers.includes(b.user) ? 1 : 0;
+       if (aFollowed !== bFollowed) return bFollowed - aFollowed;
+
        // Priority 1: Live Geography Distances (if active)
        if (userLocation && a.images[0]?.coordinates && b.images[0]?.coordinates) {
          const distA = getHaversineDistance(userLocation.lat, userLocation.lng, a.images[0].coordinates.lat, a.images[0].coordinates.lng);
          const distB = getHaversineDistance(userLocation.lat, userLocation.lng, b.images[0].coordinates.lat, b.images[0].coordinates.lng);
          
-         // If a is significantly closer than b (let's say 250 miles closer), it wins definitively. 
-         // Otherwise we let interests/likes take over so locals still find highly engaging relevant stuff.
          if (Math.abs(distA - distB) > 250) {
            return distA - distB; 
          }
        }
 
-       // Priority 2: Personalization Algorithm cookies
-       const aMatchesInterest = userInterestTags.some(tag => a.location.includes(tag) || a.caption.includes(tag)) ? 1 : 0;
-       const bMatchesInterest = userInterestTags.some(tag => b.location.includes(tag) || b.caption.includes(tag)) ? 1 : 0;
-       
-       if (aMatchesInterest !== bMatchesInterest) {
-         return bMatchesInterest - aMatchesInterest;
-       }
-       
-       // Fallback to highest likes (engagement)
-       return b.likes - a.likes;
+       // Priority 2: Phase 4 Engagement Score Algorithm (1/2/5/10) directly bridging to Supabase
+       const getScore = (p: any) => {
+         const likes = typeof p.likes === 'number' ? p.likes : p.likes?.[0]?.count || 0;
+         const comments = typeof p.comments === 'number' ? p.comments : p.comments?.[0]?.count || 0;
+         const remixes = p.remix_stats?.[0]?.count || p.remixes || 0;
+         return (likes * 1) + (comments * 2) + (remixes * 5) + ((p.rating || 5) * 10);
+       };
+       return getScore(b) - getScore(a);
     });
 
   const handleSearch = (e?: React.FormEvent) => {

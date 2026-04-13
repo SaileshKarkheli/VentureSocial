@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { SavedItem, TimelineEvent, Post, User } from './types';
 import { supabase } from './supabaseClient';
+import { SocialService } from './lib/socialService';
 
 export interface MyTrip {
   id: string;
@@ -119,12 +120,23 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [rentalCars, setRentalCars] = useState<RentalCarOption[]>([]);
   const [isLoadingServices, setIsLoadingServices] = useState(true);
 
-  // Fetch logic
+  // Fetch logic directly connected to Supabase
   useEffect(() => {
-    fetch('/api/feed').then(res => res.json()).then(data => {
-      setPublicPosts(data);
-      setIsLoadingFeed(false);
-    }).catch(() => setIsLoadingFeed(false));
+    SocialService.fetchFeed().then(data => {
+      if (data && data.length > 0) {
+        setPublicPosts(data as any);
+        setIsLoadingFeed(false);
+      } else {
+        throw new Error("Supabase tables currently empty. Falling back to local data source.");
+      }
+    }).catch((err) => {
+      console.warn(err.message);
+      // Fallback bridge for pristine UI loading when DB is structurally empty
+      fetch('/api/feed').then(res => res.json()).then(data => {
+        setPublicPosts(data);
+        setIsLoadingFeed(false);
+      }).catch(() => setIsLoadingFeed(false));
+    });
 
     fetch('/api/trips').then(res => res.json()).then(data => {
       setMyTrips(data);
@@ -278,6 +290,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     if (!cartItems.find(item => item.id === post.id)) {
       setCartItems(prev => [...prev, post]);
       showToast(`Added ${post.location} Itinerary to Cart!`);
+      // Sync strictly to Supabase Baskets for Analytics Remix Scoring
+      if (user) {
+        SocialService.remixPost(post.id, user.id).catch(err => {
+          console.error("Supabase Remix Logging Error:", err);
+        });
+      }
     } else {
       showToast(`${post.location} is already in your Cart.`);
     }
