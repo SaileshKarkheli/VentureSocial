@@ -14,6 +14,7 @@ import {
   Loader2
 } from 'lucide-react';
 import { useApp } from '../AppContext';
+import { supabase } from '../supabaseClient';
 
 const categories = [
   { title: 'Solo', image: 'https://images.unsplash.com/photo-1501504905252-473c47e087f8?auto=format&fit=crop&w=400&q=80', rotate: '-rotate-6', grayscale: true },
@@ -78,6 +79,24 @@ export default function Login() {
       console.error(err);
       setErrorMsg(err.message || 'Authentication failed. Please check your credentials.');
     } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    setIsLoading(true);
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: window.location.origin
+        }
+      });
+      if (error) throw error;
+      // Note: Redirect handles routing automatically on success.
+    } catch (err: any) {
+      console.error('Google login error:', err.message);
+      setErrorMsg(err.message);
       setIsLoading(false);
     }
   };
@@ -237,21 +256,21 @@ export default function Login() {
               <div className="absolute inset-0 flex items-center">
                 <div className="w-full border-t border-zinc-100"></div>
               </div>
-              <div className="relative flex justify-center text-[9px] uppercase">
-                <span className="bg-white px-2 text-zinc-400">Or continue with</span>
+              <div className="relative flex justify-center text-[9px] uppercase tracking-widest font-bold">
+                <span className="bg-white px-2 text-zinc-400">Enterprise Access</span>
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-2.5">
-              <button type="button" className="flex items-center justify-center gap-2 bg-zinc-50 text-[#0A192F] font-bold py-2 px-3 rounded-lg hover:bg-zinc-100 transition-all text-[10px] border border-zinc-200">
-                <Chrome size={14} />
-                Google
-              </button>
-              <button type="button" className="flex items-center justify-center gap-2 bg-zinc-50 text-[#0A192F] font-bold py-2 px-3 rounded-lg hover:bg-zinc-100 transition-all text-[10px] border border-zinc-200">
-                <Apple size={14} />
-                Apple
-              </button>
-            </div>
+            <button 
+              type="button" 
+              onClick={handleGoogleLogin} 
+              disabled={isLoading}
+              className="w-full flex items-center justify-center gap-3 bg-white text-[#0A192F] font-bold py-3 px-4 border border-zinc-300 hover:border-orange-500 hover:bg-orange-50 transition-all text-xs disabled:opacity-50"
+              style={{ borderRadius: '2px' }}
+            >
+              <Chrome size={16} className={isLoading ? 'animate-spin text-orange-500' : 'text-orange-500'} />
+              Continue with Google
+            </button>
           </form>
         </motion.div>
       </div>
