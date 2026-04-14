@@ -35,8 +35,7 @@ export default function App() {
           <Route path="/clubs" element={<ProtectedRoute><div className="p-8 text-center text-zinc-500">Travel Clubs coming soon...</div></ProtectedRoute>} />
           <Route path="/settings" element={<ProtectedRoute><div className="p-8 text-center text-zinc-500">Settings coming soon...</div></ProtectedRoute>} />
         </Route>
-
-        <Route path="/" element={<Navigate to="/login" replace />} />
+        <Route path="/" element={<Login />} />
       </Routes>
     </BrowserRouter>
   );
