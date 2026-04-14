@@ -74,6 +74,7 @@ export default function TripBuilderModal({ isOpen, onClose }: TripBuilderModalPr
     routeSummary: RouteItem[];
     images: string[];
     categoryImages?: Record<string, string>;
+    categoryCosts?: Record<string, number>;
   }
 
   const createEmptyDay = (index: number): DayState => ({
@@ -83,7 +84,8 @@ export default function TripBuilderModal({ isOpen, onClose }: TripBuilderModalPr
     budget: 0,
     routeSummary: [],
     images: [],
-    categoryImages: {}
+    categoryImages: {},
+    categoryCosts: {}
   });
 
   const [destination, setDestination] = useState('');
@@ -117,6 +119,13 @@ export default function TripBuilderModal({ isOpen, onClose }: TripBuilderModalPr
     setUploadCategory(null);
   };
 
+  const handleCostChange = (category: string, val: string) => {
+    updateActiveDay(prev => ({
+      ...prev,
+      categoryCosts: { ...(prev.categoryCosts || {}), [category]: parseFloat(val) || 0 }
+    }));
+  };
+
   const addRouteItem = (title: string, link: string, type: RouteItem['type']) => {
     const newItem: RouteItem = {
       id: Math.random().toString(36).substr(2, 9),
@@ -127,8 +136,7 @@ export default function TripBuilderModal({ isOpen, onClose }: TripBuilderModalPr
     
     updateActiveDay(prev => ({
       ...prev,
-      routeSummary: [...prev.routeSummary, newItem],
-      budget: prev.budget + (type === 'hotel' ? 200 : type === 'transport' ? 100 : 50)
+      routeSummary: [...prev.routeSummary, newItem]
     }));
   };
 
@@ -176,7 +184,10 @@ export default function TripBuilderModal({ isOpen, onClose }: TripBuilderModalPr
     setShowManualEntry(null);
   };
 
-  const totalBudget = days.reduce((sum, day) => sum + day.budget, 0);
+  const totalBudget = days.reduce((sum, day) => {
+    const costs = Object.values(day.categoryCosts || {}) as number[];
+    return sum + costs.reduce((a, b) => a + b, 0);
+  }, 0);
   const allRouteItems = days.flatMap(d => d.routeSummary);
 
   return createPortal(
@@ -276,7 +287,17 @@ export default function TripBuilderModal({ isOpen, onClose }: TripBuilderModalPr
                       </div>
                       <h3 className="font-bold uppercase tracking-widest text-[11px]">Transport Mode</h3>
                     </div>
-                    <div className="flex flex-col sm:flex-row items-end sm:items-center gap-2 sm:gap-3">
+                    <div className="flex flex-row items-center gap-2 sm:gap-3">
+                      <div className="flex items-center gap-0.5 border-b-2 border-zinc-200 focus-within:border-[#0A192F] transition-all pb-0.5">
+                        <span className="text-zinc-400 font-mono text-[10px]">$</span>
+                        <input 
+                           type="number" 
+                           placeholder="0"
+                           value={activeDay.categoryCosts?.['transport'] || ''}
+                           onChange={(e) => handleCostChange('transport', e.target.value)}
+                           className="w-12 bg-transparent border-0 focus:ring-0 text-right font-mono text-xs font-bold text-[#0A192F] p-0"
+                        />
+                      </div>
                       {!activeDay.categoryImages?.['transport'] && (
                         <button 
                           onClick={() => { setUploadCategory('transport'); contextFileInputRef.current?.click(); }}
@@ -356,7 +377,17 @@ export default function TripBuilderModal({ isOpen, onClose }: TripBuilderModalPr
                       </div>
                       <h3 className="font-bold uppercase tracking-widest text-[11px]">Stay Details</h3>
                     </div>
-                    <div className="flex flex-col sm:flex-row items-end sm:items-center gap-2 sm:gap-3">
+                    <div className="flex flex-row items-center gap-2 sm:gap-3">
+                      <div className="flex items-center gap-0.5 border-b-2 border-zinc-200 focus-within:border-[#0A192F] transition-all pb-0.5">
+                        <span className="text-zinc-400 font-mono text-[10px]">$</span>
+                        <input 
+                           type="number" 
+                           placeholder="0"
+                           value={activeDay.categoryCosts?.['hotel'] || ''}
+                           onChange={(e) => handleCostChange('hotel', e.target.value)}
+                           className="w-12 bg-transparent border-0 focus:ring-0 text-right font-mono text-xs font-bold text-[#0A192F] p-0"
+                        />
+                      </div>
                       {!activeDay.categoryImages?.['hotel'] && (
                         <button 
                           onClick={() => { setUploadCategory('hotel'); contextFileInputRef.current?.click(); }}
@@ -414,7 +445,7 @@ export default function TripBuilderModal({ isOpen, onClose }: TripBuilderModalPr
                       </div>
                     </div>
                   )}
-                </section>
+              </section>
 
                 {/* Dining Pillar */}
                 <section className="space-y-6">
@@ -438,23 +469,33 @@ export default function TripBuilderModal({ isOpen, onClose }: TripBuilderModalPr
                         </div>
                         <h3 className="font-bold uppercase tracking-widest text-[11px]">Dining</h3>
                       </div>
-                      <div className="flex flex-col sm:flex-row items-end sm:items-center gap-2 sm:gap-3">
-                        {!activeDay.categoryImages?.['dining'] && (
-                          <button 
-                            onClick={() => { setUploadCategory('dining'); contextFileInputRef.current?.click(); }}
-                            className="flex items-center gap-1.5 px-3 py-1.5 bg-white border-2 border-[#0A192F] text-[#0A192F] hover:bg-[#0A192F] hover:text-white transition-colors text-[9px] uppercase tracking-widest font-bold shadow-sm"
-                            style={{ borderRadius: '2px' }}
-                          >
-                            <ImagePlus size={12} /> Add Cover
-                          </button>
-                        )}
-                        <button 
-                          onClick={() => setShowManualEntry(showManualEntry === 'dining' ? null : 'dining')}
-                          className="text-[10px] font-bold text-zinc-400 hover:text-orange-500 transition-colors uppercase tracking-widest"
-                        >
-                          {showManualEntry === 'dining' ? 'Cancel' : 'Add Manually'}
-                        </button>
+                    <div className="flex flex-row items-center gap-2 sm:gap-3">
+                      <div className="flex items-center gap-0.5 border-b-2 border-zinc-200 focus-within:border-[#0A192F] transition-all pb-0.5">
+                        <span className="text-zinc-400 font-mono text-[10px]">$</span>
+                        <input 
+                           type="number" 
+                           placeholder="0"
+                           value={activeDay.categoryCosts?.['dining'] || ''}
+                           onChange={(e) => handleCostChange('dining', e.target.value)}
+                           className="w-12 bg-transparent border-0 focus:ring-0 text-right font-mono text-xs font-bold text-[#0A192F] p-0"
+                        />
                       </div>
+                      {!activeDay.categoryImages?.['dining'] && (
+                        <button 
+                          onClick={() => { setUploadCategory('dining'); contextFileInputRef.current?.click(); }}
+                          className="flex items-center gap-1.5 px-3 py-1.5 bg-white border-2 border-[#0A192F] text-[#0A192F] hover:bg-[#0A192F] hover:text-white transition-colors text-[9px] uppercase tracking-widest font-bold shadow-sm"
+                          style={{ borderRadius: '2px' }}
+                        >
+                          <ImagePlus size={12} /> Add Cover
+                        </button>
+                      )}
+                      <button 
+                        onClick={() => setShowManualEntry(showManualEntry === 'dining' ? null : 'dining')}
+                        className="text-[10px] font-bold text-zinc-400 hover:text-orange-500 transition-colors uppercase tracking-widest"
+                      >
+                        {showManualEntry === 'dining' ? 'Cancel' : 'Add Manually'}
+                      </button>
+                    </div>
                     </div>
                   </div>
 
@@ -481,7 +522,7 @@ export default function TripBuilderModal({ isOpen, onClose }: TripBuilderModalPr
                       </div>
                     </div>
                   )}
-                </section>
+              </section>
 
                 {/* Activities Pillar */}
                 <section className="space-y-6">
@@ -505,23 +546,33 @@ export default function TripBuilderModal({ isOpen, onClose }: TripBuilderModalPr
                         </div>
                         <h3 className="font-bold uppercase tracking-widest text-[11px]">Activities</h3>
                       </div>
-                      <div className="flex flex-col sm:flex-row items-end sm:items-center gap-2 sm:gap-3">
-                        {!activeDay.categoryImages?.['activity'] && (
-                          <button 
-                            onClick={() => { setUploadCategory('activity'); contextFileInputRef.current?.click(); }}
-                            className="flex items-center gap-1.5 px-3 py-1.5 bg-white border-2 border-[#0A192F] text-[#0A192F] hover:bg-[#0A192F] hover:text-white transition-colors text-[9px] uppercase tracking-widest font-bold shadow-sm"
-                            style={{ borderRadius: '2px' }}
-                          >
-                            <ImagePlus size={12} /> Add Cover
-                          </button>
-                        )}
-                        <button 
-                          onClick={() => setShowManualEntry(showManualEntry === 'activity' ? null : 'activity')}
-                          className="text-[10px] font-bold text-zinc-400 hover:text-orange-500 transition-colors uppercase tracking-widest"
-                        >
-                          {showManualEntry === 'activity' ? 'Cancel' : 'Add Manually'}
-                        </button>
+                    <div className="flex flex-row items-center gap-2 sm:gap-3">
+                      <div className="flex items-center gap-0.5 border-b-2 border-zinc-200 focus-within:border-[#0A192F] transition-all pb-0.5">
+                        <span className="text-zinc-400 font-mono text-[10px]">$</span>
+                        <input 
+                           type="number" 
+                           placeholder="0"
+                           value={activeDay.categoryCosts?.['activity'] || ''}
+                           onChange={(e) => handleCostChange('activity', e.target.value)}
+                           className="w-12 bg-transparent border-0 focus:ring-0 text-right font-mono text-xs font-bold text-[#0A192F] p-0"
+                        />
                       </div>
+                      {!activeDay.categoryImages?.['activity'] && (
+                        <button 
+                          onClick={() => { setUploadCategory('activity'); contextFileInputRef.current?.click(); }}
+                          className="flex items-center gap-1.5 px-3 py-1.5 bg-white border-2 border-[#0A192F] text-[#0A192F] hover:bg-[#0A192F] hover:text-white transition-colors text-[9px] uppercase tracking-widest font-bold shadow-sm"
+                          style={{ borderRadius: '2px' }}
+                        >
+                          <ImagePlus size={12} /> Add Cover
+                        </button>
+                      )}
+                      <button 
+                        onClick={() => setShowManualEntry(showManualEntry === 'activity' ? null : 'activity')}
+                        className="text-[10px] font-bold text-zinc-400 hover:text-orange-500 transition-colors uppercase tracking-widest"
+                      >
+                        {showManualEntry === 'activity' ? 'Cancel' : 'Add Manually'}
+                      </button>
+                    </div>
                     </div>
                   </div>
 
@@ -548,7 +599,7 @@ export default function TripBuilderModal({ isOpen, onClose }: TripBuilderModalPr
                       </div>
                     </div>
                   )}
-                </section>
+              </section>
 
               {/* Add Images Section */}
               <section className="space-y-6">
@@ -599,9 +650,11 @@ export default function TripBuilderModal({ isOpen, onClose }: TripBuilderModalPr
             </div>
 
             <div className="pt-10 flex flex-col sm:flex-row items-center justify-between border-t border-zinc-100 gap-4">
-              <div className="flex flex-col items-center sm:items-start">
-                <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Total Trip Budget</span>
-                <span className="text-3xl font-display font-bold text-[#0A192F]">${totalBudget}</span>
+              <div className="flex items-center gap-6">
+                <div className="flex flex-col items-start pr-6 sm:border-r sm:border-zinc-200">
+                  <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Estimated Total</span>
+                  <span className="text-3xl font-display font-bold text-[#0A192F] font-mono">${totalBudget.toFixed(2)}</span>
+                </div>
               </div>
               <div className="flex items-center gap-3">
                 <button 
