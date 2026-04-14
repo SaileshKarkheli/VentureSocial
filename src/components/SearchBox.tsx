@@ -1,138 +1,88 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Search, Loader2, ExternalLink, X } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
+import { Search as SearchIcon, Loader2, MapPin } from 'lucide-react';
+import { loadGoogleMapsScript } from '../utils/googleMapsLoader';
 
 interface SearchResult {
   title: string;
   link: string;
   snippet: string;
+  coordinates?: { lat: number; lng: number };
+  photoUrl?: string;
+  placeId?: string;
 }
 
 interface SearchBoxProps {
   placeholder: string;
-  context?: string;
+  context?: string; // Used strictly for UI labeling if needed
   onSelect: (result: SearchResult) => void;
   className?: string;
 }
 
 export default function SearchBox({ placeholder, context, onSelect, className = "" }: SearchBoxProps) {
-  const [query, setQuery] = useState('');
-  const [results, setResults] = useState<SearchResult[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [showDropdown, setShowDropdown] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
-
-  const API_KEY = import.meta.env.VITE_GOOGLE_SEARCH_API_KEY;
-  const CX = import.meta.env.VITE_GOOGLE_SEARCH_ENGINE_ID;
+  const inputRef = useRef<HTMLInputElement>(null);
+  const autocompleteRef = useRef<any>(null);
+  const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setShowDropdown(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  const handleSearch = async (val: string) => {
-    setQuery(val);
-    if (val.length < 3) {
-      setResults([]);
-      setShowDropdown(false);
+    const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+    if (!apiKey) {
+      console.warn('Google Maps API key is missing. Places Autocomplete cannot load.');
       return;
     }
 
-    setIsLoading(true);
-    setShowDropdown(true);
+    loadGoogleMapsScript(apiKey)
+      .then(() => {
+        setIsReady(true);
+        const win = window as any;
+        if (inputRef.current && win.google && win.google.maps && win.google.maps.places) {
+          autocompleteRef.current = new win.google.maps.places.Autocomplete(inputRef.current, {
+            fields: ['name', 'geometry', 'photos', 'url', 'place_id', 'formatted_address'],
+          });
 
-    try {
-      const searchQuery = context ? `${val} ${context}` : val;
-      const response = await fetch(
-        `https://www.googleapis.com/customsearch/v1?key=${API_KEY}&cx=${CX}&q=${encodeURIComponent(searchQuery)}`
-      );
-      const data = await response.json();
-      
-      if (data.items) {
-        setResults(data.items.map((item: any) => ({
-          title: item.title,
-          link: item.link,
-          snippet: item.snippet
-        })));
-      } else {
-        setResults([]);
-      }
-    } catch (error) {
-      console.error('Search error:', error);
-      setResults([]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+          autocompleteRef.current.addListener('place_changed', () => {
+            const place = autocompleteRef.current.getPlace();
+            if (!place.geometry || !place.geometry.location) {
+              return;
+            }
 
-  const handleSelect = (result: SearchResult) => {
-    onSelect(result);
-    setQuery('');
-    setResults([]);
-    setShowDropdown(false);
-  };
+            // Extract high-res photo if available
+            let photoUrl = '';
+            if (place.photos && place.photos.length > 0) {
+              photoUrl = place.photos[0].getUrl({ maxWidth: 1200 });
+            }
+
+            const result: SearchResult = {
+              title: place.name || place.formatted_address || '',
+              link: place.url || `https://www.google.com/maps/place/?q=place_id:${place.place_id}`,
+              snippet: place.formatted_address || '',
+              coordinates: {
+                lat: place.geometry.location.lat(),
+                lng: place.geometry.location.lng()
+              },
+              photoUrl: photoUrl,
+              placeId: place.place_id
+            };
+
+            onSelect(result);
+            if (inputRef.current) inputRef.current.value = '';
+          });
+        }
+      })
+      .catch((err) => console.error(err));
+  }, [onSelect]);
 
   return (
-    <div className={`relative w-full ${className}`} ref={dropdownRef}>
-      <div className="relative">
-        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400" size={18} />
-        <input
-          type="text"
-          value={query}
-          onChange={(e) => handleSearch(e.target.value)}
-          onFocus={() => query.length >= 3 && setShowDropdown(true)}
-          placeholder={placeholder}
-          className="w-full pl-12 pr-10 py-4 rounded-2xl bg-zinc-100 border border-zinc-300 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all outline-none text-zinc-800 placeholder:text-zinc-400"
-        />
-        {isLoading && (
-          <Loader2 className="absolute right-4 top-1/2 -translate-y-1/2 text-orange-500 animate-spin" size={18} />
-        )}
-        {!isLoading && query && (
-          <button 
-            onClick={() => { setQuery(''); setResults([]); setShowDropdown(false); }}
-            className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600"
-          >
-            <X size={16} />
-          </button>
-        )}
-      </div>
-
-      {showDropdown && (results.length > 0 || isLoading) && (
-        <div className="absolute z-50 left-0 right-0 mt-2 bg-white rounded-2xl shadow-2xl border border-zinc-200 overflow-hidden max-h-[400px] overflow-y-auto custom-scrollbar">
-          {isLoading ? (
-            <div className="p-8 text-center text-zinc-500 flex flex-col items-center gap-2">
-              <Loader2 className="animate-spin text-orange-500" size={24} />
-              <span className="text-xs font-bold uppercase tracking-widest">Searching Real-World Data...</span>
-            </div>
-          ) : (
-            <div className="divide-y divide-zinc-100">
-              {results.map((result, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => handleSelect(result)}
-                  className="w-full text-left p-4 hover:bg-zinc-50 transition-colors group flex flex-col gap-1"
-                >
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="font-bold text-zinc-800 group-hover:text-orange-600 transition-colors line-clamp-1">
-                      {result.title}
-                    </span>
-                    <ExternalLink size={14} className="text-zinc-300 group-hover:text-orange-400" />
-                  </div>
-                  <p className="text-xs text-zinc-500 line-clamp-2 leading-relaxed">
-                    {result.snippet}
-                  </p>
-                  <span className="text-[10px] text-zinc-400 truncate mt-1">
-                    {result.link}
-                  </span>
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
+    <div className={`relative w-full ${className}`}>
+      <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400" size={18} />
+      <input
+        ref={inputRef}
+        type="text"
+        placeholder={isReady ? placeholder : "Loading Maps SDK..."}
+        disabled={!isReady}
+        className="w-full pl-12 pr-10 py-4 rounded-2xl bg-zinc-100 border border-zinc-300 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all outline-none text-zinc-800 placeholder:text-zinc-400 disabled:opacity-50"
+      />
+      {!isReady && (
+        <Loader2 className="absolute right-4 top-1/2 -translate-y-1/2 text-orange-500 animate-spin" size={18} />
       )}
     </div>
   );

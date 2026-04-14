@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import SmartImage from './SmartImage';
 import SearchBox from './SearchBox';
+import { useApp } from '../AppContext';
 
 interface TripBuilderModalProps {
   isOpen: boolean;
@@ -88,6 +89,8 @@ export default function TripBuilderModal({ isOpen, onClose }: TripBuilderModalPr
     categoryCosts: {}
   });
 
+  const { addCustomTrip } = useApp();
+
   const [destination, setDestination] = useState('');
   const [isBudgetPublic, setIsBudgetPublic] = useState(false);
   const [days, setDays] = useState<DayState[]>([createEmptyDay(0)]);
@@ -127,18 +130,22 @@ export default function TripBuilderModal({ isOpen, onClose }: TripBuilderModalPr
     }));
   };
 
-  const addRouteItem = (title: string, link: string, type: RouteItem['type']) => {
+  const addRouteItem = (title: string, link: string, type: RouteItem['type'], coordinates?: {lat: number, lng: number}, photoUrl?: string) => {
     const newItem: RouteItem = {
       id: Math.random().toString(36).substr(2, 9),
       title,
       link,
-      type
+      type,
+      coordinates
     };
     
-    updateActiveDay(prev => ({
-      ...prev,
-      routeSummary: [...prev.routeSummary, newItem]
-    }));
+    updateActiveDay(prev => {
+      const updates: any = { routeSummary: [...prev.routeSummary, newItem] };
+      if (photoUrl && (!prev.categoryImages || !prev.categoryImages[type])) {
+        updates.categoryImages = { ...(prev.categoryImages || {}), [type]: photoUrl };
+      }
+      return { ...prev, ...updates };
+    });
   };
 
   const removeRouteItem = (dayIndex: number, itemId: string) => {
@@ -164,6 +171,30 @@ export default function TripBuilderModal({ isOpen, onClose }: TripBuilderModalPr
       images: [...randomItinerary.images]
     }]);
     setCurrentDayIndex(0);
+  };
+
+  const handleFinishTrip = () => {
+    if (!destination) return;
+    
+    // Find the first high-res photo loaded in any day's category to use as Cover Photo
+    let coverPhoto = 'https://images.unsplash.com/photo-1541844053589-3462d48979e2?auto=format&fit=crop&w=800&q=80';
+    for (const day of days) {
+      if (day.images && day.images.length > 0) { coverPhoto = day.images[0]; break; }
+      if (day.categoryImages) {
+        const cats = Object.values(day.categoryImages) as string[];
+        if (cats.length > 0) { coverPhoto = cats[0]; break; }
+      }
+    }
+    
+    addCustomTrip({
+      id: Math.random().toString(36).substr(2, 9),
+      country: destination,
+      year: new Date().getFullYear().toString(),
+      image: coverPhoto,
+      availableImages: [coverPhoto]
+    });
+    
+    onClose();
   };
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -350,7 +381,7 @@ export default function TripBuilderModal({ isOpen, onClose }: TripBuilderModalPr
                     <SearchBox 
                       placeholder={`Search ${activeDay.transportMode} Details...`} 
                       context={`${activeDay.transportMode.toLowerCase()} in ${destination}`}
-                      onSelect={(res) => addRouteItem(res.title, res.link, 'transport')}
+                      onSelect={(res) => addRouteItem(res.title, res.link, 'transport', res.coordinates, res.photoUrl)}
                     />
                   </>
                 )}
@@ -435,7 +466,7 @@ export default function TripBuilderModal({ isOpen, onClose }: TripBuilderModalPr
                       <SearchBox 
                         placeholder={`Search ${stayCategory}s, Resorts, or Boutique Stays...`} 
                         context={`${stayCategory.toLowerCase()} in ${destination}`}
-                        onSelect={(res) => addRouteItem(res.title, res.link, 'hotel')}
+                        onSelect={(res) => addRouteItem(res.title, res.link, 'hotel', res.coordinates, res.photoUrl)}
                       />
                       <div className="flex flex-wrap gap-2">
                         {['Luxury', 'Boutique', 'Budget', 'Beachfront', 'Mountain'].map((tag) => (
@@ -512,7 +543,7 @@ export default function TripBuilderModal({ isOpen, onClose }: TripBuilderModalPr
                       <SearchBox 
                         placeholder="Search Restaurants, Cafes, or Bars..." 
                         context={`restaurant in ${destination}`}
-                        onSelect={(res) => addRouteItem(res.title, res.link, 'dining')}
+                        onSelect={(res) => addRouteItem(res.title, res.link, 'dining', res.coordinates, res.photoUrl)}
                       />
                       <div className="flex flex-wrap gap-2">
                         {['Fine Dining', 'Street Food', 'Vegan', 'Seafood', 'Rooftop'].map((tag) => (
@@ -589,7 +620,7 @@ export default function TripBuilderModal({ isOpen, onClose }: TripBuilderModalPr
                       <SearchBox 
                         placeholder="Search Tours, Landmarks, or Experiences..." 
                         context={`activity tour in ${destination}`}
-                        onSelect={(res) => addRouteItem(res.title, res.link, 'activity')}
+                        onSelect={(res) => addRouteItem(res.title, res.link, 'activity', res.coordinates, res.photoUrl)}
                       />
                       <div className="flex flex-wrap gap-2">
                         {['Museums', 'Hiking', 'Nightlife', 'Shopping', 'Workshops'].map((tag) => (
@@ -685,7 +716,7 @@ export default function TripBuilderModal({ isOpen, onClose }: TripBuilderModalPr
                   <ChevronRight size={18} className="group-hover:translate-x-1 transition-transform" />
                 </button>
                 <button 
-                  onClick={onClose}
+                  onClick={handleFinishTrip}
                   className="bg-orange-500 text-white font-bold px-8 py-4 rounded-xl shadow-xl hover:bg-orange-600 transition-all flex items-center gap-2 whitespace-nowrap"
                 >
                   Finish Trip

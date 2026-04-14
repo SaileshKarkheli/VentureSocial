@@ -13,7 +13,8 @@ import {
   Compass,
   Briefcase,
   Menu,
-  X
+  X,
+  Wand2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useApp } from '../AppContext';
@@ -21,6 +22,7 @@ import { useApp } from '../AppContext';
 const navItems = [
   { icon: Home, label: 'Home', path: '/home' },
   { icon: Compass, label: 'Discover', path: '/search' },
+  { icon: Wand2, label: 'Remix Studio', path: '/remix' },
   { icon: ImageIcon, label: 'Photos', path: '/photos' },
   { icon: Video, label: 'Videos', path: '/videos' },
   { icon: User, label: 'My Profile', path: '/profile' },

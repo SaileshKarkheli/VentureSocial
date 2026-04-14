@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
-import { Heart, MessageCircle, Share2, Search as SearchIcon, Star, Filter, Image as ImageIcon, Video, LayoutGrid, ShoppingBag, Users, MapPin as MapPinIcon, Navigation } from 'lucide-react';
+import { Heart, MessageCircle, Share2, Search as SearchIcon, Star, Filter, Image as ImageIcon, Video, LayoutGrid, ShoppingBag, Users, MapPin as MapPinIcon, Navigation, Wand2 } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { getHaversineDistance } from '../utils/geo';
 import FilterBar from '../components/FilterBar';
@@ -15,7 +15,7 @@ import { supabase } from '../supabaseClient';
 type TabType = 'Feed' | 'Photos' | 'Videos';
 
 export default function Home() {
-  const { publicPosts, isLoadingFeed, searchQuery, setSearchQuery, addToCart, followedUsers, requestedUsers, toggleFollow, userInterestTags, addUserInterest, userLocation, requestLocation } = useApp();
+  const { publicPosts, isLoadingFeed, searchQuery, setSearchQuery, addToRemixFolder, followedUsers, requestedUsers, toggleFollow, userInterestTags, addUserInterest, userLocation, requestLocation } = useApp();
   const navigate = useNavigate();
   const [showFilters, setShowFilters] = useState(false);
   const [activeTab, setActiveTab] = useState<TabType>('Feed');
@@ -443,12 +443,12 @@ export default function Home() {
                         <button 
                           onClick={() => {
                             addUserInterest(post.location.split(',')[0]);
-                            addToCart(post);
+                            addToRemixFolder(post);
                           }}
                           className="flex items-center gap-2 bg-orange-500 text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-lg shadow-orange-500/20 hover:bg-orange-600 transition-all group/book"
                         >
-                          <ShoppingBag size={16} className="group-hover/book:-translate-y-0.5 transition-transform" />
-                          Book this Itinerary
+                          <Wand2 size={16} className="group-hover/book:rotate-12 transition-transform" />
+                          Add to Remix
                         </button>
                       </div>
                     </div>

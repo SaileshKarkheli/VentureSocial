@@ -7,6 +7,7 @@ import Profile from './pages/Profile';
 import UserProfile from './pages/UserProfile';
 import MyTrips from './pages/MyTrips';
 import TripDetail from './pages/TripDetail';
+import RemixStudio from './pages/RemixStudio';
 import BlogDetail from './pages/BlogDetail';
 import BlogList from './pages/BlogList';
 import Search from './pages/Search';
@@ -24,6 +25,7 @@ export default function App() {
           <Route path="/user/:username" element={<UserProfile />} />
           <Route path="/my-trips" element={<ProtectedRoute><MyTrips /></ProtectedRoute>} />
           <Route path="/trip/:id" element={<TripDetail />} />
+          <Route path="/remix" element={<RemixStudio />} />
           <Route path="/blog/:tripId" element={<BlogDetail />} />
           <Route path="/blogs" element={<BlogList />} />
           <Route path="/search" element={<Search />} />

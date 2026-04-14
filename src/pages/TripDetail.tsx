@@ -17,7 +17,8 @@ import {
   ChevronLeft,
   ChevronRight,
   Copy,
-  ShoppingBag
+  ShoppingBag,
+  Wand2
 } from 'lucide-react';
 import { useApp } from '../AppContext';
 import React, { useState } from 'react';
@@ -366,7 +367,7 @@ export const tripData: Record<string, any> = {
 export default function TripDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { addToCart, saveItem } = useApp();
+  const { addToRemixFolder, saveItem } = useApp();
   const [expandedDay, setExpandedDay] = useState<number | null>(1);
   const [expandedPillar, setExpandedPillar] = useState<string | null>(null);
   const [notification, setNotification] = useState<string | null>(null);
@@ -457,13 +458,13 @@ export default function TripDetail() {
                   activities: ['Sightseeing', 'Guided Tours'],
                   images: [{ url: trip.days[0]?.stay?.image || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=100&q=80' }]
                 };
-                addToCart(cartMockPost as any); 
-                showNotification('Trip successfully added to your Booking Cart!');
+                addToRemixFolder(cartMockPost as any); 
+                showNotification('Entire trip pushed to your Remix Studio!');
               }}
               className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-[#0A192F] text-white font-bold hover:bg-black transition-all shadow-lg group"
             >
-              <ShoppingBag size={20} className="group-hover:-translate-y-0.5 transition-transform" />
-              <span>Book / Clone Itinerary</span>
+              <Wand2 size={20} className="group-hover:rotate-12 transition-transform" />
+              <span>Add to Remix Studio</span>
             </button>
           </div>
         </div>

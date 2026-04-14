@@ -51,6 +51,10 @@ interface AppContextType {
   clearCustomTrip: () => void;
   userLocation: { lat: number, lng: number } | null;
   requestLocation: () => void;
+  remixFolders: Record<string, Post[]>;
+  addToRemixFolder: (post: Post) => void;
+  removeFromRemixFolder: (locationKey: string, postId: string) => void;
+  addCustomTrip: (trip: MyTrip) => void;
 }
 
 export interface FlightOption {
@@ -150,6 +154,15 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       setIsLoadingServices(false);
     }).catch(() => setIsLoadingServices(false));
   }, []);
+
+  const addCustomTrip = (trip: MyTrip) => {
+    // Pipeline to save new trips directly to the UI immediately, bypassing mock APIs
+    setMyTrips(prev => [trip, ...prev]);
+    showToast(`Successfully saved ${trip.country} to your history.`);
+    
+    // In production, sync to database here:
+    // await supabase.from('trips').insert([trip]);
+  };
 
   const login = async (email: string, pass: string) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password: pass });
@@ -305,6 +318,51 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   };
   const clearCart = () => setCartItems([]);
 
+  const [remixFolders, setRemixFolders] = useState<Record<string, Post[]>>({});
+
+  const addToRemixFolder = (post: Post) => {
+    const locationKey = post.location.split(',')[0].trim();
+    
+    setRemixFolders(prev => {
+      const existing = prev[locationKey] || [];
+      if (existing.some(p => p.id === post.id)) {
+         showToast(`This item is already in your ${locationKey} Remix.`);
+         return prev;
+      }
+      
+      showToast(`Added to ${locationKey} Remix Workspace!`);
+      if (user) {
+        SocialService.remixPost(post.id, user.id).catch(err => {
+          console.error("Supabase Remix Logging Error:", err);
+        });
+      }
+      
+      return {
+        ...prev,
+        [locationKey]: [...existing, post]
+      };
+    });
+  };
+
+  const removeFromRemixFolder = (locationKey: string, postId: string) => {
+    setRemixFolders(prev => {
+      const existing = prev[locationKey] || [];
+      const updated = existing.filter(p => p.id !== postId);
+      
+      if (updated.length === 0) {
+        const newFolders = { ...prev };
+        delete newFolders[locationKey];
+        return newFolders;
+      }
+      
+      return {
+        ...prev,
+        [locationKey]: updated
+      };
+    });
+    showToast('Removed from Remix Studio.');
+  };
+
   return (
     <AppContext.Provider value={{ 
       user, isAuthenticated, login, register, logout,
@@ -318,7 +376,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       followedUsers, requestedUsers, toggleFollow,
       userInterestTags, addUserInterest,
       customTripSpots, toggleCustomSpot, clearCustomTrip,
-      userLocation, requestLocation
+      userLocation, requestLocation,
+      remixFolders, addToRemixFolder, removeFromRemixFolder,
+      addCustomTrip
     }}>
       {children}
     </AppContext.Provider>
