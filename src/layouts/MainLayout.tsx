@@ -6,7 +6,6 @@ import { Menu, ShoppingBag } from 'lucide-react';
 import { useApp } from '../AppContext';
 import CheckoutModal from '../components/CheckoutModal';
 import DelayedAuthModal from '../components/DelayedAuthModal';
-import CommandSearch from '../components/CommandSearch';
 
 export default function MainLayout() {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
@@ -74,9 +73,6 @@ export default function MainLayout() {
           </motion.div>
         )}
       </AnimatePresence>
-
-      {/* Global Command Hub */}
-      <CommandSearch />
 
       {/* Delayed Public Auth Wall */}
       <DelayedAuthModal />

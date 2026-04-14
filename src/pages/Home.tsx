@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { Heart, MessageCircle, Share2, Search as SearchIcon, Star, Filter, Image as ImageIcon, Video, LayoutGrid, ShoppingBag, Users, MapPin as MapPinIcon, Navigation } from 'lucide-react';
@@ -10,6 +10,7 @@ import CollageGrid from '../components/CollageGrid';
 import SmartImage from '../components/SmartImage';
 import PublishModal from '../components/PublishModal';
 import { FeedSkeleton } from '../components/Skeletons';
+import { supabase } from '../supabaseClient';
 
 type TabType = 'Feed' | 'Photos' | 'Videos';
 
@@ -20,6 +21,31 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState<TabType>('Feed');
   const [feedMode, setFeedMode] = useState<'Discover' | 'Following'>('Discover');
   const [isPublishModalOpen, setIsPublishModalOpen] = useState(false);
+
+  // Home Matrix Dropdown State
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [hubUsers, setHubUsers] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (!searchQuery.trim() || !showDropdown) {
+      setHubUsers([]);
+      return;
+    }
+    const fetchUsers = async () => {
+      const { data } = await supabase
+        .from('profiles')
+        .select('*')
+        .or(`username.ilike.%${searchQuery}%,full_name.ilike.%${searchQuery}%`)
+        .limit(3);
+      setHubUsers(data || []);
+    };
+    const timer = setTimeout(fetchUsers, 250);
+    return () => clearTimeout(timer);
+  }, [searchQuery, showDropdown]);
+
+  const topTrips = publicPosts
+    .filter(p => p.location.toLowerCase().includes(searchQuery.toLowerCase()) || p.caption.toLowerCase().includes(searchQuery.toLowerCase()))
+    .slice(0, 3);
 
   // Home feed shows all posts (Social Discovery) + Recommendation Engine Sorting
   const homePosts = [...publicPosts]
@@ -77,11 +103,80 @@ export default function Home() {
                 <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400" size={20} />
                 <input
                   type="text"
-                  placeholder="Search City, Town, or Country..."
+                  placeholder="Search City, Town, Country, or Travelers..."
                   value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full bg-white/80 backdrop-blur-md border border-zinc-200 rounded-2xl py-4 pl-12 pr-6 text-[#0A192F] font-medium shadow-2xl focus:ring-2 focus:ring-orange-500 transition-all"
+                  onFocus={() => setShowDropdown(true)}
+                  onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
+                  onChange={(e) => {
+                    setSearchQuery(e.target.value);
+                    if (!showDropdown) setShowDropdown(true);
+                  }}
+                  className="w-full bg-white/80 backdrop-blur-md border border-zinc-200 rounded-2xl py-4 pl-12 pr-6 text-[#0A192F] font-bold shadow-2xl focus:ring-2 focus:ring-orange-500 transition-all placeholder:font-normal"
                 />
+                
+                {/* Search Discovery Dropdown Matrix */}
+                <AnimatePresence>
+                  {showDropdown && searchQuery.trim() && (
+                    <motion.div 
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      className="absolute top-full left-0 right-0 mt-3 bg-white border border-zinc-200 shadow-2xl overflow-hidden z-50 text-left"
+                      style={{ borderRadius: '1.2rem' }}
+                    >
+                      <div className="max-h-[50vh] overflow-y-auto">
+                        <div className="px-5 py-4 border-b border-zinc-100 bg-zinc-50">
+                          <h3 className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-2"><Users size={12}/> Top Travelers</h3>
+                          {hubUsers.length === 0 ? <p className="text-xs text-zinc-400 font-medium mt-2">No users matching query.</p> : (
+                            <div className="grid grid-cols-1 gap-1.5 mt-2">
+                              {hubUsers.map(u => (
+                                <div 
+                                  key={u.id}
+                                  onClick={() => navigate(`/user/${u.username}`)}
+                                  className="flex items-center gap-3 p-2.5 bg-white border border-zinc-100 hover:border-orange-500 cursor-pointer group transition-all rounded-xl"
+                                >
+                                  <div className="w-8 h-8 bg-zinc-100 rounded-full overflow-hidden shrink-0 border border-zinc-200">
+                                    {u.avatar_url ? <img src={u.avatar_url} alt={u.username} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-zinc-400"><Users size={12}/></div>}
+                                  </div>
+                                  <div className="flex flex-col">
+                                    <span className="font-bold text-[#0A192F] text-sm leading-tight group-hover:text-orange-500 transition-colors truncate">{u.full_name || u.username || 'Anonymous'}</span>
+                                    <span className="text-orange-500 font-mono text-[9px] font-bold truncate">@{u.username}</span>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="px-5 py-4 bg-white">
+                          <h3 className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-2"><MapPinIcon size={12}/> Top Itineraries</h3>
+                          {topTrips.length === 0 ? <p className="text-xs text-zinc-400 font-medium mt-2">No trip locations match.</p> : (
+                            <div className="grid grid-cols-1 gap-1.5 mt-2">
+                              {topTrips.map(p => (
+                                <div 
+                                  key={p.id}
+                                  onClick={() => { setSearchQuery(p.location); navigate('/search'); setShowDropdown(false); }}
+                                  className="flex items-center gap-3 p-2.5 bg-zinc-50 border border-zinc-100 hover:border-[#0A192F] hover:bg-white cursor-pointer group transition-all rounded-xl"
+                                >
+                                  <div className="w-8 h-8 bg-black rounded-lg shrink-0 overflow-hidden">
+                                     <img src={p.images[0]?.url} alt="Cover" className="w-full h-full object-cover opacity-80" />
+                                  </div>
+                                  <div className="flex flex-col flex-1 min-w-0">
+                                     <span className="font-bold text-[#0A192F] text-sm leading-tight group-hover:text-orange-500 transition-colors truncate">{p.caption.split('#')[0]}</span>
+                                     <span className="text-zinc-500 text-[9px] uppercase font-bold flex items-center gap-1 truncate"><MapPinIcon size={10} className="text-orange-500"/> {p.location}</span>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      <div className="p-3 bg-[#0A192F] text-white text-center font-bold text-xs uppercase tracking-widest hover:bg-black transition-colors cursor-pointer" onClick={(e) => { e.preventDefault(); navigate('/search'); setShowDropdown(false); }}>
+                         Press Enter To Full Search
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
               <button 
                 type="button"
