@@ -26,6 +26,8 @@ export const tripData: Record<string, any> = {
   '1': {
     title: 'La Dolce Vita: An Italian Adventure',
     description: "Italy isn't just a destination, it's an emotion. From the historical wonders of Rome to the romantic canals of Venice.",
+    budget: 1850.00,
+    isBudgetPublic: true,
     days: [
       {
         id: 'd1',
@@ -106,6 +108,8 @@ export const tripData: Record<string, any> = {
   '2': {
     title: 'Music City Exploration',
     description: "Nashville is the soul of country music. From honky-tonk bars to historical studios.",
+    budget: 900.00,
+    isBudgetPublic: false,
     days: [
       {
         id: 'd1',
@@ -410,9 +414,22 @@ export default function TripDetail() {
       <section className="bg-white text-[#0A192F] rounded-[2rem] p-12 relative overflow-hidden shadow-2xl border border-zinc-100">
         <div className="absolute top-0 right-0 w-96 h-96 bg-orange-500/5 rounded-full blur-[100px] -mr-48 -mt-48" />
         <div className="relative z-10 space-y-6">
-          <div className="flex items-center gap-3 text-orange-500">
-            <BookOpen size={24} />
-            <span className="font-bold uppercase tracking-widest text-sm">Travel Story</span>
+          <div className="flex flex-wrap items-center gap-4">
+            <div className="flex items-center gap-3 text-orange-500">
+              <BookOpen size={24} />
+              <span className="font-bold uppercase tracking-widest text-sm">Travel Story</span>
+            </div>
+            {trip.isBudgetPublic && trip.budget > 0 && (
+              <div className="flex items-center gap-2 px-3 py-1.5 border-2 border-[#0A192F] bg-zinc-50" style={{ borderRadius: '2px' }}>
+                <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Est. Cost</span>
+                <span className="font-mono text-sm font-bold text-[#0A192F]">${trip.budget.toFixed(2)}</span>
+              </div>
+            )}
+            {!trip.isBudgetPublic && trip.budget > 0 && (
+              <div className="flex items-center gap-2 px-3 py-1.5 border border-zinc-200 bg-white" style={{ borderRadius: '2px' }}>
+                <span className="text-[10px] font-bold text-zinc-300 uppercase tracking-widest">Cost Hidden By Creator</span>
+              </div>
+            )}
           </div>
           <h1 className="text-5xl md:text-6xl font-display font-bold leading-tight max-w-3xl text-[#0A192F]">
             {trip.title}

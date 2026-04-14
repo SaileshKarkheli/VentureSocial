@@ -89,6 +89,7 @@ export default function TripBuilderModal({ isOpen, onClose }: TripBuilderModalPr
   });
 
   const [destination, setDestination] = useState('');
+  const [isBudgetPublic, setIsBudgetPublic] = useState(false);
   const [days, setDays] = useState<DayState[]>([createEmptyDay(0)]);
   const [currentDayIndex, setCurrentDayIndex] = useState(0);
 
@@ -650,11 +651,25 @@ export default function TripBuilderModal({ isOpen, onClose }: TripBuilderModalPr
             </div>
 
             <div className="pt-10 flex flex-col sm:flex-row items-center justify-between border-t border-zinc-100 gap-4">
-              <div className="flex items-center gap-6">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-6">
                 <div className="flex flex-col items-start pr-6 sm:border-r sm:border-zinc-200">
                   <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Estimated Total</span>
                   <span className="text-3xl font-display font-bold text-[#0A192F] font-mono">${totalBudget.toFixed(2)}</span>
                 </div>
+                {totalBudget > 0 && (
+                  <label className="flex items-center gap-3 cursor-pointer group">
+                    <div className={`w-8 h-4 border-2 transition-colors relative flex items-center shrink-0 ${isBudgetPublic ? 'bg-[#0A192F] border-[#0A192F]' : 'bg-transparent border-zinc-300'}`} style={{ borderRadius: '2px' }}>
+                      <div className={`absolute w-2 h-2 transition-all ${isBudgetPublic ? 'bg-orange-500 left-[18px]' : 'bg-zinc-400 left-0.5'}`} style={{ borderRadius: '0px' }} />
+                    </div>
+                    <input 
+                      type="checkbox" 
+                      className="hidden" 
+                      checked={isBudgetPublic} 
+                      onChange={(e) => setIsBudgetPublic(e.target.checked)} 
+                    />
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-[#0A192F]">Publicize Budget</span>
+                  </label>
+                )}
               </div>
               <div className="flex items-center gap-3">
                 <button 
