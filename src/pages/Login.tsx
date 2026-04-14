@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { 
@@ -48,7 +48,7 @@ const features = [
 export default function Login() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { login, register } = useApp();
+  const { login, register, isAuthenticated } = useApp();
   
   const [view, setView] = useState<'login' | 'signup' | 'forgot'>('login');
   const [isLoading, setIsLoading] = useState(false);
@@ -58,6 +58,23 @@ export default function Login() {
   const [errorMsg, setErrorMsg] = useState('');
 
   const from = location.state?.from?.pathname || '/home';
+
+  // Direct Native Supabase Target Observer
+  useEffect(() => {
+    // 1. Instantly check current state upon component mount
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) navigate(from, { replace: true });
+    });
+
+    // 2. Map direct listener to Supabase OAuth events
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN' || session) {
+        navigate(from, { replace: true });
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [navigate, from]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
