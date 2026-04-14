@@ -19,7 +19,8 @@ import {
   Utensils,
   MapPin,
   Image as ImageIcon,
-  Upload
+  Upload,
+  ImagePlus
 } from 'lucide-react';
 import SmartImage from './SmartImage';
 import SearchBox from './SearchBox';
@@ -72,6 +73,7 @@ export default function TripBuilderModal({ isOpen, onClose }: TripBuilderModalPr
     budget: number;
     routeSummary: RouteItem[];
     images: string[];
+    categoryImages?: Record<string, string>;
   }
 
   const createEmptyDay = (index: number): DayState => ({
@@ -80,7 +82,8 @@ export default function TripBuilderModal({ isOpen, onClose }: TripBuilderModalPr
     transportMode: 'Rental',
     budget: 0,
     routeSummary: [],
-    images: []
+    images: [],
+    categoryImages: {}
   });
 
   const [destination, setDestination] = useState('');
@@ -98,6 +101,21 @@ export default function TripBuilderModal({ isOpen, onClose }: TripBuilderModalPr
   };
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const contextFileInputRef = useRef<HTMLInputElement>(null);
+  const [uploadCategory, setUploadCategory] = useState<string | null>(null);
+
+  const handleContextImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file && uploadCategory) {
+      const imgUrl = URL.createObjectURL(file);
+      updateActiveDay(prev => ({
+        ...prev,
+        categoryImages: { ...(prev.categoryImages || {}), [uploadCategory]: imgUrl }
+      }));
+    }
+    if (contextFileInputRef.current) contextFileInputRef.current.value = '';
+    setUploadCategory(null);
+  };
 
   const addRouteItem = (title: string, link: string, type: RouteItem['type']) => {
     const newItem: RouteItem = {
@@ -238,19 +256,44 @@ export default function TripBuilderModal({ isOpen, onClose }: TripBuilderModalPr
             <div className="space-y-12">
               {/* Transport Pillar */}
               <section className="space-y-6">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3 text-[#0A192F]">
-                    <div className="p-2.5 rounded-xl bg-orange-500/10 text-orange-500 shadow-sm">
-                      <Navigation size={20} />
+                <div className="flex flex-col gap-4">
+                  {activeDay.categoryImages?.['transport'] && (
+                    <div className="relative w-full h-32 md:h-40 border-2 border-[#0A192F] overflow-hidden group shadow-lg" style={{ borderRadius: '2px' }}>
+                      <img src={activeDay.categoryImages['transport']} alt="Transport Cover" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 filter contrast-125 saturate-150" />
+                      <button 
+                        onClick={() => updateActiveDay(prev => { const c = {...prev.categoryImages}; delete c['transport']; return { ...prev, categoryImages: c }; })}
+                        className="absolute top-2 right-2 p-2 bg-white text-rose-500 border-2 border-transparent hover:border-[#0A192F] transition-all opacity-0 group-hover:opacity-100"
+                        style={{ borderRadius: '2px' }}
+                      >
+                        <Trash2 size={14} />
+                      </button>
                     </div>
-                    <h3 className="font-bold uppercase tracking-widest text-[11px]">Transport Mode</h3>
+                  )}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3 text-[#0A192F]">
+                      <div className="p-2.5 rounded-xl bg-orange-500/10 text-orange-500 shadow-sm">
+                        <Navigation size={20} />
+                      </div>
+                      <h3 className="font-bold uppercase tracking-widest text-[11px]">Transport Mode</h3>
+                    </div>
+                    <div className="flex flex-col sm:flex-row items-end sm:items-center gap-2 sm:gap-3">
+                      {!activeDay.categoryImages?.['transport'] && (
+                        <button 
+                          onClick={() => { setUploadCategory('transport'); contextFileInputRef.current?.click(); }}
+                          className="flex items-center gap-1.5 px-3 py-1.5 bg-white border-2 border-[#0A192F] text-[#0A192F] hover:bg-[#0A192F] hover:text-white transition-colors text-[9px] uppercase tracking-widest font-bold shadow-sm"
+                          style={{ borderRadius: '2px' }}
+                        >
+                          <ImagePlus size={12} /> Add Cover
+                        </button>
+                      )}
+                      <button 
+                        onClick={() => setShowManualEntry(showManualEntry === 'transport' ? null : 'transport')}
+                        className="text-[10px] font-bold text-zinc-400 hover:text-orange-500 transition-colors uppercase tracking-widest"
+                      >
+                        {showManualEntry === 'transport' ? 'Cancel' : 'Add Manually'}
+                      </button>
+                    </div>
                   </div>
-                  <button 
-                    onClick={() => setShowManualEntry(showManualEntry === 'transport' ? null : 'transport')}
-                    className="text-[10px] font-bold text-zinc-400 hover:text-orange-500 transition-colors uppercase tracking-widest"
-                  >
-                    {showManualEntry === 'transport' ? 'Cancel' : 'Add Manually'}
-                  </button>
                 </div>
                 
                 {showManualEntry === 'transport' ? (
@@ -293,19 +336,44 @@ export default function TripBuilderModal({ isOpen, onClose }: TripBuilderModalPr
 
               {/* Stay Pillar */}
               <section className="space-y-6">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3 text-[#0A192F]">
-                    <div className="p-2.5 rounded-xl bg-orange-500/10 text-orange-500 shadow-sm">
-                      <Bed size={20} />
+                <div className="flex flex-col gap-4">
+                  {activeDay.categoryImages?.['hotel'] && (
+                    <div className="relative w-full h-32 md:h-40 border-2 border-[#0A192F] overflow-hidden group shadow-lg" style={{ borderRadius: '2px' }}>
+                      <img src={activeDay.categoryImages['hotel']} alt="Stay Cover" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 filter contrast-125 saturate-150" />
+                      <button 
+                        onClick={() => updateActiveDay(prev => { const c = {...prev.categoryImages}; delete c['hotel']; return { ...prev, categoryImages: c }; })}
+                        className="absolute top-2 right-2 p-2 bg-white text-rose-500 border-2 border-transparent hover:border-[#0A192F] transition-all opacity-0 group-hover:opacity-100"
+                        style={{ borderRadius: '2px' }}
+                      >
+                        <Trash2 size={14} />
+                      </button>
                     </div>
-                    <h3 className="font-bold uppercase tracking-widest text-[11px]">Stay Details</h3>
+                  )}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3 text-[#0A192F]">
+                      <div className="p-2.5 rounded-xl bg-orange-500/10 text-orange-500 shadow-sm">
+                        <Bed size={20} />
+                      </div>
+                      <h3 className="font-bold uppercase tracking-widest text-[11px]">Stay Details</h3>
+                    </div>
+                    <div className="flex flex-col sm:flex-row items-end sm:items-center gap-2 sm:gap-3">
+                      {!activeDay.categoryImages?.['hotel'] && (
+                        <button 
+                          onClick={() => { setUploadCategory('hotel'); contextFileInputRef.current?.click(); }}
+                          className="flex items-center gap-1.5 px-3 py-1.5 bg-white border-2 border-[#0A192F] text-[#0A192F] hover:bg-[#0A192F] hover:text-white transition-colors text-[9px] uppercase tracking-widest font-bold shadow-sm"
+                          style={{ borderRadius: '2px' }}
+                        >
+                          <ImagePlus size={12} /> Add Cover
+                        </button>
+                      )}
+                      <button 
+                        onClick={() => setShowManualEntry(showManualEntry === 'hotel' ? null : 'hotel')}
+                        className="text-[10px] font-bold text-zinc-400 hover:text-orange-500 transition-colors uppercase tracking-widest"
+                      >
+                        {showManualEntry === 'hotel' ? 'Cancel' : 'Add Manually'}
+                      </button>
+                    </div>
                   </div>
-                  <button 
-                    onClick={() => setShowManualEntry(showManualEntry === 'hotel' ? null : 'hotel')}
-                    className="text-[10px] font-bold text-zinc-400 hover:text-orange-500 transition-colors uppercase tracking-widest"
-                  >
-                    {showManualEntry === 'hotel' ? 'Cancel' : 'Add Manually'}
-                  </button>
                 </div>
 
                 {showManualEntry === 'hotel' ? (
@@ -350,19 +418,44 @@ export default function TripBuilderModal({ isOpen, onClose }: TripBuilderModalPr
 
                 {/* Dining Pillar */}
                 <section className="space-y-6">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3 text-[#0A192F]">
-                      <div className="p-2.5 rounded-xl bg-orange-500/10 text-orange-500 shadow-sm">
-                        <Utensils size={20} />
+                  <div className="flex flex-col gap-4">
+                    {activeDay.categoryImages?.['dining'] && (
+                      <div className="relative w-full h-32 md:h-40 border-2 border-[#0A192F] overflow-hidden group shadow-lg" style={{ borderRadius: '2px' }}>
+                        <img src={activeDay.categoryImages['dining']} alt="Dining Cover" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 filter contrast-125 saturate-150" />
+                        <button 
+                          onClick={() => updateActiveDay(prev => { const c = {...prev.categoryImages}; delete c['dining']; return { ...prev, categoryImages: c }; })}
+                          className="absolute top-2 right-2 p-2 bg-white text-rose-500 border-2 border-transparent hover:border-[#0A192F] transition-all opacity-0 group-hover:opacity-100"
+                          style={{ borderRadius: '2px' }}
+                        >
+                          <Trash2 size={14} />
+                        </button>
                       </div>
-                      <h3 className="font-bold uppercase tracking-widest text-[11px]">Dining</h3>
+                    )}
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3 text-[#0A192F]">
+                        <div className="p-2.5 rounded-xl bg-orange-500/10 text-orange-500 shadow-sm">
+                          <Utensils size={20} />
+                        </div>
+                        <h3 className="font-bold uppercase tracking-widest text-[11px]">Dining</h3>
+                      </div>
+                      <div className="flex flex-col sm:flex-row items-end sm:items-center gap-2 sm:gap-3">
+                        {!activeDay.categoryImages?.['dining'] && (
+                          <button 
+                            onClick={() => { setUploadCategory('dining'); contextFileInputRef.current?.click(); }}
+                            className="flex items-center gap-1.5 px-3 py-1.5 bg-white border-2 border-[#0A192F] text-[#0A192F] hover:bg-[#0A192F] hover:text-white transition-colors text-[9px] uppercase tracking-widest font-bold shadow-sm"
+                            style={{ borderRadius: '2px' }}
+                          >
+                            <ImagePlus size={12} /> Add Cover
+                          </button>
+                        )}
+                        <button 
+                          onClick={() => setShowManualEntry(showManualEntry === 'dining' ? null : 'dining')}
+                          className="text-[10px] font-bold text-zinc-400 hover:text-orange-500 transition-colors uppercase tracking-widest"
+                        >
+                          {showManualEntry === 'dining' ? 'Cancel' : 'Add Manually'}
+                        </button>
+                      </div>
                     </div>
-                    <button 
-                      onClick={() => setShowManualEntry(showManualEntry === 'dining' ? null : 'dining')}
-                      className="text-[10px] font-bold text-zinc-400 hover:text-orange-500 transition-colors uppercase tracking-widest"
-                    >
-                      {showManualEntry === 'dining' ? 'Cancel' : 'Add Manually'}
-                    </button>
                   </div>
 
                   {showManualEntry === 'dining' ? (
@@ -392,19 +485,44 @@ export default function TripBuilderModal({ isOpen, onClose }: TripBuilderModalPr
 
                 {/* Activities Pillar */}
                 <section className="space-y-6">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3 text-[#0A192F]">
-                      <div className="p-2.5 rounded-xl bg-orange-500/10 text-orange-500 shadow-sm">
-                        <Camera size={20} />
+                  <div className="flex flex-col gap-4">
+                    {activeDay.categoryImages?.['activity'] && (
+                      <div className="relative w-full h-32 md:h-40 border-2 border-[#0A192F] overflow-hidden group shadow-lg" style={{ borderRadius: '2px' }}>
+                        <img src={activeDay.categoryImages['activity']} alt="Activity Cover" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 filter contrast-125 saturate-150" />
+                        <button 
+                          onClick={() => updateActiveDay(prev => { const c = {...prev.categoryImages}; delete c['activity']; return { ...prev, categoryImages: c }; })}
+                          className="absolute top-2 right-2 p-2 bg-white text-rose-500 border-2 border-transparent hover:border-[#0A192F] transition-all opacity-0 group-hover:opacity-100"
+                          style={{ borderRadius: '2px' }}
+                        >
+                          <Trash2 size={14} />
+                        </button>
                       </div>
-                      <h3 className="font-bold uppercase tracking-widest text-[11px]">Activities</h3>
+                    )}
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3 text-[#0A192F]">
+                        <div className="p-2.5 rounded-xl bg-orange-500/10 text-orange-500 shadow-sm">
+                          <Camera size={20} />
+                        </div>
+                        <h3 className="font-bold uppercase tracking-widest text-[11px]">Activities</h3>
+                      </div>
+                      <div className="flex flex-col sm:flex-row items-end sm:items-center gap-2 sm:gap-3">
+                        {!activeDay.categoryImages?.['activity'] && (
+                          <button 
+                            onClick={() => { setUploadCategory('activity'); contextFileInputRef.current?.click(); }}
+                            className="flex items-center gap-1.5 px-3 py-1.5 bg-white border-2 border-[#0A192F] text-[#0A192F] hover:bg-[#0A192F] hover:text-white transition-colors text-[9px] uppercase tracking-widest font-bold shadow-sm"
+                            style={{ borderRadius: '2px' }}
+                          >
+                            <ImagePlus size={12} /> Add Cover
+                          </button>
+                        )}
+                        <button 
+                          onClick={() => setShowManualEntry(showManualEntry === 'activity' ? null : 'activity')}
+                          className="text-[10px] font-bold text-zinc-400 hover:text-orange-500 transition-colors uppercase tracking-widest"
+                        >
+                          {showManualEntry === 'activity' ? 'Cancel' : 'Add Manually'}
+                        </button>
+                      </div>
                     </div>
-                    <button 
-                      onClick={() => setShowManualEntry(showManualEntry === 'activity' ? null : 'activity')}
-                      className="text-[10px] font-bold text-zinc-400 hover:text-orange-500 transition-colors uppercase tracking-widest"
-                    >
-                      {showManualEntry === 'activity' ? 'Cancel' : 'Add Manually'}
-                    </button>
                   </div>
 
                   {showManualEntry === 'activity' ? (
@@ -465,6 +583,14 @@ export default function TripBuilderModal({ isOpen, onClose }: TripBuilderModalPr
                     ref={fileInputRef} 
                     onChange={handleImageUpload} 
                     multiple 
+                    accept="image/*" 
+                    className="hidden" 
+                  />
+                  {/* Hidden input for contextual category covers */}
+                  <input 
+                    type="file" 
+                    ref={contextFileInputRef} 
+                    onChange={handleContextImageUpload} 
                     accept="image/*" 
                     className="hidden" 
                   />
