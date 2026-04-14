@@ -7,14 +7,49 @@ import MediaCarousel from '../components/MediaCarousel';
 import SmartImage from '../components/SmartImage';
 import { Post } from '../types';
 import { tripData, DayHighlightCarousel, PillarSection } from './TripDetail';
+import { supabase } from '../supabaseClient';
+import { useNavigate } from 'react-router-dom';
 
 export default function Search() {
   const { publicPosts, searchQuery, setSearchQuery, filters, sortBy, customTripSpots, toggleCustomSpot } = useApp();
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
+  const navigate = useNavigate();
   
   // Timeline State
   const [expandedDay, setExpandedDay] = useState<number | null>(1);
   const [expandedPillar, setExpandedPillar] = useState<string | null>(null);
+
+  // User Directory State
+  const [searchTab, setSearchTab] = useState<'itineraries' | 'users'>('itineraries');
+  const [searchedUsers, setSearchedUsers] = useState<any[]>([]);
+  const [isSearchingUsers, setIsSearchingUsers] = useState(false);
+
+  React.useEffect(() => {
+    if (searchTab !== 'users') return;
+    const fetchUsers = async () => {
+      setIsSearchingUsers(true);
+      if (!searchQuery.trim()) {
+        const { data } = await supabase.from('profiles').select('*').limit(20);
+        setSearchedUsers(data || []);
+        setIsSearchingUsers(false);
+        return;
+      }
+      
+      const { data } = await supabase
+        .from('profiles')
+        .select('*')
+        .or(`username.ilike.%${searchQuery}%,full_name.ilike.%${searchQuery}%`)
+        .limit(20);
+        
+      setSearchedUsers(data || []);
+      setIsSearchingUsers(false);
+    };
+    
+    const timeoutId = setTimeout(() => {
+      fetchUsers();
+    }, 300);
+    return () => clearTimeout(timeoutId);
+  }, [searchQuery, searchTab]);
 
   const filteredPosts = publicPosts
     .filter(post => {
@@ -42,13 +77,28 @@ export default function Search() {
 
   return (
     <div className="space-y-6 text-zinc-900 pb-20">
+      <div className="flex bg-zinc-100 p-1 rounded-full w-64 mx-auto border border-zinc-200 shadow-inner">
+         <button 
+           onClick={() => setSearchTab('itineraries')}
+           className={`flex-1 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest transition-all ${searchTab === 'itineraries' ? 'bg-[#0A192F] text-white shadow-md' : 'text-zinc-500 hover:text-zinc-800'}`}
+         >
+           Trips
+         </button>
+         <button 
+           onClick={() => setSearchTab('users')}
+           className={`flex-1 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest transition-all ${searchTab === 'users' ? 'bg-[#0A192F] text-white shadow-md' : 'text-zinc-500 hover:text-zinc-800'}`}
+         >
+           Users
+         </button>
+      </div>
+
       <div className="relative max-w-2xl mx-auto">
         <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none text-zinc-400">
           <SearchIcon size={20} />
         </div>
         <input
           type="text"
-          placeholder="Search locations to Remix a trip... (e.g. Italy, Bali)"
+          placeholder={searchTab === 'itineraries' ? "Search locations to Remix a trip... (e.g. Italy, Bali)" : "Find global travelers automatically..."}
           className="w-full bg-white border border-zinc-200 rounded-2xl py-4 pl-12 pr-4 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent shadow-sm transition-all text-[#0A192F] placeholder:text-zinc-400"
           value={searchQuery}
           onChange={(e) => {
@@ -58,13 +108,17 @@ export default function Search() {
         />
       </div>
 
-      <div className="bg-white rounded-3xl p-4 shadow-sm border border-zinc-100 max-w-3xl mx-auto">
-        <FilterBar />
-      </div>
+      {searchTab === 'itineraries' && (
+        <div className="bg-white rounded-3xl p-4 shadow-sm border border-zinc-100 max-w-3xl mx-auto">
+          <FilterBar />
+        </div>
+      )}
 
       <div className="flex items-start lg:h-[800px] gap-6 overflow-hidden">
         
-        {/* Left Pane: Best Viewed Itineraries List */}
+        {searchTab === 'itineraries' ? (
+          <>
+            {/* Left Pane: Best Viewed Itineraries List */}
         <div className={`flex-1 flex flex-col h-full bg-white rounded-3xl border border-zinc-200 shadow-sm overflow-hidden ${selectedPost ? 'hidden lg:flex lg:w-1/3' : 'w-full'}`}>
           <div className="p-6 border-b border-zinc-100 bg-zinc-50 shrink-0">
             <h2 className="text-xl font-display font-bold text-[#0A192F]">Top Creator Itineraries</h2>
@@ -338,6 +392,47 @@ export default function Search() {
             </div>
           )}
         </AnimatePresence>
+          </>
+        ) : (
+          <div className="w-full flex flex-col h-full bg-white rounded-3xl border border-zinc-200 shadow-sm overflow-hidden p-6 gap-6">
+             <div className="pb-4 border-b border-zinc-100 shrink-0">
+               <h2 className="text-xl font-display font-bold text-[#0A192F]">Global User Directory</h2>
+               <p className="text-sm text-zinc-500 font-medium mt-1">Discover travelers and browse their public portfolios.</p>
+             </div>
+             <div className="p-2 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 overflow-y-auto custom-scrollbar content-start">
+                {isSearchingUsers ? (
+                   <div className="col-span-full py-12 text-center text-zinc-400 font-bold uppercase tracking-widest text-xs">Scanning Matrix...</div>
+                ) : searchedUsers.length === 0 ? (
+                   <div className="col-span-full py-12 text-center text-zinc-400 font-bold uppercase tracking-widest text-xs">No users match query</div>
+                ) : (
+                   searchedUsers.map(u => (
+                      <div 
+                        key={u.id} 
+                        onClick={() => navigate(`/user/${u.username || u.id}`)}
+                        className="flex items-center gap-4 p-4 border-2 border-zinc-100 hover:border-[#0A192F] transition-all cursor-pointer group shadow-sm hover:shadow-md bg-white hover:-translate-y-0.5" style={{ borderRadius: '2px' }}
+                      >
+                         <div className="w-16 h-16 bg-zinc-100 border-2 border-[#0A192F] shrink-0 overflow-hidden relative" style={{ borderRadius: '2px' }}>
+                           {u.avatar_url ? (
+                             <img src={u.avatar_url} alt={u.username} className="w-full h-full object-cover filter contrast-125 saturate-150" />
+                           ) : (
+                             <div className="w-full h-full flex items-center justify-center text-zinc-400 bg-zinc-50">
+                               <Users size={24} />
+                             </div>
+                           )}
+                         </div>
+                         <div className="flex flex-col">
+                           <h3 className="font-bold text-[#0A192F] text-lg leading-tight group-hover:text-orange-500 transition-colors truncate max-w-[180px]">{u.full_name || u.username || 'Anonymous'}</h3>
+                           {u.username && <span className="text-orange-500 font-mono text-xs font-bold mt-0.5 truncate max-w-[180px]">@{u.username}</span>}
+                           <span className="text-zinc-400 text-[9px] uppercase tracking-widest mt-1.5 font-bold truncate">
+                             {u.created_at ? `Member since ${new Date(u.created_at).getFullYear()}` : 'Plan your first trip'}
+                           </span>
+                         </div>
+                      </div>
+                   ))
+                )}
+             </div>
+          </div>
+        )}
       </div>
     </div>
   );

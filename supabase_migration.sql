@@ -108,3 +108,47 @@ ON public.remix_stats FOR INSERT WITH CHECK (auth.uid() = user_id);
 
 CREATE POLICY "Users can remove posts from their basket." 
 ON public.remix_stats FOR DELETE USING (auth.uid() = user_id);
+
+-- ==========================================
+-- PROFILES & OAUTH SYNC TRIGGER
+-- ==========================================
+
+-- 7. Public Profiles Table
+CREATE TABLE public.profiles (
+  id UUID REFERENCES auth.users(id) ON DELETE CASCADE PRIMARY KEY,
+  username TEXT UNIQUE,
+  full_name TEXT,
+  avatar_url TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Public profiles are viewable by everyone." 
+ON public.profiles FOR SELECT USING (true);
+
+CREATE POLICY "Users can insert their own profile." 
+ON public.profiles FOR INSERT WITH CHECK (auth.uid() = id);
+
+CREATE POLICY "Users can update own profile." 
+ON public.profiles FOR UPDATE USING (auth.uid() = id);
+
+-- 8. Auth Trigger for Google OAuth Sync
+CREATE OR REPLACE FUNCTION public.handle_new_user() 
+RETURNS trigger AS $$
+BEGIN
+  INSERT INTO public.profiles (id, full_name, avatar_url, username)
+  VALUES (
+    new.id, 
+    new.raw_user_meta_data->>'full_name', 
+    new.raw_user_meta_data->>'avatar_url',
+    COALESCE(new.raw_user_meta_data->>'user_name', split_part(new.email, '@', 1))
+  );
+  RETURN new;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Trigger fires instantly upon Google OAuth success
+CREATE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE PROCEDURE public.handle_new_user();
