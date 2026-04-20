@@ -38,6 +38,44 @@ export default function Profile() {
     fetchProfile();
   }, [user]);
 
+  const handleDirectImageUpload = (e: React.ChangeEvent<HTMLInputElement>, fieldName: string) => {
+    if (!user) return;
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const img = new Image();
+      img.onload = async () => {
+        const canvas = document.createElement('canvas');
+        let width = img.width;
+        let height = img.height;
+        const MAX = 1200;
+        if (width > height) {
+          if (width > MAX) { height *= MAX / width; width = MAX; }
+        } else {
+          if (height > MAX) { width *= MAX / height; height = MAX; }
+        }
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx?.drawImage(img, 0, 0, width, height);
+        
+        const base64Str = canvas.toDataURL('image/jpeg', 0.6);
+        setDbProfile((prev: any) => ({ ...prev, [fieldName]: base64Str }));
+        
+        try {
+          const { error } = await supabase.from('profiles').update({ [fieldName]: base64Str }).eq('id', user.id);
+          if (error) throw error;
+        } catch (err: any) {
+          alert('Failed to save image permanently. Ensure database columns are built properly.');
+        }
+      };
+      img.src = event.target?.result as string;
+    };
+    reader.readAsDataURL(file);
+  };
+
   const userData = {
     name: dbProfile?.full_name || user?.name || 'New Explorer',
     dob: dbProfile?.dob || '',
@@ -45,8 +83,8 @@ export default function Profile() {
     location: dbProfile?.location || '',
     education: dbProfile?.education || '',
     bio: dbProfile?.bio || '',
-    avatar: dbProfile?.avatar_url || user?.avatar || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=400&q=80",
-    cover: dbProfile?.cover_photo_url || "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1200&q=80",
+    avatar: dbProfile?.avatar_url || user?.avatar || "",
+    cover: dbProfile?.cover_photo_url || "",
     stats: [
       { label: 'Trips', value: '0' },
       { label: 'Following', value: followedUsers.length.toString() },
@@ -60,35 +98,56 @@ export default function Profile() {
 
   return (
     <div className="max-w-4xl mx-auto space-y-8 pb-20 text-zinc-900">
-      <div className="relative h-64 rounded-3xl overflow-hidden bg-zinc-100 border border-zinc-200">
-        <img
-          src={userData.cover}
-          alt="Cover"
-          className="w-full h-full object-cover opacity-80"
-          referrerPolicy="no-referrer"
-        />
-        <button className="absolute bottom-4 right-4 bg-white/80 backdrop-blur-md text-zinc-900 p-2 rounded-full hover:bg-white transition-colors border border-zinc-200">
+      <div className="relative h-64 rounded-3xl overflow-hidden bg-zinc-200 border border-zinc-200">
+        {userData.cover ? (
+          <img
+            src={userData.cover}
+            alt="Cover"
+            className="w-full h-full object-cover opacity-80"
+            referrerPolicy="no-referrer"
+          />
+        ) : (
+          <div className="w-full h-full bg-gradient-to-tr from-[#0A192F]/5 to-[#0A192F]/10 flex items-center justify-center">
+            <Camera size={48} className="text-[#0A192F]/20" />
+          </div>
+        )}
+        <label className="absolute bottom-4 right-4 bg-white/80 backdrop-blur-md text-zinc-900 p-2 rounded-full hover:bg-white transition-colors border border-zinc-200 shadow-lg cursor-pointer">
+          <input 
+            type="file" 
+            accept="image/*"
+            className="hidden"
+            onChange={(e) => handleDirectImageUpload(e, 'cover_photo_url')}
+          />
           <Camera size={20} />
-        </button>
+        </label>
       </div>
 
       <div className="relative px-8 -mt-20">
         <div className="flex flex-col md:flex-row items-end gap-6 mb-8">
-          <div className="relative">
-            <div className="w-40 h-40 rounded-3xl bg-white p-1 shadow-xl border-4 border-white">
-              <img
-                src={userData.avatar}
-                alt="Profile"
-                className="w-full h-full object-cover rounded-2xl"
-                referrerPolicy="no-referrer"
-              />
+          <div className="relative mt-8">
+            <div className="w-40 h-40 rounded-3xl bg-white p-1 shadow-xl border-4 border-white flex items-center justify-center overflow-hidden">
+              {userData.avatar ? (
+                <img
+                  src={userData.avatar}
+                  alt="Profile"
+                  className="w-full h-full object-cover rounded-2xl"
+                  referrerPolicy="no-referrer"
+                />
+              ) : (
+                <div className="w-full h-full bg-zinc-100 rounded-2xl flex items-center justify-center">
+                  <UserIcon size={48} className="text-zinc-300" />
+                </div>
+              )}
             </div>
-            <button 
-              onClick={() => setIsEditModalOpen(true)}
-              className="absolute bottom-2 right-2 bg-orange-500 text-white p-2 rounded-xl shadow-lg hover:bg-orange-400 transition-colors"
-            >
-              <Edit2 size={16} />
-            </button>
+            <label className="absolute bottom-2 right-2 bg-orange-500 text-white p-2 rounded-xl shadow-lg hover:bg-orange-400 transition-colors cursor-pointer">
+              <input 
+                type="file" 
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => handleDirectImageUpload(e, 'avatar_url')}
+              />
+              <Camera size={16} />
+            </label>
           </div>
 
           <div className="flex-1 pb-4">

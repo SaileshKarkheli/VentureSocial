@@ -104,41 +104,6 @@ export default function EditProfileModal({ isOpen, onClose, currentProfile, onPr
         <div className="flex-1 overflow-y-auto p-6 md:p-8 custom-scrollbar">
           <form id="edit-profile-form" onSubmit={handleSave} className="space-y-8">
             
-            {/* Visuals */}
-            <div className="space-y-6">
-              <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-widest border-b border-zinc-100 pb-2">Visual Identity</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <label className="text-xs font-bold text-[#0A192F]">Avatar Image URL</label>
-                  <div className="relative">
-                    <Camera className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" size={16} />
-                    <input 
-                      type="url" 
-                      name="avatar_url"
-                      value={formData.avatar_url}
-                      onChange={handleChange}
-                      placeholder="Paste directly..."
-                      className="w-full bg-zinc-50 border border-zinc-200 rounded-xl py-3 pl-10 pr-4 text-sm focus:ring-2 focus:ring-orange-500/50 outline-none transition-all"
-                    />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <label className="text-xs font-bold text-[#0A192F]">Profile Banner URL</label>
-                  <div className="relative">
-                    <Camera className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" size={16} />
-                    <input 
-                      type="url" 
-                      name="cover_photo_url"
-                      value={formData.cover_photo_url}
-                      onChange={handleChange}
-                      placeholder="Paste directly..."
-                      className="w-full bg-zinc-50 border border-zinc-200 rounded-xl py-3 pl-10 pr-4 text-sm focus:ring-2 focus:ring-orange-500/50 outline-none transition-all"
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-
             {/* General Info */}
             <div className="space-y-6">
               <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-widest border-b border-zinc-100 pb-2">Personal Information</h3>
