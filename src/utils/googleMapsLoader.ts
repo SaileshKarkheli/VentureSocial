@@ -4,7 +4,7 @@ export const loadGoogleMapsScript = (apiKey: string): Promise<void> => {
       resolve();
       return;
     }
-    
+
     // Create script if not already loading
     const existingScript = document.getElementById('google-maps-script');
     if (existingScript) {
@@ -18,10 +18,10 @@ export const loadGoogleMapsScript = (apiKey: string): Promise<void> => {
     script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`;
     script.async = true;
     script.defer = true;
-    
+
     script.addEventListener('load', () => resolve());
     script.addEventListener('error', () => reject(new Error('Failed to load Google Maps script')));
-    
+
     document.head.appendChild(script);
   });
 };

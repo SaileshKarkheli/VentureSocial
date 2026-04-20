@@ -1,15 +1,15 @@
 import React, { useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'motion/react';
-import { 
-  X, 
-  Map as MapIcon, 
-  Bed, 
-  Car, 
-  Plane, 
-  Bike, 
-  Camera, 
-  Sparkles, 
+import {
+  X,
+  Map as MapIcon,
+  Bed,
+  Car,
+  Plane,
+  Bike,
+  Camera,
+  Sparkles,
   Plus,
   Navigation,
   ChevronRight,
@@ -130,7 +130,7 @@ export default function TripBuilderModal({ isOpen, onClose }: TripBuilderModalPr
     }));
   };
 
-  const addRouteItem = (title: string, link: string, type: RouteItem['type'], coordinates?: {lat: number, lng: number}, photoUrl?: string) => {
+  const addRouteItem = (title: string, link: string, type: RouteItem['type'], coordinates?: { lat: number, lng: number }, photoUrl?: string) => {
     const newItem: RouteItem = {
       id: Math.random().toString(36).substr(2, 9),
       title,
@@ -138,7 +138,7 @@ export default function TripBuilderModal({ isOpen, onClose }: TripBuilderModalPr
       type,
       coordinates
     };
-    
+
     updateActiveDay(prev => {
       const updates: any = { routeSummary: [...prev.routeSummary, newItem] };
       if (photoUrl && (!prev.categoryImages || !prev.categoryImages[type])) {
@@ -175,7 +175,7 @@ export default function TripBuilderModal({ isOpen, onClose }: TripBuilderModalPr
 
   const handleFinishTrip = () => {
     if (!destination) return;
-    
+
     // Find the first high-res photo loaded in any day's category to use as Cover Photo
     let coverPhoto = 'https://images.unsplash.com/photo-1541844053589-3462d48979e2?auto=format&fit=crop&w=800&q=80';
     for (const day of days) {
@@ -185,7 +185,7 @@ export default function TripBuilderModal({ isOpen, onClose }: TripBuilderModalPr
         if (cats.length > 0) { coverPhoto = cats[0]; break; }
       }
     }
-    
+
     addCustomTrip({
       id: Math.random().toString(36).substr(2, 9),
       country: destination,
@@ -193,7 +193,7 @@ export default function TripBuilderModal({ isOpen, onClose }: TripBuilderModalPr
       image: coverPhoto,
       availableImages: [coverPhoto]
     });
-    
+
     onClose();
   };
 
@@ -238,233 +238,231 @@ export default function TripBuilderModal({ isOpen, onClose }: TripBuilderModalPr
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
-          className="relative w-full max-w-6xl bg-white rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col md:flex-row h-[90vh]"
-        >
-          {/* Left Side: Builder Form (2/3) */}
-          <div className="flex-[2] overflow-y-auto p-8 md:p-12 space-y-10 custom-scrollbar bg-white">
-            <div className="flex items-center justify-between">
-              <div className="space-y-4 w-full mr-8">
-                <div className="flex items-center gap-3">
-                  <h2 className="text-3xl font-display font-bold text-[#0A192F]">Trip Builder</h2>
-                  <button 
-                    onClick={handleRemix}
-                    className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-orange-500/10 text-orange-600 text-[10px] font-bold uppercase tracking-wider hover:bg-orange-500/20 transition-all border border-orange-500/20"
-                  >
-                    <Copy size={12} />
-                    Remix Expert Itinerary
-                  </button>
-                </div>
-                <div className="flex items-center gap-2 text-zinc-400">
-                  <MapPin size={16} />
-                  <input 
-                    type="text" 
-                    placeholder="Enter Destination (e.g. Venice, Italy)"
-                    value={destination}
-                    onChange={(e) => setDestination(e.target.value)}
-                    className="bg-transparent border-none focus:ring-0 p-0 text-sm font-medium text-[#0A192F] placeholder:text-zinc-300 w-64 md:w-96"
-                  />
-                </div>
-                
-                {/* Day Timeline */}
-                <div className="flex gap-3 overflow-x-auto pb-2 pt-2 custom-scrollbar items-center">
-                  {days.map((day, idx) => (
-                    <button 
-                      key={day.id} 
-                      onClick={() => setCurrentDayIndex(idx)}
-                      className={`px-5 py-2.5 rounded-xl font-bold text-sm transition-all whitespace-nowrap shadow-sm border ${idx === currentDayIndex ? 'bg-orange-500 text-white border-orange-500' : 'bg-white text-zinc-400 border-zinc-200 hover:border-orange-500 hover:text-orange-500'}`}
+            className="relative w-full max-w-6xl bg-white rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col md:flex-row h-[90vh]"
+          >
+            {/* Left Side: Builder Form (2/3) */}
+            <div className="flex-[2] overflow-y-auto p-8 md:p-12 space-y-10 custom-scrollbar bg-white">
+              <div className="flex items-center justify-between">
+                <div className="space-y-4 w-full mr-8">
+                  <div className="flex items-center gap-3">
+                    <h2 className="text-3xl font-display font-bold text-[#0A192F]">Trip Builder</h2>
+                    <button
+                      onClick={handleRemix}
+                      className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-orange-500/10 text-orange-600 text-[10px] font-bold uppercase tracking-wider hover:bg-orange-500/20 transition-all border border-orange-500/20"
                     >
-                      {day.title}
+                      <Copy size={12} />
+                      Remix Expert Itinerary
                     </button>
-                  ))}
-                  <button 
-                    onClick={() => {
-                      setDays(prev => [...prev, createEmptyDay(prev.length)]);
-                      setCurrentDayIndex(days.length);
-                    }}
-                    className="px-5 py-2.5 rounded-xl font-bold text-sm bg-orange-500/10 text-orange-500 hover:bg-orange-500/20 transition-all whitespace-nowrap flex items-center gap-2 border border-orange-500/10"
-                  >
-                    <Plus size={16} /> Add Day
-                  </button>
-                </div>
-              </div>
-              <button 
-                onClick={onClose}
-                className="p-3 rounded-full bg-zinc-100 text-zinc-400 hover:bg-rose-500/10 hover:text-rose-500 transition-all self-start"
-              >
-                <X size={24} />
-              </button>
-            </div>
-
-            {/* Form Sections (Pillars) */}
-            <div className="space-y-12">
-              {/* Transport Pillar */}
-              <section className="space-y-6">
-                <div className="flex flex-col gap-4">
-                  {activeDay.categoryImages?.['transport'] && (
-                    <div className="relative w-full h-32 md:h-40 border-2 border-[#0A192F] overflow-hidden group shadow-lg" style={{ borderRadius: '2px' }}>
-                      <img src={activeDay.categoryImages['transport']} alt="Transport Cover" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 filter contrast-125 saturate-150" />
-                      <button 
-                        onClick={() => updateActiveDay(prev => { const c = {...prev.categoryImages}; delete c['transport']; return { ...prev, categoryImages: c }; })}
-                        className="absolute top-2 right-2 p-2 bg-white text-rose-500 border-2 border-transparent hover:border-[#0A192F] transition-all opacity-0 group-hover:opacity-100"
-                        style={{ borderRadius: '2px' }}
-                      >
-                        <Trash2 size={14} />
-                      </button>
-                    </div>
-                  )}
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3 text-[#0A192F]">
-                      <div className="p-2.5 rounded-xl bg-orange-500/10 text-orange-500 shadow-sm">
-                        <Navigation size={20} />
-                      </div>
-                      <h3 className="font-bold uppercase tracking-widest text-[11px]">Transport Mode</h3>
-                    </div>
-                    <div className="flex flex-row items-center gap-2 sm:gap-3">
-                      <div className="flex items-center gap-0.5 border-b-2 border-zinc-200 focus-within:border-[#0A192F] transition-all pb-0.5">
-                        <span className="text-zinc-400 font-mono text-[10px]">$</span>
-                        <input 
-                           type="number" 
-                           placeholder="0"
-                           value={activeDay.categoryCosts?.['transport'] || ''}
-                           onChange={(e) => handleCostChange('transport', e.target.value)}
-                           className="w-12 bg-transparent border-0 focus:ring-0 text-right font-mono text-xs font-bold text-[#0A192F] p-0"
-                        />
-                      </div>
-                      {!activeDay.categoryImages?.['transport'] && (
-                        <button 
-                          onClick={() => { setUploadCategory('transport'); contextFileInputRef.current?.click(); }}
-                          className="flex items-center gap-1.5 px-3 py-1.5 bg-white border-2 border-[#0A192F] text-[#0A192F] hover:bg-[#0A192F] hover:text-white transition-colors text-[9px] uppercase tracking-widest font-bold shadow-sm"
-                          style={{ borderRadius: '2px' }}
-                        >
-                          <ImagePlus size={12} /> Add Cover
-                        </button>
-                      )}
-                      <button 
-                        onClick={() => setShowManualEntry(showManualEntry === 'transport' ? null : 'transport')}
-                        className="text-[10px] font-bold text-zinc-400 hover:text-orange-500 transition-colors uppercase tracking-widest"
-                      >
-                        {showManualEntry === 'transport' ? 'Cancel' : 'Add Manually'}
-                      </button>
-                    </div>
                   </div>
-                </div>
-                
-                {showManualEntry === 'transport' ? (
-                  <ManualEntryForm 
-                    value={manualItem} 
-                    onChange={setManualItem} 
-                    onAdd={() => handleManualAdd('transport')} 
-                    placeholder="e.g. Private Shuttle"
-                  />
-                ) : (
-                  <>
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                      {[
-                        { id: 'Rental', icon: Car, label: 'Rental Car' },
-                        { id: 'Flights', icon: Plane, label: 'Flight' },
-                        { id: 'Own', icon: Bike, label: 'Own Vehicle' }
-                      ].map((mode) => (
-                        <button
-                          key={mode.id}
-                          onClick={() => updateActiveDay(prev => ({ ...prev, transportMode: mode.id as TransportMode }))}
-                          className={`flex items-center justify-center gap-3 px-6 py-4 rounded-2xl font-bold transition-all border ${
-                            activeDay.transportMode === mode.id 
-                              ? 'bg-[#0A192F] text-white border-[#0A192F] shadow-lg' 
-                              : 'bg-white border-zinc-200 text-zinc-500 hover:border-orange-500'
-                          }`}
-                        >
-                          <mode.icon size={20} />
-                          <span className="text-sm">{mode.label}</span>
-                        </button>
-                      ))}
-                    </div>
-                    <SearchBox 
-                      placeholder={`Search ${activeDay.transportMode} Details...`} 
-                      context={`${activeDay.transportMode.toLowerCase()} in ${destination}`}
-                      onSelect={(res) => addRouteItem(res.title, res.link, 'transport', res.coordinates, res.photoUrl)}
+                  <div className="flex items-center gap-2 text-zinc-400">
+                    <MapPin size={16} />
+                    <input
+                      type="text"
+                      placeholder="Enter Destination (e.g. Venice, Italy)"
+                      value={destination}
+                      onChange={(e) => setDestination(e.target.value)}
+                      className="bg-transparent border-none focus:ring-0 p-0 text-sm font-medium text-[#0A192F] placeholder:text-zinc-300 w-64 md:w-96"
                     />
-                  </>
-                )}
-              </section>
+                  </div>
 
-              {/* Stay Pillar */}
-              <section className="space-y-6">
-                <div className="flex flex-col gap-4">
-                  {activeDay.categoryImages?.['hotel'] && (
-                    <div className="relative w-full h-32 md:h-40 border-2 border-[#0A192F] overflow-hidden group shadow-lg" style={{ borderRadius: '2px' }}>
-                      <img src={activeDay.categoryImages['hotel']} alt="Stay Cover" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 filter contrast-125 saturate-150" />
-                      <button 
-                        onClick={() => updateActiveDay(prev => { const c = {...prev.categoryImages}; delete c['hotel']; return { ...prev, categoryImages: c }; })}
-                        className="absolute top-2 right-2 p-2 bg-white text-rose-500 border-2 border-transparent hover:border-[#0A192F] transition-all opacity-0 group-hover:opacity-100"
-                        style={{ borderRadius: '2px' }}
+                  {/* Day Timeline */}
+                  <div className="flex gap-3 overflow-x-auto pb-2 pt-2 custom-scrollbar items-center">
+                    {days.map((day, idx) => (
+                      <button
+                        key={day.id}
+                        onClick={() => setCurrentDayIndex(idx)}
+                        className={`px-5 py-2.5 rounded-xl font-bold text-sm transition-all whitespace-nowrap shadow-sm border ${idx === currentDayIndex ? 'bg-orange-500 text-white border-orange-500' : 'bg-white text-zinc-400 border-zinc-200 hover:border-orange-500 hover:text-orange-500'}`}
                       >
-                        <Trash2 size={14} />
+                        {day.title}
                       </button>
-                    </div>
-                  )}
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3 text-[#0A192F]">
-                      <div className="p-2.5 rounded-xl bg-orange-500/10 text-orange-500 shadow-sm">
-                        <Bed size={20} />
-                      </div>
-                      <h3 className="font-bold uppercase tracking-widest text-[11px]">Stay Details</h3>
-                    </div>
-                    <div className="flex flex-row items-center gap-2 sm:gap-3">
-                      <div className="flex items-center gap-0.5 border-b-2 border-zinc-200 focus-within:border-[#0A192F] transition-all pb-0.5">
-                        <span className="text-zinc-400 font-mono text-[10px]">$</span>
-                        <input 
-                           type="number" 
-                           placeholder="0"
-                           value={activeDay.categoryCosts?.['hotel'] || ''}
-                           onChange={(e) => handleCostChange('hotel', e.target.value)}
-                           className="w-12 bg-transparent border-0 focus:ring-0 text-right font-mono text-xs font-bold text-[#0A192F] p-0"
-                        />
-                      </div>
-                      {!activeDay.categoryImages?.['hotel'] && (
-                        <button 
-                          onClick={() => { setUploadCategory('hotel'); contextFileInputRef.current?.click(); }}
-                          className="flex items-center gap-1.5 px-3 py-1.5 bg-white border-2 border-[#0A192F] text-[#0A192F] hover:bg-[#0A192F] hover:text-white transition-colors text-[9px] uppercase tracking-widest font-bold shadow-sm"
-                          style={{ borderRadius: '2px' }}
-                        >
-                          <ImagePlus size={12} /> Add Cover
-                        </button>
-                      )}
-                      <button 
-                        onClick={() => setShowManualEntry(showManualEntry === 'hotel' ? null : 'hotel')}
-                        className="text-[10px] font-bold text-zinc-400 hover:text-orange-500 transition-colors uppercase tracking-widest"
-                      >
-                        {showManualEntry === 'hotel' ? 'Cancel' : 'Add Manually'}
-                      </button>
-                    </div>
+                    ))}
+                    <button
+                      onClick={() => {
+                        setDays(prev => [...prev, createEmptyDay(prev.length)]);
+                        setCurrentDayIndex(days.length);
+                      }}
+                      className="px-5 py-2.5 rounded-xl font-bold text-sm bg-orange-500/10 text-orange-500 hover:bg-orange-500/20 transition-all whitespace-nowrap flex items-center gap-2 border border-orange-500/10"
+                    >
+                      <Plus size={16} /> Add Day
+                    </button>
                   </div>
                 </div>
+                <button
+                  onClick={onClose}
+                  className="p-3 rounded-full bg-zinc-100 text-zinc-400 hover:bg-rose-500/10 hover:text-rose-500 transition-all self-start"
+                >
+                  <X size={24} />
+                </button>
+              </div>
 
-                {showManualEntry === 'hotel' ? (
-                  <ManualEntryForm 
-                    value={manualItem} 
-                    onChange={setManualItem} 
-                    onAdd={() => handleManualAdd('hotel')} 
-                    placeholder="e.g. Luxury Villa"
-                  />
-                ) : (
+              {/* Form Sections (Pillars) */}
+              <div className="space-y-12">
+                {/* Transport Pillar */}
+                <section className="space-y-6">
+                  <div className="flex flex-col gap-4">
+                    {activeDay.categoryImages?.['transport'] && (
+                      <div className="relative w-full h-32 md:h-40 border-2 border-[#0A192F] overflow-hidden group shadow-lg" style={{ borderRadius: '2px' }}>
+                        <img src={activeDay.categoryImages['transport']} alt="Transport Cover" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 filter contrast-125 saturate-150" />
+                        <button
+                          onClick={() => updateActiveDay(prev => { const c = { ...prev.categoryImages }; delete c['transport']; return { ...prev, categoryImages: c }; })}
+                          className="absolute top-2 right-2 p-2 bg-white text-rose-500 border-2 border-transparent hover:border-[#0A192F] transition-all opacity-0 group-hover:opacity-100"
+                          style={{ borderRadius: '2px' }}
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    )}
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3 text-[#0A192F]">
+                        <div className="p-2.5 rounded-xl bg-orange-500/10 text-orange-500 shadow-sm">
+                          <Navigation size={20} />
+                        </div>
+                        <h3 className="font-bold uppercase tracking-widest text-[11px]">Transport Mode</h3>
+                      </div>
+                      <div className="flex flex-row items-center gap-2 sm:gap-3">
+                        <div className="flex items-center gap-0.5 border-b-2 border-zinc-200 focus-within:border-[#0A192F] transition-all pb-0.5">
+                          <span className="text-zinc-400 font-mono text-[10px]">$</span>
+                          <input
+                            type="number"
+                            placeholder="0"
+                            value={activeDay.categoryCosts?.['transport'] || ''}
+                            onChange={(e) => handleCostChange('transport', e.target.value)}
+                            className="w-12 bg-transparent border-0 focus:ring-0 text-right font-mono text-xs font-bold text-[#0A192F] p-0"
+                          />
+                        </div>
+                        {!activeDay.categoryImages?.['transport'] && (
+                          <button
+                            onClick={() => { setUploadCategory('transport'); contextFileInputRef.current?.click(); }}
+                            className="flex items-center gap-1.5 px-3 py-1.5 bg-white border-2 border-[#0A192F] text-[#0A192F] hover:bg-[#0A192F] hover:text-white transition-colors text-[9px] uppercase tracking-widest font-bold shadow-sm"
+                            style={{ borderRadius: '2px' }}
+                          >
+                            <ImagePlus size={12} /> Add Cover
+                          </button>
+                        )}
+                        <button
+                          onClick={() => setShowManualEntry(showManualEntry === 'transport' ? null : 'transport')}
+                          className="text-[10px] font-bold text-zinc-400 hover:text-orange-500 transition-colors uppercase tracking-widest"
+                        >
+                          {showManualEntry === 'transport' ? 'Cancel' : 'Add Manually'}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {showManualEntry === 'transport' ? (
+                    <ManualEntryForm
+                      value={manualItem}
+                      onChange={setManualItem}
+                      onAdd={() => handleManualAdd('transport')}
+                      placeholder="e.g. Private Shuttle"
+                    />
+                  ) : (
+                    <>
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        {[
+                          { id: 'Rental', icon: Car, label: 'Rental Car' },
+                          { id: 'Flights', icon: Plane, label: 'Flight' },
+                          { id: 'Own', icon: Bike, label: 'Own Vehicle' }
+                        ].map((mode) => (
+                          <button
+                            key={mode.id}
+                            onClick={() => updateActiveDay(prev => ({ ...prev, transportMode: mode.id as TransportMode }))}
+                            className={`flex items-center justify-center gap-3 px-6 py-4 rounded-2xl font-bold transition-all border ${activeDay.transportMode === mode.id
+                                ? 'bg-[#0A192F] text-white border-[#0A192F] shadow-lg'
+                                : 'bg-white border-zinc-200 text-zinc-500 hover:border-orange-500'
+                              }`}
+                          >
+                            <mode.icon size={20} />
+                            <span className="text-sm">{mode.label}</span>
+                          </button>
+                        ))}
+                      </div>
+                      <SearchBox
+                        placeholder={`Search ${activeDay.transportMode} Details...`}
+                        context={`${activeDay.transportMode.toLowerCase()} in ${destination}`}
+                        onSelect={(res) => addRouteItem(res.title, res.link, 'transport', res.coordinates, res.photoUrl)}
+                      />
+                    </>
+                  )}
+                </section>
+
+                {/* Stay Pillar */}
+                <section className="space-y-6">
+                  <div className="flex flex-col gap-4">
+                    {activeDay.categoryImages?.['hotel'] && (
+                      <div className="relative w-full h-32 md:h-40 border-2 border-[#0A192F] overflow-hidden group shadow-lg" style={{ borderRadius: '2px' }}>
+                        <img src={activeDay.categoryImages['hotel']} alt="Stay Cover" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 filter contrast-125 saturate-150" />
+                        <button
+                          onClick={() => updateActiveDay(prev => { const c = { ...prev.categoryImages }; delete c['hotel']; return { ...prev, categoryImages: c }; })}
+                          className="absolute top-2 right-2 p-2 bg-white text-rose-500 border-2 border-transparent hover:border-[#0A192F] transition-all opacity-0 group-hover:opacity-100"
+                          style={{ borderRadius: '2px' }}
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    )}
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3 text-[#0A192F]">
+                        <div className="p-2.5 rounded-xl bg-orange-500/10 text-orange-500 shadow-sm">
+                          <Bed size={20} />
+                        </div>
+                        <h3 className="font-bold uppercase tracking-widest text-[11px]">Stay Details</h3>
+                      </div>
+                      <div className="flex flex-row items-center gap-2 sm:gap-3">
+                        <div className="flex items-center gap-0.5 border-b-2 border-zinc-200 focus-within:border-[#0A192F] transition-all pb-0.5">
+                          <span className="text-zinc-400 font-mono text-[10px]">$</span>
+                          <input
+                            type="number"
+                            placeholder="0"
+                            value={activeDay.categoryCosts?.['hotel'] || ''}
+                            onChange={(e) => handleCostChange('hotel', e.target.value)}
+                            className="w-12 bg-transparent border-0 focus:ring-0 text-right font-mono text-xs font-bold text-[#0A192F] p-0"
+                          />
+                        </div>
+                        {!activeDay.categoryImages?.['hotel'] && (
+                          <button
+                            onClick={() => { setUploadCategory('hotel'); contextFileInputRef.current?.click(); }}
+                            className="flex items-center gap-1.5 px-3 py-1.5 bg-white border-2 border-[#0A192F] text-[#0A192F] hover:bg-[#0A192F] hover:text-white transition-colors text-[9px] uppercase tracking-widest font-bold shadow-sm"
+                            style={{ borderRadius: '2px' }}
+                          >
+                            <ImagePlus size={12} /> Add Cover
+                          </button>
+                        )}
+                        <button
+                          onClick={() => setShowManualEntry(showManualEntry === 'hotel' ? null : 'hotel')}
+                          className="text-[10px] font-bold text-zinc-400 hover:text-orange-500 transition-colors uppercase tracking-widest"
+                        >
+                          {showManualEntry === 'hotel' ? 'Cancel' : 'Add Manually'}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {showManualEntry === 'hotel' ? (
+                    <ManualEntryForm
+                      value={manualItem}
+                      onChange={setManualItem}
+                      onAdd={() => handleManualAdd('hotel')}
+                      placeholder="e.g. Luxury Villa"
+                    />
+                  ) : (
                     <div className="space-y-4">
                       <div className="flex flex-wrap gap-2">
                         {['Hotel', 'Villa', 'Airbnb'].map((cat) => (
                           <button
                             key={cat}
                             onClick={() => setStayCategory(cat as any)}
-                            className={`px-4 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider border transition-all ${
-                              stayCategory === cat 
-                                ? 'bg-orange-500 border-orange-500 text-white shadow-lg shadow-orange-500/20' 
+                            className={`px-4 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider border transition-all ${stayCategory === cat
+                                ? 'bg-orange-500 border-orange-500 text-white shadow-lg shadow-orange-500/20'
                                 : 'bg-zinc-50 border-zinc-100 text-zinc-400 hover:border-orange-500/30'
-                            }`}
+                              }`}
                           >
                             {cat}s
                           </button>
                         ))}
                       </div>
-                      <SearchBox 
-                        placeholder={`Search ${stayCategory}s, Resorts, or Boutique Stays...`} 
+                      <SearchBox
+                        placeholder={`Search ${stayCategory}s, Resorts, or Boutique Stays...`}
                         context={`${stayCategory.toLowerCase()} in ${destination}`}
                         onSelect={(res) => addRouteItem(res.title, res.link, 'hotel', res.coordinates, res.photoUrl)}
                       />
@@ -477,7 +475,7 @@ export default function TripBuilderModal({ isOpen, onClose }: TripBuilderModalPr
                       </div>
                     </div>
                   )}
-              </section>
+                </section>
 
                 {/* Dining Pillar */}
                 <section className="space-y-6">
@@ -485,8 +483,8 @@ export default function TripBuilderModal({ isOpen, onClose }: TripBuilderModalPr
                     {activeDay.categoryImages?.['dining'] && (
                       <div className="relative w-full h-32 md:h-40 border-2 border-[#0A192F] overflow-hidden group shadow-lg" style={{ borderRadius: '2px' }}>
                         <img src={activeDay.categoryImages['dining']} alt="Dining Cover" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 filter contrast-125 saturate-150" />
-                        <button 
-                          onClick={() => updateActiveDay(prev => { const c = {...prev.categoryImages}; delete c['dining']; return { ...prev, categoryImages: c }; })}
+                        <button
+                          onClick={() => updateActiveDay(prev => { const c = { ...prev.categoryImages }; delete c['dining']; return { ...prev, categoryImages: c }; })}
                           className="absolute top-2 right-2 p-2 bg-white text-rose-500 border-2 border-transparent hover:border-[#0A192F] transition-all opacity-0 group-hover:opacity-100"
                           style={{ borderRadius: '2px' }}
                         >
@@ -501,47 +499,47 @@ export default function TripBuilderModal({ isOpen, onClose }: TripBuilderModalPr
                         </div>
                         <h3 className="font-bold uppercase tracking-widest text-[11px]">Dining</h3>
                       </div>
-                    <div className="flex flex-row items-center gap-2 sm:gap-3">
-                      <div className="flex items-center gap-0.5 border-b-2 border-zinc-200 focus-within:border-[#0A192F] transition-all pb-0.5">
-                        <span className="text-zinc-400 font-mono text-[10px]">$</span>
-                        <input 
-                           type="number" 
-                           placeholder="0"
-                           value={activeDay.categoryCosts?.['dining'] || ''}
-                           onChange={(e) => handleCostChange('dining', e.target.value)}
-                           className="w-12 bg-transparent border-0 focus:ring-0 text-right font-mono text-xs font-bold text-[#0A192F] p-0"
-                        />
-                      </div>
-                      {!activeDay.categoryImages?.['dining'] && (
-                        <button 
-                          onClick={() => { setUploadCategory('dining'); contextFileInputRef.current?.click(); }}
-                          className="flex items-center gap-1.5 px-3 py-1.5 bg-white border-2 border-[#0A192F] text-[#0A192F] hover:bg-[#0A192F] hover:text-white transition-colors text-[9px] uppercase tracking-widest font-bold shadow-sm"
-                          style={{ borderRadius: '2px' }}
+                      <div className="flex flex-row items-center gap-2 sm:gap-3">
+                        <div className="flex items-center gap-0.5 border-b-2 border-zinc-200 focus-within:border-[#0A192F] transition-all pb-0.5">
+                          <span className="text-zinc-400 font-mono text-[10px]">$</span>
+                          <input
+                            type="number"
+                            placeholder="0"
+                            value={activeDay.categoryCosts?.['dining'] || ''}
+                            onChange={(e) => handleCostChange('dining', e.target.value)}
+                            className="w-12 bg-transparent border-0 focus:ring-0 text-right font-mono text-xs font-bold text-[#0A192F] p-0"
+                          />
+                        </div>
+                        {!activeDay.categoryImages?.['dining'] && (
+                          <button
+                            onClick={() => { setUploadCategory('dining'); contextFileInputRef.current?.click(); }}
+                            className="flex items-center gap-1.5 px-3 py-1.5 bg-white border-2 border-[#0A192F] text-[#0A192F] hover:bg-[#0A192F] hover:text-white transition-colors text-[9px] uppercase tracking-widest font-bold shadow-sm"
+                            style={{ borderRadius: '2px' }}
+                          >
+                            <ImagePlus size={12} /> Add Cover
+                          </button>
+                        )}
+                        <button
+                          onClick={() => setShowManualEntry(showManualEntry === 'dining' ? null : 'dining')}
+                          className="text-[10px] font-bold text-zinc-400 hover:text-orange-500 transition-colors uppercase tracking-widest"
                         >
-                          <ImagePlus size={12} /> Add Cover
+                          {showManualEntry === 'dining' ? 'Cancel' : 'Add Manually'}
                         </button>
-                      )}
-                      <button 
-                        onClick={() => setShowManualEntry(showManualEntry === 'dining' ? null : 'dining')}
-                        className="text-[10px] font-bold text-zinc-400 hover:text-orange-500 transition-colors uppercase tracking-widest"
-                      >
-                        {showManualEntry === 'dining' ? 'Cancel' : 'Add Manually'}
-                      </button>
-                    </div>
+                      </div>
                     </div>
                   </div>
 
                   {showManualEntry === 'dining' ? (
-                    <ManualEntryForm 
-                      value={manualItem} 
-                      onChange={setManualItem} 
-                      onAdd={() => handleManualAdd('dining')} 
+                    <ManualEntryForm
+                      value={manualItem}
+                      onChange={setManualItem}
+                      onAdd={() => handleManualAdd('dining')}
                       placeholder="e.g. Local Bistro"
                     />
                   ) : (
                     <div className="space-y-3">
-                      <SearchBox 
-                        placeholder="Search Restaurants, Cafes, or Bars..." 
+                      <SearchBox
+                        placeholder="Search Restaurants, Cafes, or Bars..."
                         context={`restaurant in ${destination}`}
                         onSelect={(res) => addRouteItem(res.title, res.link, 'dining', res.coordinates, res.photoUrl)}
                       />
@@ -554,7 +552,7 @@ export default function TripBuilderModal({ isOpen, onClose }: TripBuilderModalPr
                       </div>
                     </div>
                   )}
-              </section>
+                </section>
 
                 {/* Activities Pillar */}
                 <section className="space-y-6">
@@ -562,8 +560,8 @@ export default function TripBuilderModal({ isOpen, onClose }: TripBuilderModalPr
                     {activeDay.categoryImages?.['activity'] && (
                       <div className="relative w-full h-32 md:h-40 border-2 border-[#0A192F] overflow-hidden group shadow-lg" style={{ borderRadius: '2px' }}>
                         <img src={activeDay.categoryImages['activity']} alt="Activity Cover" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 filter contrast-125 saturate-150" />
-                        <button 
-                          onClick={() => updateActiveDay(prev => { const c = {...prev.categoryImages}; delete c['activity']; return { ...prev, categoryImages: c }; })}
+                        <button
+                          onClick={() => updateActiveDay(prev => { const c = { ...prev.categoryImages }; delete c['activity']; return { ...prev, categoryImages: c }; })}
                           className="absolute top-2 right-2 p-2 bg-white text-rose-500 border-2 border-transparent hover:border-[#0A192F] transition-all opacity-0 group-hover:opacity-100"
                           style={{ borderRadius: '2px' }}
                         >
@@ -578,47 +576,47 @@ export default function TripBuilderModal({ isOpen, onClose }: TripBuilderModalPr
                         </div>
                         <h3 className="font-bold uppercase tracking-widest text-[11px]">Activities</h3>
                       </div>
-                    <div className="flex flex-row items-center gap-2 sm:gap-3">
-                      <div className="flex items-center gap-0.5 border-b-2 border-zinc-200 focus-within:border-[#0A192F] transition-all pb-0.5">
-                        <span className="text-zinc-400 font-mono text-[10px]">$</span>
-                        <input 
-                           type="number" 
-                           placeholder="0"
-                           value={activeDay.categoryCosts?.['activity'] || ''}
-                           onChange={(e) => handleCostChange('activity', e.target.value)}
-                           className="w-12 bg-transparent border-0 focus:ring-0 text-right font-mono text-xs font-bold text-[#0A192F] p-0"
-                        />
-                      </div>
-                      {!activeDay.categoryImages?.['activity'] && (
-                        <button 
-                          onClick={() => { setUploadCategory('activity'); contextFileInputRef.current?.click(); }}
-                          className="flex items-center gap-1.5 px-3 py-1.5 bg-white border-2 border-[#0A192F] text-[#0A192F] hover:bg-[#0A192F] hover:text-white transition-colors text-[9px] uppercase tracking-widest font-bold shadow-sm"
-                          style={{ borderRadius: '2px' }}
+                      <div className="flex flex-row items-center gap-2 sm:gap-3">
+                        <div className="flex items-center gap-0.5 border-b-2 border-zinc-200 focus-within:border-[#0A192F] transition-all pb-0.5">
+                          <span className="text-zinc-400 font-mono text-[10px]">$</span>
+                          <input
+                            type="number"
+                            placeholder="0"
+                            value={activeDay.categoryCosts?.['activity'] || ''}
+                            onChange={(e) => handleCostChange('activity', e.target.value)}
+                            className="w-12 bg-transparent border-0 focus:ring-0 text-right font-mono text-xs font-bold text-[#0A192F] p-0"
+                          />
+                        </div>
+                        {!activeDay.categoryImages?.['activity'] && (
+                          <button
+                            onClick={() => { setUploadCategory('activity'); contextFileInputRef.current?.click(); }}
+                            className="flex items-center gap-1.5 px-3 py-1.5 bg-white border-2 border-[#0A192F] text-[#0A192F] hover:bg-[#0A192F] hover:text-white transition-colors text-[9px] uppercase tracking-widest font-bold shadow-sm"
+                            style={{ borderRadius: '2px' }}
+                          >
+                            <ImagePlus size={12} /> Add Cover
+                          </button>
+                        )}
+                        <button
+                          onClick={() => setShowManualEntry(showManualEntry === 'activity' ? null : 'activity')}
+                          className="text-[10px] font-bold text-zinc-400 hover:text-orange-500 transition-colors uppercase tracking-widest"
                         >
-                          <ImagePlus size={12} /> Add Cover
+                          {showManualEntry === 'activity' ? 'Cancel' : 'Add Manually'}
                         </button>
-                      )}
-                      <button 
-                        onClick={() => setShowManualEntry(showManualEntry === 'activity' ? null : 'activity')}
-                        className="text-[10px] font-bold text-zinc-400 hover:text-orange-500 transition-colors uppercase tracking-widest"
-                      >
-                        {showManualEntry === 'activity' ? 'Cancel' : 'Add Manually'}
-                      </button>
-                    </div>
+                      </div>
                     </div>
                   </div>
 
                   {showManualEntry === 'activity' ? (
-                    <ManualEntryForm 
-                      value={manualItem} 
-                      onChange={setManualItem} 
-                      onAdd={() => handleManualAdd('activity')} 
+                    <ManualEntryForm
+                      value={manualItem}
+                      onChange={setManualItem}
+                      onAdd={() => handleManualAdd('activity')}
                       placeholder="e.g. Sunset Cruise"
                     />
                   ) : (
                     <div className="space-y-3">
-                      <SearchBox 
-                        placeholder="Search Tours, Landmarks, or Experiences..." 
+                      <SearchBox
+                        placeholder="Search Tours, Landmarks, or Experiences..."
                         context={`activity tour in ${destination}`}
                         onSelect={(res) => addRouteItem(res.title, res.link, 'activity', res.coordinates, res.photoUrl)}
                       />
@@ -631,221 +629,220 @@ export default function TripBuilderModal({ isOpen, onClose }: TripBuilderModalPr
                       </div>
                     </div>
                   )}
-              </section>
+                </section>
 
-              {/* Add Images Section */}
-              <section className="space-y-6">
-                <div className="flex items-center gap-3 text-[#0A192F]">
-                  <div className="p-2.5 rounded-xl bg-orange-500/10 text-orange-500 shadow-sm">
-                    <ImageIcon size={20} />
+                {/* Add Images Section */}
+                <section className="space-y-6">
+                  <div className="flex items-center gap-3 text-[#0A192F]">
+                    <div className="p-2.5 rounded-xl bg-orange-500/10 text-orange-500 shadow-sm">
+                      <ImageIcon size={20} />
+                    </div>
+                    <h3 className="font-bold uppercase tracking-widest text-[11px]">Add Images</h3>
                   </div>
-                  <h3 className="font-bold uppercase tracking-widest text-[11px]">Add Images</h3>
-                </div>
-                
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                  {activeDay.images.map((img, idx) => (
-                    <div key={idx} className="relative aspect-square rounded-2xl overflow-hidden group">
-                      <img src={img} alt="Uploaded" className="w-full h-full object-cover" />
-                      <button 
-                        onClick={() => updateActiveDay(prev => ({ ...prev, images: prev.images.filter((_, i) => i !== idx) }))}
-                        className="absolute top-2 right-2 p-1.5 bg-rose-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                      >
-                        <X size={12} />
-                      </button>
-                    </div>
-                  ))}
-                  <button 
-                    onClick={() => fileInputRef.current?.click()}
-                    className="aspect-square rounded-2xl border-2 border-dashed border-zinc-200 flex flex-col items-center justify-center gap-2 text-zinc-400 hover:border-orange-500 hover:text-orange-500 transition-all bg-zinc-50"
-                  >
-                    <Upload size={24} />
-                    <span className="text-[10px] font-bold uppercase tracking-wider">Upload</span>
-                  </button>
-                  <input 
-                    type="file" 
-                    ref={fileInputRef} 
-                    onChange={handleImageUpload} 
-                    multiple 
-                    accept="image/*" 
-                    className="hidden" 
-                  />
-                  {/* Hidden input for contextual category covers */}
-                  <input 
-                    type="file" 
-                    ref={contextFileInputRef} 
-                    onChange={handleContextImageUpload} 
-                    accept="image/*" 
-                    className="hidden" 
-                  />
-                </div>
-              </section>
-            </div>
 
-            <div className="pt-10 flex flex-col sm:flex-row items-center justify-between border-t border-zinc-100 gap-4">
-              <div className="flex flex-col sm:flex-row sm:items-center gap-6">
-                <div className="flex flex-col items-start pr-6 sm:border-r sm:border-zinc-200">
-                  <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Estimated Total</span>
-                  <span className="text-3xl font-display font-bold text-[#0A192F] font-mono">${totalBudget.toFixed(2)}</span>
-                </div>
-                {totalBudget > 0 && (
-                  <label className="flex items-center gap-3 cursor-pointer group">
-                    <div className={`w-8 h-4 border-2 transition-colors relative flex items-center shrink-0 ${isBudgetPublic ? 'bg-[#0A192F] border-[#0A192F]' : 'bg-transparent border-zinc-300'}`} style={{ borderRadius: '2px' }}>
-                      <div className={`absolute w-2 h-2 transition-all ${isBudgetPublic ? 'bg-orange-500 left-[18px]' : 'bg-zinc-400 left-0.5'}`} style={{ borderRadius: '0px' }} />
-                    </div>
-                    <input 
-                      type="checkbox" 
-                      className="hidden" 
-                      checked={isBudgetPublic} 
-                      onChange={(e) => setIsBudgetPublic(e.target.checked)} 
-                    />
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-[#0A192F]">Publicize Budget</span>
-                  </label>
-                )}
-              </div>
-              <div className="flex items-center gap-3">
-                <button 
-                  onClick={() => {
-                    if (currentDayIndex === days.length - 1) {
-                      setDays(prev => [...prev, createEmptyDay(prev.length)]);
-                    }
-                    setCurrentDayIndex(prev => prev + 1);
-                  }}
-                  className="bg-zinc-100 text-[#0A192F] font-bold px-6 py-4 rounded-xl hover:bg-zinc-200 transition-all flex items-center gap-2 group whitespace-nowrap"
-                >
-                  {currentDayIndex === days.length - 1 ? 'Save & Add Next Day' : 'Next Day'}
-                  <ChevronRight size={18} className="group-hover:translate-x-1 transition-transform" />
-                </button>
-                <button 
-                  onClick={handleFinishTrip}
-                  className="bg-orange-500 text-white font-bold px-8 py-4 rounded-xl shadow-xl hover:bg-orange-600 transition-all flex items-center gap-2 whitespace-nowrap"
-                >
-                  Finish Trip
-                  <Sparkles size={18} />
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Right Side: Map & Summary (1/3) */}
-          <div className="w-full md:w-[400px] bg-zinc-50 relative group overflow-hidden border-l border-zinc-100 flex-shrink-0">
-            <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1524661135-423995f22d0b?auto=format&fit=crop&w=800&q=80')] bg-cover bg-center opacity-10 grayscale group-hover:grayscale-0 transition-all duration-1000" />
-            
-            <div className="relative z-10 h-full flex flex-col p-8">
-              <div className="flex items-center gap-3 bg-white p-4 rounded-2xl shadow-xl border border-zinc-100 mb-8">
-                <div className="p-2 rounded-lg bg-orange-500/10 text-orange-500">
-                  <MapIcon size={20} />
-                </div>
-                <div>
-                  <h4 className="font-bold text-[#0A192F] text-sm">Trip Map</h4>
-                  <p className="text-[10px] text-zinc-400">Visualizing route in {destination || 'Selected Location'}</p>
-                </div>
-              </div>
-
-              {/* Route Visualization (Mock) */}
-              <div className="flex-[0.8] flex flex-col items-center justify-start relative mb-4">
-                <div className="w-full h-[250px] relative">
-                  <svg className="absolute inset-0 w-full h-full" viewBox="0 0 400 300">
-                    <motion.path
-                      d="M 100 50 Q 200 100 150 200 T 250 300"
-                      fill="none"
-                      stroke="#F97316"
-                      strokeWidth="3"
-                      strokeDasharray="6 6"
-                      initial={{ pathLength: 0 }}
-                      animate={{ pathLength: 1 }}
-                      transition={{ duration: 3, repeat: Infinity }}
-                    />
-                    {allRouteItems.map((_, i) => (
-                      <circle 
-                        key={i}
-                        cx={100 + (i * 15)} 
-                        cy={50 + (i * 40)} 
-                        r="4" 
-                        fill={i === 0 ? "#F97316" : "#CBD5E1"} 
-                        className="shadow-lg"
-                      />
-                    ))}
-                  </svg>
-                  
-                  {allRouteItems.slice(0, 3).map((item, i) => (
-                    <div 
-                      key={item.id}
-                      style={{ top: `${40 + (i * 40)}px`, left: `${80 + (i * 10)}px` }}
-                      className="absolute px-2 py-1 bg-white/90 backdrop-blur-md rounded-lg shadow-lg border border-zinc-100 text-[9px] font-bold text-[#0A192F] max-w-[120px] truncate"
-                    >
-                      {item.title}
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="bg-white p-6 rounded-[2.5rem] shadow-xl border border-zinc-100 flex flex-col flex-1 min-h-0">
-                <h5 className="font-bold text-[#0A192F] text-[10px] uppercase tracking-widest opacity-60 mb-4 shrink-0">Complete Route Summary</h5>
-                <div className="overflow-y-auto custom-scrollbar pr-2 flex-1">
-                  {days.map((day, dIdx) => (
-                    <div key={day.id} className="mb-6 last:mb-2">
-                      <div className="flex items-center justify-between mb-3">
-                        <h6 className="font-bold text-orange-500 text-xs uppercase tracking-widest">{day.title}</h6>
-                        <span className="text-[10px] font-bold text-zinc-400">${day.budget}</span>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                    {activeDay.images.map((img, idx) => (
+                      <div key={idx} className="relative aspect-square rounded-2xl overflow-hidden group">
+                        <img src={img} alt="Uploaded" className="w-full h-full object-cover" />
+                        <button
+                          onClick={() => updateActiveDay(prev => ({ ...prev, images: prev.images.filter((_, i) => i !== idx) }))}
+                          className="absolute top-2 right-2 p-1.5 bg-rose-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <X size={12} />
+                        </button>
                       </div>
-                      
-                      {day.routeSummary.length === 0 ? (
-                        <p className="text-[10px] text-zinc-400 italic py-2 pl-2 border-l-2 border-zinc-100">No items added to {day.title} yet.</p>
-                      ) : (
-                        <div className="space-y-3">
-                          {day.routeSummary.map((item, idx) => (
-                            <div key={item.id} className="flex items-start justify-between group/item">
-                              <div className="flex gap-3">
-                                <div className="flex flex-col items-center">
-                                  <div className={`w-2 h-2 rounded-full border-2 mt-1 ${
-                                    item.type === 'hotel' ? 'border-orange-500 bg-orange-500' : 
-                                    item.type === 'transport' ? 'border-blue-400 bg-blue-400' : 
-                                    item.type === 'dining' ? 'border-yellow-400 bg-yellow-400' :
-                                    'border-emerald-400 bg-emerald-400'
-                                  }`} />
-                                  {idx !== day.routeSummary.length - 1 && (
-                                    <div className="w-0.5 h-6 bg-zinc-100 my-0.5" />
-                                  )}
-                                </div>
-                                <div className="flex flex-col">
-                                  <span className="text-xs text-[#0A192F] font-bold line-clamp-1 leading-none mb-1">{item.title}</span>
-                                  <span className="text-[9px] text-zinc-400 uppercase tracking-tighter">{item.type}</span>
-                                </div>
-                              </div>
-                              <div className="flex items-center gap-2 opacity-0 group-hover/item:opacity-100 transition-opacity">
-                                <a href={item.link} target="_blank" rel="noopener noreferrer" className="text-zinc-400 hover:text-orange-500">
-                                  <ExternalLink size={12} />
-                                </a>
-                                <button onClick={() => removeRouteItem(dIdx, item.id)} className="text-zinc-400 hover:text-rose-500">
-                                  <Trash2 size={12} />
-                                </button>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  ))}
+                    ))}
+                    <button
+                      onClick={() => fileInputRef.current?.click()}
+                      className="aspect-square rounded-2xl border-2 border-dashed border-zinc-200 flex flex-col items-center justify-center gap-2 text-zinc-400 hover:border-orange-500 hover:text-orange-500 transition-all bg-zinc-50"
+                    >
+                      <Upload size={24} />
+                      <span className="text-[10px] font-bold uppercase tracking-wider">Upload</span>
+                    </button>
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      onChange={handleImageUpload}
+                      multiple
+                      accept="image/*"
+                      className="hidden"
+                    />
+                    {/* Hidden input for contextual category covers */}
+                    <input
+                      type="file"
+                      ref={contextFileInputRef}
+                      onChange={handleContextImageUpload}
+                      accept="image/*"
+                      className="hidden"
+                    />
+                  </div>
+                </section>
+              </div>
+
+              <div className="pt-10 flex flex-col sm:flex-row items-center justify-between border-t border-zinc-100 gap-4">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-6">
+                  <div className="flex flex-col items-start pr-6 sm:border-r sm:border-zinc-200">
+                    <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Estimated Total</span>
+                    <span className="text-3xl font-display font-bold text-[#0A192F] font-mono">${totalBudget.toFixed(2)}</span>
+                  </div>
+                  {totalBudget > 0 && (
+                    <label className="flex items-center gap-3 cursor-pointer group">
+                      <div className={`w-8 h-4 border-2 transition-colors relative flex items-center shrink-0 ${isBudgetPublic ? 'bg-[#0A192F] border-[#0A192F]' : 'bg-transparent border-zinc-300'}`} style={{ borderRadius: '2px' }}>
+                        <div className={`absolute w-2 h-2 transition-all ${isBudgetPublic ? 'bg-orange-500 left-[18px]' : 'bg-zinc-400 left-0.5'}`} style={{ borderRadius: '0px' }} />
+                      </div>
+                      <input
+                        type="checkbox"
+                        className="hidden"
+                        checked={isBudgetPublic}
+                        onChange={(e) => setIsBudgetPublic(e.target.checked)}
+                      />
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-[#0A192F]">Publicize Budget</span>
+                    </label>
+                  )}
+                </div>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => {
+                      if (currentDayIndex === days.length - 1) {
+                        setDays(prev => [...prev, createEmptyDay(prev.length)]);
+                      }
+                      setCurrentDayIndex(prev => prev + 1);
+                    }}
+                    className="bg-zinc-100 text-[#0A192F] font-bold px-6 py-4 rounded-xl hover:bg-zinc-200 transition-all flex items-center gap-2 group whitespace-nowrap"
+                  >
+                    {currentDayIndex === days.length - 1 ? 'Save & Add Next Day' : 'Next Day'}
+                    <ChevronRight size={18} className="group-hover:translate-x-1 transition-transform" />
+                  </button>
+                  <button
+                    onClick={handleFinishTrip}
+                    className="bg-orange-500 text-white font-bold px-8 py-4 rounded-xl shadow-xl hover:bg-orange-600 transition-all flex items-center gap-2 whitespace-nowrap"
+                  >
+                    Finish Trip
+                    <Sparkles size={18} />
+                  </button>
                 </div>
               </div>
             </div>
-          </div>
-        </motion.div>
-      </div>
+
+            {/* Right Side: Map & Summary (1/3) */}
+            <div className="w-full md:w-[400px] bg-zinc-50 relative group overflow-hidden border-l border-zinc-100 flex-shrink-0">
+              <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1524661135-423995f22d0b?auto=format&fit=crop&w=800&q=80')] bg-cover bg-center opacity-10 grayscale group-hover:grayscale-0 transition-all duration-1000" />
+
+              <div className="relative z-10 h-full flex flex-col p-8">
+                <div className="flex items-center gap-3 bg-white p-4 rounded-2xl shadow-xl border border-zinc-100 mb-8">
+                  <div className="p-2 rounded-lg bg-orange-500/10 text-orange-500">
+                    <MapIcon size={20} />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-[#0A192F] text-sm">Trip Map</h4>
+                    <p className="text-[10px] text-zinc-400">Visualizing route in {destination || 'Selected Location'}</p>
+                  </div>
+                </div>
+
+                {/* Route Visualization (Mock) */}
+                <div className="flex-[0.8] flex flex-col items-center justify-start relative mb-4">
+                  <div className="w-full h-[250px] relative">
+                    <svg className="absolute inset-0 w-full h-full" viewBox="0 0 400 300">
+                      <motion.path
+                        d="M 100 50 Q 200 100 150 200 T 250 300"
+                        fill="none"
+                        stroke="#F97316"
+                        strokeWidth="3"
+                        strokeDasharray="6 6"
+                        initial={{ pathLength: 0 }}
+                        animate={{ pathLength: 1 }}
+                        transition={{ duration: 3, repeat: Infinity }}
+                      />
+                      {allRouteItems.map((_, i) => (
+                        <circle
+                          key={i}
+                          cx={100 + (i * 15)}
+                          cy={50 + (i * 40)}
+                          r="4"
+                          fill={i === 0 ? "#F97316" : "#CBD5E1"}
+                          className="shadow-lg"
+                        />
+                      ))}
+                    </svg>
+
+                    {allRouteItems.slice(0, 3).map((item, i) => (
+                      <div
+                        key={item.id}
+                        style={{ top: `${40 + (i * 40)}px`, left: `${80 + (i * 10)}px` }}
+                        className="absolute px-2 py-1 bg-white/90 backdrop-blur-md rounded-lg shadow-lg border border-zinc-100 text-[9px] font-bold text-[#0A192F] max-w-[120px] truncate"
+                      >
+                        {item.title}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="bg-white p-6 rounded-[2.5rem] shadow-xl border border-zinc-100 flex flex-col flex-1 min-h-0">
+                  <h5 className="font-bold text-[#0A192F] text-[10px] uppercase tracking-widest opacity-60 mb-4 shrink-0">Complete Route Summary</h5>
+                  <div className="overflow-y-auto custom-scrollbar pr-2 flex-1">
+                    {days.map((day, dIdx) => (
+                      <div key={day.id} className="mb-6 last:mb-2">
+                        <div className="flex items-center justify-between mb-3">
+                          <h6 className="font-bold text-orange-500 text-xs uppercase tracking-widest">{day.title}</h6>
+                          <span className="text-[10px] font-bold text-zinc-400">${day.budget}</span>
+                        </div>
+
+                        {day.routeSummary.length === 0 ? (
+                          <p className="text-[10px] text-zinc-400 italic py-2 pl-2 border-l-2 border-zinc-100">No items added to {day.title} yet.</p>
+                        ) : (
+                          <div className="space-y-3">
+                            {day.routeSummary.map((item, idx) => (
+                              <div key={item.id} className="flex items-start justify-between group/item">
+                                <div className="flex gap-3">
+                                  <div className="flex flex-col items-center">
+                                    <div className={`w-2 h-2 rounded-full border-2 mt-1 ${item.type === 'hotel' ? 'border-orange-500 bg-orange-500' :
+                                        item.type === 'transport' ? 'border-blue-400 bg-blue-400' :
+                                          item.type === 'dining' ? 'border-yellow-400 bg-yellow-400' :
+                                            'border-emerald-400 bg-emerald-400'
+                                      }`} />
+                                    {idx !== day.routeSummary.length - 1 && (
+                                      <div className="w-0.5 h-6 bg-zinc-100 my-0.5" />
+                                    )}
+                                  </div>
+                                  <div className="flex flex-col">
+                                    <span className="text-xs text-[#0A192F] font-bold line-clamp-1 leading-none mb-1">{item.title}</span>
+                                    <span className="text-[9px] text-zinc-400 uppercase tracking-tighter">{item.type}</span>
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-2 opacity-0 group-hover/item:opacity-100 transition-opacity">
+                                  <a href={item.link} target="_blank" rel="noopener noreferrer" className="text-zinc-400 hover:text-orange-500">
+                                    <ExternalLink size={12} />
+                                  </a>
+                                  <button onClick={() => removeRouteItem(dIdx, item.id)} className="text-zinc-400 hover:text-rose-500">
+                                    <Trash2 size={12} />
+                                  </button>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        </div>
       )}
     </AnimatePresence>,
     document.body
   );
 }
 
-function ManualEntryForm({ value, onChange, onAdd, placeholder }: { 
-  value: { title: string, link: string }, 
-  onChange: (val: any) => void, 
+function ManualEntryForm({ value, onChange, onAdd, placeholder }: {
+  value: { title: string, link: string },
+  onChange: (val: any) => void,
   onAdd: () => void,
   placeholder: string
 }) {
   return (
-    <motion.div 
+    <motion.div
       initial={{ opacity: 0, y: -10 }}
       animate={{ opacity: 1, y: 0 }}
       className="p-6 bg-zinc-50 rounded-2xl border border-zinc-100 space-y-4"
@@ -853,8 +850,8 @@ function ManualEntryForm({ value, onChange, onAdd, placeholder }: {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-1">
           <label className="text-[9px] font-bold text-zinc-400 uppercase tracking-widest ml-1">Name / Title</label>
-          <input 
-            type="text" 
+          <input
+            type="text"
             placeholder={placeholder}
             value={value.title}
             onChange={(e) => onChange({ ...value, title: e.target.value })}
@@ -863,8 +860,8 @@ function ManualEntryForm({ value, onChange, onAdd, placeholder }: {
         </div>
         <div className="space-y-1">
           <label className="text-[9px] font-bold text-zinc-400 uppercase tracking-widest ml-1">Website Link (Optional)</label>
-          <input 
-            type="text" 
+          <input
+            type="text"
             placeholder="https://..."
             value={value.link}
             onChange={(e) => onChange({ ...value, link: e.target.value })}
@@ -872,7 +869,7 @@ function ManualEntryForm({ value, onChange, onAdd, placeholder }: {
           />
         </div>
       </div>
-      <button 
+      <button
         onClick={onAdd}
         className="w-full bg-[#0A192F] text-white font-bold py-3 rounded-xl hover:bg-navy/90 transition-all text-xs uppercase tracking-widest"
       >

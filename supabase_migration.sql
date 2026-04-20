@@ -119,6 +119,11 @@ CREATE TABLE public.profiles (
   username TEXT UNIQUE,
   full_name TEXT,
   avatar_url TEXT,
+  cover_photo_url TEXT,
+  bio TEXT,
+  location TEXT,
+  education TEXT,
+  dob TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 

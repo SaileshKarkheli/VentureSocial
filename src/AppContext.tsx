@@ -55,6 +55,7 @@ interface AppContextType {
   addToRemixFolder: (post: Post) => void;
   removeFromRemixFolder: (locationKey: string, postId: string) => void;
   addCustomTrip: (trip: MyTrip) => void;
+  isAuthInitializing: boolean;
 }
 
 export interface FlightOption {
@@ -97,16 +98,19 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const [isAuthInitializing, setIsAuthInitializing] = useState(true);
   const isAuthenticated = !!user;
 
   // Supabase Auth Integration
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ? { id: session.user.id, name: session.user.user_metadata?.name || 'User', email: session.user.email || '', avatar: '', bio: '' } : null);
+      setIsAuthInitializing(false);
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ? { id: session.user.id, name: session.user.user_metadata?.name || 'User', email: session.user.email || '', avatar: '', bio: '' } : null);
+      setIsAuthInitializing(false);
     });
 
     return () => subscription.unsubscribe();
@@ -159,7 +163,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     // Pipeline to save new trips directly to the UI immediately, bypassing mock APIs
     setMyTrips(prev => [trip, ...prev]);
     showToast(`Successfully saved ${trip.country} to your history.`);
-    
+
     // In production, sync to database here:
     // await supabase.from('trips').insert([trip]);
   };
@@ -173,7 +177,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const { error } = await supabase.auth.signUp({
       email,
       password: pass,
-      options: { data: { name } }
+      options: { data: { name, full_name: name, user_name: name } }
     });
     if (error) throw error;
   };
@@ -214,7 +218,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       if (data.success) {
         setPublicPosts(prev => [data.post, ...prev]);
       }
-    } catch {}
+    } catch { }
   };
 
   const togglePublic = (eventId: string, isPublic: boolean) => {
@@ -223,7 +227,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const [cartItems, setCartItems] = useState<Post[]>([]);
   const [globalToast, setGlobalToast] = useState<string | null>(null);
-  
+
   // Follow System State
   const [followedUsers, setFollowedUsers] = useState<string[]>([]);
   const [requestedUsers, setRequestedUsers] = useState<string[]>([]);
@@ -240,11 +244,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setCustomTripSpots(prev => {
       const exists = prev.find(s => s.description === spot.description);
       if (exists) {
-         showToast(`Removed from your Custom Trip`);
-         return prev.filter(s => s.description !== spot.description);
+        showToast(`Removed from your Custom Trip`);
+        return prev.filter(s => s.description !== spot.description);
       } else {
-         showToast(`Added to your Custom Trip!`);
-         return [...prev, { ...spot, id: spot.id || Math.random().toString(36).substr(2, 9) }];
+        showToast(`Added to your Custom Trip!`);
+        return [...prev, { ...spot, id: spot.id || Math.random().toString(36).substr(2, 9) }];
       }
     });
   };
@@ -322,21 +326,21 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const addToRemixFolder = (post: Post) => {
     const locationKey = post.location.split(',')[0].trim();
-    
+
     setRemixFolders(prev => {
       const existing = prev[locationKey] || [];
       if (existing.some(p => p.id === post.id)) {
-         showToast(`This item is already in your ${locationKey} Remix.`);
-         return prev;
+        showToast(`This item is already in your ${locationKey} Remix.`);
+        return prev;
       }
-      
+
       showToast(`Added to ${locationKey} Remix Workspace!`);
       if (user) {
         SocialService.remixPost(post.id, user.id).catch(err => {
           console.error("Supabase Remix Logging Error:", err);
         });
       }
-      
+
       return {
         ...prev,
         [locationKey]: [...existing, post]
@@ -348,13 +352,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setRemixFolders(prev => {
       const existing = prev[locationKey] || [];
       const updated = existing.filter(p => p.id !== postId);
-      
+
       if (updated.length === 0) {
         const newFolders = { ...prev };
         delete newFolders[locationKey];
         return newFolders;
       }
-      
+
       return {
         ...prev,
         [locationKey]: updated
@@ -364,9 +368,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AppContext.Provider value={{ 
+    <AppContext.Provider value={{
       user, isAuthenticated, login, register, logout,
-      savedItems, saveItem, 
+      savedItems, saveItem,
       publicPosts, isLoadingFeed, addPublicPost, togglePublic,
       searchQuery, setSearchQuery, filters, setFilters, sortBy, setSortBy,
       travelServices, flights, rentalCars, isLoadingServices,

@@ -1,33 +1,68 @@
-import React, { useState } from 'react';
-import { motion } from 'motion/react';
-import { User as UserIcon, Mail, Calendar, MapPin, Camera, Edit2, Bookmark, ExternalLink, Bed, Utensils, Info, Plus, Shield, ShieldCheck, MessageSquare } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
+import { User as UserIcon, Mail, Calendar, MapPin, Camera, Edit2, Bookmark, ExternalLink, Bed, Utensils, Info, Plus, Shield, ShieldCheck, MessageSquare, Loader2 } from 'lucide-react';
 import { useApp } from '../AppContext';
 import ChatOverlay from '../components/ChatOverlay';
+import { supabase } from '../supabaseClient';
+import EditProfileModal from '../components/EditProfileModal';
 
 export default function Profile() {
-  const { savedItems, followedUsers, user } = useApp(); // Kept user from Supabase auth!
+  const { savedItems, followedUsers, user } = useApp();
   const [isPrivateAccount, setIsPrivateAccount] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
-  
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+
+  const [isLoading, setIsLoading] = useState(true);
+  const [dbProfile, setDbProfile] = useState<any>(null);
+
+  useEffect(() => {
+    if (!user) {
+      setIsLoading(false);
+      return;
+    }
+    
+    const fetchProfile = async () => {
+      setIsLoading(true);
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+        
+      if (data) {
+        setDbProfile(data);
+      }
+      setIsLoading(false);
+    };
+    
+    fetchProfile();
+  }, [user]);
+
   const userData = {
-    name: user?.name || 'Sailesh Karkheli',
-    dob: 'January 15, 1992',
-    email: user?.email || 'karkhsail@gmail.com',
-    location: 'Dayton, Ohio',
-    education: "Master's in Marketing Analytics, Wright State University",
-    bio: 'Entrepreneur and Marketing Specialist building the future of social travel history.',
+    name: dbProfile?.full_name || user?.name || 'New Explorer',
+    dob: dbProfile?.dob || '',
+    email: user?.email || '',
+    location: dbProfile?.location || '',
+    education: dbProfile?.education || '',
+    bio: dbProfile?.bio || '',
+    avatar: dbProfile?.avatar_url || user?.avatar || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=400&q=80",
+    cover: dbProfile?.cover_photo_url || "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1200&q=80",
     stats: [
-      { label: 'Trips', value: '42' },
+      { label: 'Trips', value: '0' },
       { label: 'Following', value: followedUsers.length.toString() },
-      { label: 'Followers', value: '8.5k' }
+      { label: 'Followers', value: '0' }
     ]
   };
+
+  if (isLoading) {
+    return <div className="min-h-[50vh] flex items-center justify-center"><Loader2 className="animate-spin text-orange-500" size={32} /></div>;
+  }
 
   return (
     <div className="max-w-4xl mx-auto space-y-8 pb-20 text-zinc-900">
       <div className="relative h-64 rounded-3xl overflow-hidden bg-zinc-100 border border-zinc-200">
         <img
-          src="https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1200&q=80"
+          src={userData.cover}
           alt="Cover"
           className="w-full h-full object-cover opacity-80"
           referrerPolicy="no-referrer"
@@ -42,30 +77,38 @@ export default function Profile() {
           <div className="relative">
             <div className="w-40 h-40 rounded-3xl bg-white p-1 shadow-xl border-4 border-white">
               <img
-                src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=400&q=80"
+                src={userData.avatar}
                 alt="Profile"
                 className="w-full h-full object-cover rounded-2xl"
                 referrerPolicy="no-referrer"
               />
             </div>
-            <button className="absolute bottom-2 right-2 bg-orange-500 text-white p-2 rounded-xl shadow-lg hover:bg-orange-400 transition-colors">
+            <button 
+              onClick={() => setIsEditModalOpen(true)}
+              className="absolute bottom-2 right-2 bg-orange-500 text-white p-2 rounded-xl shadow-lg hover:bg-orange-400 transition-colors"
+            >
               <Edit2 size={16} />
             </button>
           </div>
-          
+
           <div className="flex-1 pb-4">
             <h2 className="text-4xl font-display font-bold text-[#0A192F]">{userData.name}</h2>
-            <div className="flex items-center gap-2 text-zinc-500 mt-1">
-              <MapPin size={16} className="text-orange-500" />
-              <span>{userData.location}</span>
-            </div>
+            {userData.location && (
+              <div className="flex items-center gap-2 text-zinc-500 mt-1">
+                <MapPin size={16} className="text-orange-500" />
+                <span>{userData.location}</span>
+              </div>
+            )}
           </div>
 
           <div className="flex flex-col sm:flex-row gap-3 pb-4">
-            <button className="bg-[#0A192F] text-white px-6 py-2 rounded-xl font-bold hover:bg-black transition-colors shadow-lg">
+            <button 
+              onClick={() => setIsEditModalOpen(true)}
+              className="bg-[#0A192F] text-white px-6 py-2 rounded-xl font-bold hover:bg-black transition-colors shadow-lg"
+            >
               Edit Profile
             </button>
-            <button 
+            <button
               onClick={() => setIsChatOpen(true)}
               className="bg-orange-500 text-white px-6 py-2 rounded-xl font-bold hover:bg-orange-400 transition-colors flex items-center justify-center gap-2 shadow-lg shadow-orange-500/20"
             >
@@ -76,14 +119,22 @@ export default function Profile() {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div className="md:col-span-2 space-y-8">
-            <section className="bg-white p-6 rounded-2xl border border-zinc-100 shadow-sm">
-              <h3 className="text-lg font-bold text-[#0A192F] mb-4">About Me</h3>
-              <p className="text-zinc-600 leading-relaxed">{userData.bio}</p>
-              <div className="mt-4 pt-4 border-t border-zinc-100">
-                <p className="text-xs text-zinc-400 uppercase font-bold tracking-wider mb-1">Education</p>
-                <p className="text-sm text-[#0A192F] font-medium">{userData.education}</p>
-              </div>
-            </section>
+            {(userData.bio || userData.education) && (
+              <section className="bg-white p-6 rounded-2xl border border-zinc-100 shadow-sm">
+                {userData.bio && (
+                  <>
+                    <h3 className="text-lg font-bold text-[#0A192F] mb-4">About Me</h3>
+                    <p className="text-zinc-600 leading-relaxed">{userData.bio}</p>
+                  </>
+                )}
+                {userData.education && (
+                  <div className={userData.bio ? "mt-4 pt-4 border-t border-zinc-100" : ""}>
+                    <p className="text-xs text-zinc-400 uppercase font-bold tracking-wider mb-1">Education</p>
+                    <p className="text-sm text-[#0A192F] font-medium">{userData.education}</p>
+                  </div>
+                )}
+              </section>
+            )}
 
             {/* Saved Items Section */}
             <section className="bg-white p-6 rounded-2xl border border-zinc-100 shadow-sm space-y-6">
@@ -153,24 +204,28 @@ export default function Profile() {
                     <p className="font-medium text-[#0A192F]">{userData.name}</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-3 text-zinc-600">
-                  <div className="w-10 h-10 rounded-xl bg-zinc-50 flex items-center justify-center">
-                    <Mail size={20} className="text-orange-500" />
+                {userData.email && (
+                  <div className="flex items-center gap-3 text-zinc-600">
+                    <div className="w-10 h-10 rounded-xl bg-zinc-50 flex items-center justify-center">
+                      <Mail size={20} className="text-orange-500" />
+                    </div>
+                    <div>
+                      <p className="text-xs text-zinc-400 uppercase font-bold tracking-wider">Email Address</p>
+                      <p className="font-medium text-[#0A192F]">{userData.email}</p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-xs text-zinc-400 uppercase font-bold tracking-wider">Email Address</p>
-                    <p className="font-medium text-[#0A192F]">{userData.email}</p>
+                )}
+                {userData.dob && (
+                  <div className="flex items-center gap-3 text-zinc-600">
+                    <div className="w-10 h-10 rounded-xl bg-zinc-50 flex items-center justify-center">
+                      <Calendar size={20} className="text-orange-500" />
+                    </div>
+                    <div>
+                      <p className="text-xs text-zinc-400 uppercase font-bold tracking-wider">Date of Birth</p>
+                      <p className="font-medium text-[#0A192F]">{userData.dob}</p>
+                    </div>
                   </div>
-                </div>
-                <div className="flex items-center gap-3 text-zinc-600">
-                  <div className="w-10 h-10 rounded-xl bg-zinc-50 flex items-center justify-center">
-                    <Calendar size={20} className="text-orange-500" />
-                  </div>
-                  <div>
-                    <p className="text-xs text-zinc-400 uppercase font-bold tracking-wider">Date of Birth</p>
-                    <p className="font-medium text-[#0A192F]">{userData.dob}</p>
-                  </div>
-                </div>
+                )}
               </div>
             </section>
           </div>
@@ -196,8 +251,8 @@ export default function Profile() {
                     {isPrivateAccount ? 'Private Account' : 'Public Account (Standard)'}
                   </h4>
                   <p className="text-xs text-zinc-500 mt-1 max-w-[200px]">
-                    {isPrivateAccount 
-                      ? 'Only approved followers can view your trips.' 
+                    {isPrivateAccount
+                      ? 'Only approved followers can view your trips.'
                       : 'Anyone can view your trips and follow you instantly.'}
                   </p>
                 </div>
@@ -226,9 +281,20 @@ export default function Profile() {
           </div>
         </div>
       </div>
-      
+
       {/* Absolute strict deployment of Chat UI layer */}
       <ChatOverlay isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} targetUser="@travel_guru" />
+      
+      <AnimatePresence>
+        {isEditModalOpen && (
+          <EditProfileModal 
+            isOpen={isEditModalOpen} 
+            onClose={() => setIsEditModalOpen(false)} 
+            currentProfile={dbProfile} 
+            onProfileUpdate={(newData) => setDbProfile(prev => ({ ...prev, ...newData }))} 
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }

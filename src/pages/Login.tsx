@@ -83,10 +83,10 @@ export default function Login() {
     try {
       if (view === 'login') {
         await login(email, password);
-        navigate(from, { replace: true });
+        // Navigation relies natively on the onAuthStateChange hook above
       } else if (view === 'signup') {
         await register(name, email, password);
-        navigate(from, { replace: true });
+        // Navigation relies natively on the onAuthStateChange hook above
       } else if (view === 'forgot') {
         await new Promise(r => setTimeout(r, 1000));
         alert('Password reset link sent to ' + email);
