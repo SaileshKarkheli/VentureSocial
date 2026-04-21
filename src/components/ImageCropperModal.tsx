@@ -110,11 +110,13 @@ export default function ImageCropperModal({ imageSrc, aspectRatio, onCropComplet
             image={imageSrc}
             crop={crop}
             zoom={zoom}
+            minZoom={0.1}
+            maxZoom={3}
             aspect={aspectRatio}
             onCropChange={setCrop}
             onCropComplete={onCropCompleteEvent}
             onZoomChange={setZoom}
-            objectFit="horizontal-cover"
+            restrictPosition={false}
           />
         </div>
 
@@ -127,7 +129,7 @@ export default function ImageCropperModal({ imageSrc, aspectRatio, onCropComplet
             <input
               type="range"
               value={zoom}
-              min={1}
+              min={0.1}
               max={3}
               step={0.1}
               aria-labelledby="Zoom"
