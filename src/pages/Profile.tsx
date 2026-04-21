@@ -5,12 +5,18 @@ import { useApp } from '../AppContext';
 import ChatOverlay from '../components/ChatOverlay';
 import { supabase } from '../supabaseClient';
 import EditProfileModal from '../components/EditProfileModal';
+import ImageCropperModal from '../components/ImageCropperModal';
+import ImageViewerModal from '../components/ImageViewerModal';
 
 export default function Profile() {
   const { savedItems, followedUsers, user } = useApp();
   const [isPrivateAccount, setIsPrivateAccount] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [selectedFullImage, setSelectedFullImage] = useState<string | null>(null);
+  
+  // Cropper Pipeline State
+  const [cropperState, setCropperState] = useState<{ src: string, aspect: number, field: string } | null>(null);
 
   const [isLoading, setIsLoading] = useState(true);
   const [dbProfile, setDbProfile] = useState<any>(null);
@@ -38,42 +44,32 @@ export default function Profile() {
     fetchProfile();
   }, [user]);
 
-  const handleDirectImageUpload = (e: React.ChangeEvent<HTMLInputElement>, fieldName: string) => {
+  const initiateCropPipeline = (e: React.ChangeEvent<HTMLInputElement>, fieldName: string, aspect: number) => {
     if (!user) return;
     const file = e.target.files?.[0];
     if (!file) return;
 
     const reader = new FileReader();
     reader.onload = (event) => {
-      const img = new Image();
-      img.onload = async () => {
-        const canvas = document.createElement('canvas');
-        let width = img.width;
-        let height = img.height;
-        const MAX = 1200;
-        if (width > height) {
-          if (width > MAX) { height *= MAX / width; width = MAX; }
-        } else {
-          if (height > MAX) { width *= MAX / height; height = MAX; }
-        }
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext('2d');
-        ctx?.drawImage(img, 0, 0, width, height);
-        
-        const base64Str = canvas.toDataURL('image/jpeg', 0.6);
-        setDbProfile((prev: any) => ({ ...prev, [fieldName]: base64Str }));
-        
-        try {
-          const { error } = await supabase.from('profiles').update({ [fieldName]: base64Str }).eq('id', user.id);
-          if (error) throw error;
-        } catch (err: any) {
-          alert('Failed to save image permanently. Ensure database columns are built properly.');
-        }
-      };
-      img.src = event.target?.result as string;
+      setCropperState({ src: event.target?.result as string, aspect, field: fieldName });
     };
     reader.readAsDataURL(file);
+    e.target.value = ''; // Reset strictly to allow re-uploading same file
+  };
+
+  const handleCropComplete = async (base64Str: string) => {
+    if (!user || !cropperState) return;
+    
+    setDbProfile((prev: any) => ({ ...prev, [cropperState.field]: base64Str }));
+    const currentField = cropperState.field;
+    setCropperState(null); // Instantly drop modal
+    
+    try {
+      const { error } = await supabase.from('profiles').update({ [currentField]: base64Str }).eq('id', user.id);
+      if (error) throw error;
+    } catch (err: any) {
+      alert('Failed to save image permanently. Database failure.');
+    }
   };
 
   const userData = {
@@ -103,20 +99,21 @@ export default function Profile() {
           <img
             src={userData.cover}
             alt="Cover"
-            className="w-full h-full object-cover opacity-80"
+            className="w-full h-full object-cover opacity-80 cursor-pointer"
             referrerPolicy="no-referrer"
+            onClick={() => setSelectedFullImage(userData.cover)}
           />
         ) : (
           <div className="w-full h-full bg-gradient-to-tr from-[#0A192F]/5 to-[#0A192F]/10 flex items-center justify-center">
             <Camera size={48} className="text-[#0A192F]/20" />
           </div>
         )}
-        <label className="absolute bottom-4 right-4 bg-white/80 backdrop-blur-md text-zinc-900 p-2 rounded-full hover:bg-white transition-colors border border-zinc-200 shadow-lg cursor-pointer">
+        <label className="absolute bottom-4 right-4 bg-white/80 backdrop-blur-md text-zinc-900 p-2 rounded-full hover:bg-white transition-colors border border-zinc-200 shadow-lg cursor-pointer z-10">
           <input 
             type="file" 
             accept="image/*"
             className="hidden"
-            onChange={(e) => handleDirectImageUpload(e, 'cover_photo_url')}
+            onChange={(e) => initiateCropPipeline(e, 'cover_photo_url', 16/9)}
           />
           <Camera size={20} />
         </label>
@@ -130,8 +127,9 @@ export default function Profile() {
                 <img
                   src={userData.avatar}
                   alt="Profile"
-                  className="w-full h-full object-cover rounded-2xl"
+                  className="w-full h-full object-cover rounded-2xl cursor-pointer"
                   referrerPolicy="no-referrer"
+                  onClick={() => setSelectedFullImage(userData.avatar)}
                 />
               ) : (
                 <div className="w-full h-full bg-zinc-100 rounded-2xl flex items-center justify-center">
@@ -139,12 +137,12 @@ export default function Profile() {
                 </div>
               )}
             </div>
-            <label className="absolute bottom-2 right-2 bg-orange-500 text-white p-2 rounded-xl shadow-lg hover:bg-orange-400 transition-colors cursor-pointer">
+            <label className="absolute bottom-2 right-2 bg-orange-500 text-white p-2 rounded-xl shadow-lg hover:bg-orange-400 transition-colors cursor-pointer z-10">
               <input 
                 type="file" 
                 accept="image/*"
                 className="hidden"
-                onChange={(e) => handleDirectImageUpload(e, 'avatar_url')}
+                onChange={(e) => initiateCropPipeline(e, 'avatar_url', 1)}
               />
               <Camera size={16} />
             </label>
@@ -351,6 +349,21 @@ export default function Profile() {
             onClose={() => setIsEditModalOpen(false)} 
             currentProfile={dbProfile} 
             onProfileUpdate={(newData) => setDbProfile(prev => ({ ...prev, ...newData }))} 
+          />
+        )}
+        
+        <ImageViewerModal 
+          isOpen={!!selectedFullImage} 
+          imageSrc={selectedFullImage} 
+          onClose={() => setSelectedFullImage(null)} 
+        />
+        
+        {cropperState && (
+          <ImageCropperModal
+            imageSrc={cropperState.src}
+            aspectRatio={cropperState.aspect}
+            onCropComplete={handleCropComplete}
+            onClose={() => setCropperState(null)}
           />
         )}
       </AnimatePresence>
