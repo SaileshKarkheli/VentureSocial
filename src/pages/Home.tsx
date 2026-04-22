@@ -15,7 +15,7 @@ import { supabase } from '../supabaseClient';
 type TabType = 'Feed' | 'Photos' | 'Videos';
 
 export default function Home() {
-  const { publicPosts, isLoadingFeed, searchQuery, setSearchQuery, addToRemixFolder, followedUsers, requestedUsers, toggleFollow, userInterestTags, addUserInterest, userLocation, requestLocation } = useApp();
+  const { publicPosts, isLoadingFeed, searchQuery, setSearchQuery, addToRemixFolder, followedUsers, requestedUsers, toggleFollow, userInterestTags, addUserInterest, userLocation, requestLocation, userLikedPosts, togglePostLike } = useApp();
   const navigate = useNavigate();
   const [showFilters, setShowFilters] = useState(false);
   const [activeTab, setActiveTab] = useState<TabType>('Feed');
@@ -405,8 +405,11 @@ export default function Home() {
                   {/* Post Engagement & Content */}
                   <div className="p-6 space-y-4">
                     <div className="flex items-center gap-6">
-                      <button className="flex items-center gap-2 text-[#0A192F] hover:text-rose-500 transition-colors group">
-                        <Heart size={26} className="group-hover:fill-rose-500 transition-all" />
+                      <button 
+                        onClick={() => togglePostLike(post.id)}
+                        className={`flex items-center gap-2 transition-colors group ${userLikedPosts.includes(post.id) ? 'text-rose-500' : 'text-[#0A192F] hover:text-rose-500'}`}
+                      >
+                        <Heart size={26} className={`transition-all ${userLikedPosts.includes(post.id) ? 'fill-rose-500 scale-110 drop-shadow-md' : 'group-hover:fill-rose-500'}`} />
                         <span className="font-bold">{post.likes}</span>
                       </button>
                       <button className="flex items-center gap-2 text-[#0A192F] hover:text-orange-500 transition-colors group">

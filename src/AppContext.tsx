@@ -42,13 +42,15 @@ interface AppContextType {
   globalToast: string | null;
   setGlobalToast: (msg: string | null) => void;
   followedUsers: string[];
-  requestedUsers: string[];
-  toggleFollow: (username: string, isPrivate: boolean) => void;
   userInterestTags: string[];
   addUserInterest: (tag: string) => void;
   customTripSpots: import('./types').PostImage[];
   toggleCustomSpot: (spot: import('./types').PostImage) => void;
+  userLikedPosts: string[];
+  togglePostLike: (postId: string) => void;
   clearCustomTrip: () => void;
+  hasUnreadMessages: boolean;
+  setHasUnreadMessages: (has: boolean) => void;
   userLocation: { lat: number, lng: number } | null;
   requestLocation: () => void;
   remixFolders: Record<string, Post[]>;
@@ -105,13 +107,19 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ? { id: session.user.id, name: session.user.user_metadata?.name || 'User', email: session.user.email || '', avatar: '', bio: '' } : null);
-      if (session?.user) fetchUserFollows(session.user.id);
+      if (session?.user) {
+        fetchUserFollows(session.user.id);
+        fetchUserLikesCache(session.user.id);
+      }
       setIsAuthInitializing(false);
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ? { id: session.user.id, name: session.user.user_metadata?.name || 'User', email: session.user.email || '', avatar: '', bio: '' } : null);
-      if (session?.user) fetchUserFollows(session.user.id);
+      if (session?.user) {
+        fetchUserFollows(session.user.id);
+        fetchUserLikesCache(session.user.id);
+      }
       setIsAuthInitializing(false);
     });
 
@@ -135,6 +143,54 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       setFollowedUsers(activeIdentities);
     }
   };
+
+  const [userLikedPosts, setUserLikedPosts] = useState<string[]>([]);
+  const fetchUserLikesCache = async (userId: string) => {
+    const likes = await SocialService.fetchUserLikes(userId);
+    setUserLikedPosts(likes);
+  };
+
+  const togglePostLike = async (postId: string) => {
+    if (!user) {
+      showToast('Must be logged in to like posts.');
+      return;
+    }
+    const isCurrentlyLiked = userLikedPosts.includes(postId);
+    // Optimistic UI Update
+    setUserLikedPosts(prev => isCurrentlyLiked ? prev.filter(id => id !== postId) : [...prev, postId]);
+    setPublicPosts(prev => prev.map(p => 
+      p.id === postId 
+        ? { ...p, likes: isCurrentlyLiked ? p.likes - 1 : p.likes + 1 }
+        : p
+    ));
+    
+    try {
+      await SocialService.toggleLike(postId, user.id);
+    } catch {
+      // Revert if API fails
+      setUserLikedPosts(prev => isCurrentlyLiked ? [...prev, postId] : prev.filter(id => id !== postId));
+      setPublicPosts(prev => prev.map(p => 
+        p.id === postId 
+          ? { ...p, likes: isCurrentlyLiked ? p.likes + 1 : p.likes - 1 }
+          : p
+      ));
+      showToast('Failed to update like status.');
+    }
+  };
+
+  const [hasUnreadMessages, setHasUnreadMessages] = useState(false);
+
+  // Real-Time P2P Interceptor 
+  useEffect(() => {
+    if (!user) return;
+    const channel = SocialService.subscribeToGlobalMessages((payload) => {
+      if (payload.new.sender_id !== user.id) {
+        setHasUnreadMessages(true);
+        showToast('📬 New Travel Message Received!');
+      }
+    });
+    return () => { supabase.removeChannel(channel); };
+  }, [user]);
 
   // Data States
   const [publicPosts, setPublicPosts] = useState<Post[]>([]);
@@ -408,6 +464,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       followedUsers, requestedUsers, toggleFollow,
       userInterestTags, addUserInterest,
       customTripSpots, toggleCustomSpot, clearCustomTrip,
+      userLikedPosts, togglePostLike,
+      hasUnreadMessages, setHasUnreadMessages,
       userLocation, requestLocation,
       remixFolders, addToRemixFolder, removeFromRemixFolder,
       addCustomTrip

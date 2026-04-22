@@ -12,6 +12,7 @@ import BlogDetail from './pages/BlogDetail';
 import BlogList from './pages/BlogList';
 import Search from './pages/Search';
 import TravelServices from './pages/TravelServices';
+import Messages from './pages/Messages';
 
 export default function App() {
   return (
@@ -30,6 +31,7 @@ export default function App() {
           <Route path="/blogs" element={<BlogList />} />
           <Route path="/search" element={<Search />} />
           <Route path="/services" element={<TravelServices />} />
+          <Route path="/messages" element={<ProtectedRoute><Messages /></ProtectedRoute>} />
           
           {/* Placeholder routes for the rest of the sidebar */}
           <Route path="/photos" element={<ProtectedRoute><div className="p-8 text-center text-zinc-500">Photos coming soon...</div></ProtectedRoute>} />

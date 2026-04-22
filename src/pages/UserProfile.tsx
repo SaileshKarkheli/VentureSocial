@@ -158,7 +158,10 @@ export default function UserProfile() {
                 >
                   {followedUsers.includes(targetProfile.id) ? 'Following' : 'Follow'}
                 </button>
-                <button className="bg-orange-500 text-white px-6 py-3 rounded-xl font-bold shadow-lg shadow-orange-500/20 hover:bg-orange-400 transition-colors flex items-center justify-center gap-2">
+                <button 
+                  onClick={() => navigate(`/messages?user=${targetProfile.id}`)}
+                  className="bg-orange-500 text-white px-6 py-3 rounded-xl font-bold shadow-lg shadow-orange-500/20 hover:bg-orange-400 transition-colors flex items-center justify-center gap-2"
+                >
                   <MessageSquare size={16} /> Contact
                 </button>
               </>

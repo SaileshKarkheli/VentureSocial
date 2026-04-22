@@ -63,23 +63,81 @@ export const SocialService = {
     return data;
   },
 
+  // LIKE (Toggle Like Status)
+  async toggleLike(postId: string, userId: string): Promise<boolean> {
+    const { data, error } = await supabase.from('likes').select('id').eq('post_id', postId).eq('user_id', userId).single();
+    if (data) {
+      // Remove Like
+      const { error: delError } = await supabase.from('likes').delete().eq('id', data.id);
+      if (delError) throw delError;
+      return false;
+    } else {
+      // Add Like
+      const { error: insError } = await supabase.from('likes').insert({ post_id: postId, user_id: userId });
+      if (insError) throw insError;
+      return true;
+    }
+  },
+
+  // FETCH USER LIKES (Identify what needs to glow red in the UI)
+  async fetchUserLikes(userId: string): Promise<string[]> {
+    const { data, error } = await supabase.from('likes').select('post_id').eq('user_id', userId);
+    if (error) return [];
+    return data.map(d => d.post_id);
+  },
+
   // GET OR CREATE CONVERSATION 
   async getOrCreateConversation(userA: string, userB: string) {
-    // Supabase RPC natively handles the unique least/greatest constraints on the Postgres backend 
-    return null; 
+    // Alphabetical ID sorting guarantees consistent constraint hits regardless of who initiates
+    const p1 = userA < userB ? userA : userB;
+    const p2 = userA < userB ? userB : userA;
+    
+    let { data, error } = await supabase.from('conversations').select('id').eq('participant_1', p1).eq('participant_2', p2).single();
+    if (data) return data.id;
+
+    // If none exists, instantiate
+    const { data: newData, error: newErr } = await supabase.from('conversations').insert({ participant_1: p1, participant_2: p2 }).select('id').single();
+    if (newErr) throw newErr;
+    return newData.id;
+  },
+
+  // FETCH CONVERSATIONS FOR USER
+  async fetchUserConversations(userId: string) {
+    const { data, error } = await supabase
+      .from('conversations')
+      .select('*, p1:profiles!conversations_participant_1_fkey(*), p2:profiles!conversations_participant_2_fkey(*)')
+      .or(`participant_1.eq.${userId},participant_2.eq.${userId}`)
+      .order('updated_at', { ascending: false });
+    if (error) throw error;
+    return data;
+  },
+
+  // FETCH MESSAGES FOR A CONVERSATION
+  async fetchMessages(conversationId: string) {
+    const { data, error } = await supabase
+      .from('messages')
+      .select('*')
+      .eq('conversation_id', conversationId)
+      .order('created_at', { ascending: true });
+    if (error) throw error;
+    return data;
   },
 
   // SEND MESSAGE
   async sendMessage(conversationId: string, senderId: string, text: string) {
     const { error } = await supabase.from('messages').insert({ conversation_id: conversationId, sender_id: senderId, content: text });
     if (error) throw error;
+    
+    // Bump updated_at for sorting
+    await supabase.from('conversations').update({ updated_at: new Date().toISOString() }).eq('id', conversationId);
   },
 
-  // SUBSCRIBE TO MESSAGES (Supabase Realtime)
-  subscribeToMessages(conversationId: string, callback: (payload: any) => void) {
+  // SUBSCRIBE TO MESSAGES (Global User Listener)
+  subscribeToGlobalMessages(callback: (payload: any) => void) {
+    // RLS naturally restricts payload broadcasts to rows the user can read via their active conversations
     return supabase
-      .channel(`chat_${conversationId}`)
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: `conversation_id=eq.${conversationId}` }, callback)
+      .channel('public:messages')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, callback)
       .subscribe();
   },
 
