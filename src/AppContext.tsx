@@ -105,16 +105,36 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ? { id: session.user.id, name: session.user.user_metadata?.name || 'User', email: session.user.email || '', avatar: '', bio: '' } : null);
+      if (session?.user) fetchUserFollows(session.user.id);
       setIsAuthInitializing(false);
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ? { id: session.user.id, name: session.user.user_metadata?.name || 'User', email: session.user.email || '', avatar: '', bio: '' } : null);
+      if (session?.user) fetchUserFollows(session.user.id);
       setIsAuthInitializing(false);
     });
 
     return () => subscription.unsubscribe();
   }, []);
+
+  const fetchUserFollows = async (userId: string) => {
+    // Relational join to extract the explicit username attached to the following_id, mapped safely via Supabase foreign keys
+    const { data, error } = await supabase
+      .from('follows')
+      .select('profiles!follows_following_id_fkey(username, id)')
+      .eq('follower_id', userId);
+      
+    if (!error && data) {
+       // Dual identity injection: Allows the UI to check `.includes` against either UUID or Username perfectly!
+      const activeIdentities: string[] = [];
+      data.forEach((d: any) => {
+        if (d.profiles?.id) activeIdentities.push(d.profiles.id);
+        if (d.profiles?.username) activeIdentities.push(d.profiles.username);
+      });
+      setFollowedUsers(activeIdentities);
+    }
+  };
 
   // Data States
   const [publicPosts, setPublicPosts] = useState<Post[]>([]);
@@ -282,23 +302,31 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const toggleFollow = (username: string, isPrivate: boolean) => {
-    if (followedUsers.includes(username)) {
-      // Unfollow
-      setFollowedUsers(prev => prev.filter(u => u !== username));
-      showToast(`Unfollowed ${username}`);
-    } else if (requestedUsers.includes(username)) {
-      // Cancel Request
-      setRequestedUsers(prev => prev.filter(u => u !== username));
-      showToast(`Cancelled request to ${username}`);
+  const toggleFollow = async (targetId: string, isPrivate: boolean) => {
+    if (!user) {
+      showToast("Must be logged in to follow");
+      return;
+    }
+    
+    if (followedUsers.includes(targetId)) {
+      // Optimistic Unfollow
+      setFollowedUsers(prev => prev.filter(u => u !== targetId));
+      showToast(`Unfollowed account.`);
+      // Unfollow in Database
+      const { error } = await supabase.from('follows').delete().eq('follower_id', user.id).eq('following_id', targetId);
+      if (error) {
+        setFollowedUsers(prev => [...prev, targetId]);
+        showToast("Error unfollowing");
+      }
     } else {
-      // Follow / Request
-      if (isPrivate) {
-        setRequestedUsers(prev => [...prev, username]);
-        showToast(`Requested to follow ${username} 🔒`);
-      } else {
-        setFollowedUsers(prev => [...prev, username]);
-        showToast(`You are now following ${username}!`);
+      // Optimistic Follow
+      setFollowedUsers(prev => [...prev, targetId]);
+      showToast(`You are now following them!`);
+      // Bind connection in Database
+      const { error } = await supabase.from('follows').insert({ follower_id: user.id, following_id: targetId });
+      if (error) {
+        setFollowedUsers(prev => prev.filter(u => u !== targetId));
+        showToast("Error executing follow relation.");
       }
     }
   };

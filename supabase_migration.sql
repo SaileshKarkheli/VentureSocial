@@ -157,3 +157,30 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE PROCEDURE public.handle_new_user();
+
+-- ==========================================
+-- PHASE 8: THE SOCIAL GRAPH
+-- ==========================================
+
+-- 9. Follows Relational Table
+CREATE TABLE public.follows (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  follower_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE NOT NULL,
+  following_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+  UNIQUE(follower_id, following_id)
+);
+
+ALTER TABLE public.follows ENABLE ROW LEVEL SECURITY;
+
+-- Everyone can see who follows who
+CREATE POLICY "Public follows are viewable by everyone." 
+ON public.follows FOR SELECT USING (true);
+
+-- Authenticated Users can only follow people as themselves
+CREATE POLICY "Users can follow others." 
+ON public.follows FOR INSERT WITH CHECK (auth.uid() = follower_id);
+
+-- Authenticated Users can only unfollow people as themselves
+CREATE POLICY "Users can unfollow others." 
+ON public.follows FOR DELETE USING (auth.uid() = follower_id);
