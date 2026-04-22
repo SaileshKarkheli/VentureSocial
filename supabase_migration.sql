@@ -29,6 +29,7 @@ CREATE OR REPLACE FUNCTION calculate_engagement_score(target_post_id UUID)
 RETURNS INTEGER
 LANGUAGE sql
 STABLE
+SET search_path = public
 AS $$
     WITH post_stats AS (
         SELECT
@@ -117,7 +118,7 @@ BEGIN
   );
   RETURN new;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
 -- Trigger fires instantly upon Google OAuth success
 CREATE TRIGGER on_auth_user_created
@@ -218,3 +219,13 @@ CREATE POLICY "Users view messages in their conversations" ON public.messages
   );
 CREATE POLICY "Users send messages to their conversations" ON public.messages 
   FOR INSERT WITH CHECK (auth.uid() = sender_id);
+
+-- ==========================================
+-- PHASE 10: LEGACY INFRASTRUCTURE SECURITY PATCH
+-- ==========================================
+-- Supabase Splinter identifies legacy tables as publicly accessible if missing RLS.
+ALTER TABLE IF EXISTS public.trips ENABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS public.travel_services ENABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS public.flights ENABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS public.rental_cars ENABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS public.points_ledger ENABLE ROW LEVEL SECURITY;

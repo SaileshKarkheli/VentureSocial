@@ -105,22 +105,23 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   // Supabase Auth Integration
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    const initializeSession = async (session: any) => {
       setUser(session?.user ? { id: session.user.id, name: session.user.user_metadata?.name || 'User', email: session.user.email || '', avatar: '', bio: '' } : null);
       if (session?.user) {
-        fetchUserFollows(session.user.id);
-        fetchUserLikesCache(session.user.id);
+        await Promise.all([
+          fetchUserFollows(session.user.id),
+          fetchUserLikesCache(session.user.id)
+        ]);
       }
       setIsAuthInitializing(false);
+    };
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      initializeSession(session);
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ? { id: session.user.id, name: session.user.user_metadata?.name || 'User', email: session.user.email || '', avatar: '', bio: '' } : null);
-      if (session?.user) {
-        fetchUserFollows(session.user.id);
-        fetchUserLikesCache(session.user.id);
-      }
-      setIsAuthInitializing(false);
+      initializeSession(session);
     });
 
     return () => subscription.unsubscribe();

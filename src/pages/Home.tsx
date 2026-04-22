@@ -82,7 +82,12 @@ export default function Home() {
   };
 
   return (
-    <div className="space-y-12 text-zinc-900">
+    <motion.div 
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.6, ease: "easeOut" }}
+      className="space-y-12 text-zinc-900"
+    >
       {/* Discovery Hero */}
       <section className="relative h-[224px] rounded-[2.5rem] overflow-hidden flex flex-col items-center justify-center text-center px-6 border border-zinc-200">
         <SmartImage
@@ -470,6 +475,6 @@ export default function Home() {
           </motion.div>
         )}
       </AnimatePresence>
-    </div>
+    </motion.div>
   );
 }
