@@ -12,23 +12,6 @@ CREATE TABLE public.posts (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
--- 2. Likes Table
-CREATE TABLE public.likes (
-    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-    user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
-    post_id UUID REFERENCES public.posts(id) ON DELETE CASCADE NOT NULL,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
-    UNIQUE(user_id, post_id) 
-);
-
--- 3. Comments Table
-CREATE TABLE public.comments (
-    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-    user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
-    post_id UUID REFERENCES public.posts(id) ON DELETE CASCADE NOT NULL,
-    content TEXT NOT NULL,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
-);
 
 -- 4. Remix Stats (The Select/Basket Table)
 CREATE TABLE public.remix_stats (
@@ -39,24 +22,7 @@ CREATE TABLE public.remix_stats (
     UNIQUE(user_id, post_id)
 );
 
--- 5. Real-time P2P Interaction Hub
-CREATE TABLE public.conversations (
-    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-    user_a UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
-    user_b UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
-);
 
-CREATE UNIQUE INDEX unique_conversation_pair 
-ON public.conversations (LEAST(user_a, user_b), GREATEST(user_a, user_b));
-
-CREATE TABLE public.messages (
-    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-    conversation_id UUID REFERENCES public.conversations(id) ON DELETE CASCADE NOT NULL,
-    sender_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
-    content TEXT NOT NULL,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
-);
 
 -- 6. Social Scoring RPC (Database Function)
 CREATE OR REPLACE FUNCTION calculate_engagement_score(target_post_id UUID)
@@ -184,3 +150,71 @@ ON public.follows FOR INSERT WITH CHECK (auth.uid() = follower_id);
 -- Authenticated Users can only unfollow people as themselves
 CREATE POLICY "Users can unfollow others." 
 ON public.follows FOR DELETE USING (auth.uid() = follower_id);
+
+-- ==========================================
+-- PHASE 9: ENGAGEMENT & COORDINATION
+-- ==========================================
+
+-- 10. Likes Table
+CREATE TABLE public.likes (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE NOT NULL,
+  post_id UUID REFERENCES public.posts(id) ON DELETE CASCADE NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+  UNIQUE(user_id, post_id)
+);
+
+ALTER TABLE public.likes ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Public likes are viewable by everyone." ON public.likes FOR SELECT USING (true);
+CREATE POLICY "Users can insert their own likes." ON public.likes FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Users can delete their own likes." ON public.likes FOR DELETE USING (auth.uid() = user_id);
+
+-- 11. Comments Table
+CREATE TABLE public.comments (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE NOT NULL,
+  post_id UUID REFERENCES public.posts(id) ON DELETE CASCADE NOT NULL,
+  content TEXT NOT NULL CHECK (char_length(content) > 0 AND char_length(content) <= 500),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+ALTER TABLE public.comments ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Public comments are viewable by everyone." ON public.comments FOR SELECT USING (true);
+CREATE POLICY "Users can insert their own comments." ON public.comments FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Users can delete their own comments." ON public.comments FOR DELETE USING (auth.uid() = user_id);
+
+-- 12. Conversations Table (Private Message Threads)
+CREATE TABLE public.conversations (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  participant_1 UUID REFERENCES public.profiles(id) ON DELETE CASCADE NOT NULL,
+  participant_2 UUID REFERENCES public.profiles(id) ON DELETE CASCADE NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+  UNIQUE(participant_1, participant_2)
+);
+
+ALTER TABLE public.conversations ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Users view conversations they are in" ON public.conversations 
+  FOR SELECT USING (auth.uid() = participant_1 OR auth.uid() = participant_2);
+CREATE POLICY "Users insert conversations they are in" ON public.conversations 
+  FOR INSERT WITH CHECK (auth.uid() = participant_1 OR auth.uid() = participant_2);
+
+-- 13. Messages Table
+CREATE TABLE public.messages (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  conversation_id UUID REFERENCES public.conversations(id) ON DELETE CASCADE NOT NULL,
+  sender_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE NOT NULL,
+  content TEXT NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+ALTER TABLE public.messages ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Users view messages in their conversations" ON public.messages 
+  FOR SELECT USING (
+    EXISTS (
+      SELECT 1 FROM public.conversations c 
+      WHERE c.id = messages.conversation_id AND (auth.uid() = c.participant_1 OR auth.uid() = c.participant_2)
+    )
+  );
+CREATE POLICY "Users send messages to their conversations" ON public.messages 
+  FOR INSERT WITH CHECK (auth.uid() = sender_id);
