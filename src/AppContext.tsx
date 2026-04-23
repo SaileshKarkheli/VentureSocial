@@ -58,6 +58,8 @@ interface AppContextType {
   removeFromRemixFolder: (locationKey: string, postId: string) => void;
   addCustomTrip: (trip: MyTrip) => void;
   isAuthInitializing: boolean;
+  activeProfile: any;
+  updateActiveProfile: (newData: any) => void;
 }
 
 export interface FlightOption {
@@ -100,6 +102,7 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const [activeProfile, setActiveProfile] = useState<any>(null);
   const [isAuthInitializing, setIsAuthInitializing] = useState(true);
   const isAuthenticated = !!user;
 
@@ -108,10 +111,19 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const initializeSession = async (session: any) => {
       setUser(session?.user ? { id: session.user.id, name: session.user.user_metadata?.name || 'User', email: session.user.email || '', avatar: '', bio: '' } : null);
       if (session?.user) {
+        
+        // Identity Sub-Layer Hydration
+        const { data: profData } = await supabase.from('profiles').select('*').eq('id', session.user.id).single();
+        if (profData) {
+          setActiveProfile(profData);
+        }
+
         await Promise.all([
           fetchUserFollows(session.user.id),
           fetchUserLikesCache(session.user.id)
         ]);
+      } else {
+        setActiveProfile(null);
       }
       setIsAuthInitializing(false);
     };
@@ -452,6 +464,29 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     showToast('Removed from Remix Studio.');
   };
 
+  const updateActiveProfile = (newData: any) => {
+    setActiveProfile((prev: any) => ({ ...prev, ...newData }));
+    
+    // Zero-Refresh Matrix Overwrite
+    const nextName = newData.full_name || newData.username || 'Anonymous Explorer';
+    const nextAvatar = newData.avatar_url;
+    
+    const patchIdentity = (p: Post) => p.userId === user?.id 
+      ? { ...p, user: nextName, avatar: nextAvatar || p.avatar } 
+      : p;
+
+    setPublicPosts(prev => prev.map(patchIdentity));
+    setCartItems(prev => prev.map(patchIdentity));
+    
+    setRemixFolders(prev => {
+      const patched: Record<string, Post[]> = {};
+      Object.keys(prev).forEach(k => {
+        patched[k] = prev[k].map(patchIdentity);
+      });
+      return patched;
+    });
+  };
+
   return (
     <AppContext.Provider value={{
       user, isAuthenticated, login, register, logout,
@@ -469,7 +504,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       hasUnreadMessages, setHasUnreadMessages,
       userLocation, requestLocation,
       remixFolders, addToRemixFolder, removeFromRemixFolder,
-      addCustomTrip
+      addCustomTrip, activeProfile, updateActiveProfile
     }}>
       {children}
     </AppContext.Provider>

@@ -229,3 +229,9 @@ ALTER TABLE IF EXISTS public.travel_services ENABLE ROW LEVEL SECURITY;
 ALTER TABLE IF EXISTS public.flights ENABLE ROW LEVEL SECURITY;
 ALTER TABLE IF EXISTS public.rental_cars ENABLE ROW LEVEL SECURITY;
 ALTER TABLE IF EXISTS public.points_ledger ENABLE ROW LEVEL SECURITY;
+
+-- ==========================================
+-- PHASE 11: GLOBAL IDENTITY SYNC
+-- ==========================================
+-- Inject strict Foreign Key from posts to profiles to enable PostgREST relational inner joins.
+ALTER TABLE public.posts ADD CONSTRAINT posts_profile_fkey FOREIGN KEY (user_id) REFERENCES public.profiles(id) ON DELETE CASCADE;

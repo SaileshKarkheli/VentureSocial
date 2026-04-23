@@ -39,10 +39,29 @@ export const SocialService = {
   async fetchFeed() {
     const { data, error } = await supabase
       .from('posts')
-      .select('*, likes(count), comments(count), remix_stats(count)')
+      .select('*, profile:profiles!inner(id, username, full_name, avatar_url), likes(count), comments(count), remix_stats(count)')
       .order('created_at', { ascending: false });
     if (error) throw error;
-    return data;
+    
+    // Identity Hydration mapping to legacy types
+    return data.map((row: any) => ({
+      id: row.id,
+      userId: row.user_id,
+      tripId: row.id,
+      user: row.profile?.full_name || row.profile?.username || 'Anonymous Explorer',
+      avatar: row.profile?.avatar_url || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=100&q=80',
+      location: row.location_name,
+      images: [], // Images not natively configured in backend yet, handled by placeholder
+      caption: row.category,
+      likes: row.likes?.[0]?.count || 0,
+      comments: row.comments?.[0]?.count || 0,
+      remixes: row.remix_stats?.[0]?.count || 0,
+      rating: row.rating || 0,
+      activities: [],
+      hotelType: row.category,
+      price: row.base_price || 0,
+      isPrivate: false
+    }));
   },
 
   // REMIX (Add to Basket)

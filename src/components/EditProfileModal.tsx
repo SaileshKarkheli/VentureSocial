@@ -12,7 +12,7 @@ interface EditProfileModalProps {
 }
 
 export default function EditProfileModal({ isOpen, onClose, currentProfile, onProfileUpdate }: EditProfileModalProps) {
-  const { user } = useApp();
+  const { user, updateActiveProfile } = useApp();
   const [isLoading, setIsLoading] = useState(false);
   
   const [formData, setFormData] = useState({
@@ -64,6 +64,7 @@ export default function EditProfileModal({ isOpen, onClose, currentProfile, onPr
         
       if (error) throw error;
       onProfileUpdate(formData);
+      updateActiveProfile(formData);
       onClose();
     } catch (err: any) {
       console.error(err);
