@@ -20,6 +20,8 @@ export default function Profile() {
 
   const [isLoading, setIsLoading] = useState(true);
   const [dbProfile, setDbProfile] = useState<any>(null);
+  const [tripCount, setTripCount] = useState(0);
+  const [followersCount, setFollowersCount] = useState(0);
 
   useEffect(() => {
     if (!user) {
@@ -38,6 +40,14 @@ export default function Profile() {
       if (data) {
         setDbProfile(data);
       }
+
+      // Fetch Dynamic Stats
+      const { count: trips } = await supabase.from('posts').select('id', { count: 'exact', head: true }).eq('user_id', user.id);
+      const { count: followers } = await supabase.from('follows').select('follower_id', { count: 'exact', head: true }).eq('following_id', user.id);
+      
+      setTripCount(trips || 0);
+      setFollowersCount(followers || 0);
+
       setIsLoading(false);
     };
     
@@ -82,9 +92,9 @@ export default function Profile() {
     avatar: dbProfile?.avatar_url || user?.avatar || "",
     cover: dbProfile?.cover_photo_url || "",
     stats: [
-      { label: 'Trips', value: '0' },
+      { label: 'Trips', value: tripCount.toString() },
       { label: 'Following', value: followedUsers.length.toString() },
-      { label: 'Followers', value: '0' }
+      { label: 'Followers', value: followersCount.toString() }
     ]
   };
 

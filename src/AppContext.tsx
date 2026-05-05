@@ -251,10 +251,28 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       }).catch(() => setIsLoadingFeed(false));
     });
 
-    fetch('/api/trips').then(res => res.json()).then(data => {
-      setMyTrips(data);
+    if (user) {
+      supabase.from('posts').select(`
+        id,
+        location_name,
+        created_at,
+        trip_spots ( image_url )
+      `).eq('user_id', user.id).then(({ data, error }) => {
+        if (!error && data) {
+          const formatted = data.map((post: any) => ({
+            id: post.id,
+            year: new Date(post.created_at).getFullYear().toString(),
+            country: post.location_name,
+            image: post.trip_spots?.find((s: any) => s.image_url)?.image_url || 'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?auto=format&fit=crop&w=800&q=80',
+            availableImages: []
+          }));
+          setMyTrips(formatted);
+        }
+        setIsLoadingTrips(false);
+      });
+    } else {
       setIsLoadingTrips(false);
-    }).catch(() => setIsLoadingTrips(false));
+    }
 
     fetch('/api/services').then(res => res.json()).then(data => {
       setTravelServices(data.travelServices || []);
