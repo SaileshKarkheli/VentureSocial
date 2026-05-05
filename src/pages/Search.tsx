@@ -6,8 +6,9 @@ import FilterBar from '../components/FilterBar';
 import MediaCarousel from '../components/MediaCarousel';
 import SmartImage from '../components/SmartImage';
 import { Post } from '../types';
-import { tripData, DayHighlightCarousel, PillarSection } from './TripDetail';
+import { DayHighlightCarousel, PillarSection } from './TripDetail';
 import { supabase } from '../supabaseClient';
+import { SaveSpotModal } from '../components/remix/SaveSpotModal';
 import { useNavigate } from 'react-router-dom';
 
 export default function Search() {
@@ -24,6 +25,25 @@ export default function Search() {
   const [searchedUsers, setSearchedUsers] = useState<any[]>([]);
   const [isSearchingUsers, setIsSearchingUsers] = useState(false);
 
+  // Add Trip Spots State
+  const [tripSpots, setTripSpots] = useState<any[]>([]);
+  const [isSpotsLoading, setIsSpotsLoading] = useState(false);
+  const [spotToSave, setSpotToSave] = useState<string | null>(null);
+
+  React.useEffect(() => {
+    if (!selectedPost?.id) {
+      setTripSpots([]);
+      return;
+    }
+    const fetchSpots = async () => {
+      setIsSpotsLoading(true);
+      const { data } = await supabase.from('trip_spots').select('*').eq('post_id', selectedPost.id).order('day_number');
+      setTripSpots(data || []);
+      setIsSpotsLoading(false);
+    };
+    fetchSpots();
+  }, [selectedPost?.id]);
+
   React.useEffect(() => {
     if (searchTab !== 'users') return;
     const fetchUsers = async () => {
@@ -35,10 +55,11 @@ export default function Search() {
         return;
       }
       
+      const formattedQuery = searchQuery.trim().split(/\s+/).join(' | ');
       const { data } = await supabase
         .from('profiles')
         .select('*')
-        .or(`username.ilike.%${searchQuery}%,full_name.ilike.%${searchQuery}%`)
+        .textSearch('search_vector', formattedQuery)
         .limit(20);
         
       setSearchedUsers(data || []);
@@ -195,189 +216,232 @@ export default function Search() {
                 </div>
               </div>
 
-              <div className="flex-1 overflow-y-auto p-6 md:p-8 bg-zinc-50 custom-scrollbar">
+              <div className="flex-1 overflow-y-auto p-6 md:p-8 bg-zinc-50 custom-scrollbar relative">
                 <div className="flex items-center justify-between mb-8">
                   <h3 className="text-2xl font-display font-bold text-[#0A192F]">A La Carte Itinerary</h3>
                   <div className="px-4 py-2 bg-orange-500/10 text-orange-500 rounded-xl font-bold text-sm">
-                    {customTripSpots.length} Spots in Custom Trip
+                    {tripSpots.length} Spots Available
                   </div>
                 </div>
 
                 <div className="space-y-6" style={{ zoom: 0.6 } as any}>
-                  {(() => {
-                    const trip = tripData[selectedPost.id || '1'] || tripData['1'];
-                    return trip.days.map((day: any) => (
-                      <div
-                        key={day.id}
-                        className={`bg-white rounded-[2rem] border transition-all duration-500 overflow-hidden ${expandedDay === day.id ? 'border-orange-500 shadow-xl' : 'border-zinc-200 shadow-sm hover:border-zinc-300'}`}
-                      >
-                        <div className="w-full text-left group">
-                          <div className="p-6 md:p-8 space-y-6">
-                            <div
-                              onClick={() => setExpandedDay(expandedDay === day.id ? null : day.id)}
-                              className="w-full flex items-center justify-between cursor-pointer group"
-                            >
-                              <div className="flex items-center gap-6">
-                                <div className="flex flex-col items-center justify-center w-16 h-16 rounded-2xl bg-zinc-50 border border-zinc-100 group-hover:bg-orange-500/10 group-hover:border-orange-500/20 transition-colors">
-                                  <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Day</span>
-                                  <span className="text-2xl font-display font-bold text-[#0A192F]">{day.day}</span>
+                  {isSpotsLoading ? (
+                    <div className="flex justify-center py-20">
+                      <div className="animate-spin text-orange-500"><LayoutGrid size={40} /></div>
+                    </div>
+                  ) : tripSpots.length === 0 ? (
+                    <div className="text-center py-20 text-zinc-400 font-bold uppercase tracking-widest text-lg">
+                      No spots found for this trip.
+                    </div>
+                  ) : (() => {
+                    const spotsByDay = tripSpots.reduce((acc, spot) => {
+                      if (!acc[spot.day_number]) acc[spot.day_number] = [];
+                      acc[spot.day_number].push(spot);
+                      return acc;
+                    }, {} as Record<number, any[]>);
+
+                    return Object.entries(spotsByDay).map(([dayNumStr, spots]) => {
+                      const dayNum = parseInt(dayNumStr);
+                      const transport = spots.find(s => s.category === 'Transport');
+                      const stay = spots.find(s => s.category === 'Stay');
+                      const dining = spots.find(s => s.category === 'Dining');
+                      const activities = spots.filter(s => s.category === 'Activity');
+
+                      // Synthetic day for the DayHighlightCarousel to maintain parity without breaking it
+                      const syntheticDayForCarousel = {
+                        stay: stay ? { image: stay.image_url, name: stay.title } : { image: 'https://images.unsplash.com/photo-1552832230-c0197dd311b5?auto=format&fit=crop&w=1200&q=80', name: 'No Stay' },
+                        dining: dining ? { image: dining.image_url, name: dining.title } : { image: 'https://images.unsplash.com/photo-1590846406792-0adc7f928f1d?auto=format&fit=crop&w=1200&q=80', name: 'No Dining' },
+                        activities: activities.length > 0 ? activities.map(a => ({ image: a.image_url, name: a.title })) : [{ image: 'https://images.unsplash.com/photo-1542820229-081e0c12af0b?auto=format&fit=crop&w=800&q=80', name: 'Explore' }]
+                      };
+
+                      return (
+                        <div
+                          key={`day-${dayNum}`}
+                          className={`bg-white rounded-[2rem] border transition-all duration-500 overflow-hidden ${expandedDay === dayNum ? 'border-orange-500 shadow-xl' : 'border-zinc-200 shadow-sm hover:border-zinc-300'}`}
+                        >
+                          <div className="w-full text-left group">
+                            <div className="p-6 md:p-8 space-y-6">
+                              <div
+                                onClick={() => setExpandedDay(expandedDay === dayNum ? null : dayNum)}
+                                className="w-full flex items-center justify-between cursor-pointer group"
+                              >
+                                <div className="flex items-center gap-6">
+                                  <div className="flex flex-col items-center justify-center w-16 h-16 rounded-2xl bg-zinc-50 border border-zinc-100 group-hover:bg-orange-500/10 group-hover:border-orange-500/20 transition-colors">
+                                    <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Day</span>
+                                    <span className="text-2xl font-display font-bold text-[#0A192F]">{dayNum}</span>
+                                  </div>
+                                  <div>
+                                    <h3 className="text-2xl font-display font-bold text-[#0A192F] group-hover:text-orange-500 transition-colors">
+                                      Day {dayNum}
+                                    </h3>
+                                    <div className="flex items-center gap-2 text-zinc-400 text-sm mt-1">
+                                      <MapPin size={14} />
+                                      <span>{selectedPost?.location}</span>
+                                    </div>
+                                  </div>
                                 </div>
-                                <div>
-                                  <h3 className="text-2xl font-display font-bold text-[#0A192F] group-hover:text-orange-500 transition-colors">
-                                    Day {day.day}: {day.title}
-                                  </h3>
-                                  <div className="flex items-center gap-2 text-zinc-400 text-sm mt-1">
-                                    <MapPin size={14} />
-                                    <span>{day.location}</span>
+                                <div className="flex items-center gap-4">
+                                  <div className={`p-3 rounded-full text-[#0A192F] transition-transform duration-500 ${expandedDay === dayNum ? 'rotate-180 bg-orange-500 text-white shadow-lg' : 'bg-zinc-50'}`}>
+                                    <ChevronDown size={24} />
                                   </div>
                                 </div>
                               </div>
-                              <div className="flex items-center gap-4">
-                                <div className={`p-3 rounded-full text-[#0A192F] transition-transform duration-500 ${expandedDay === day.id ? 'rotate-180 bg-orange-500 text-white shadow-lg' : 'bg-zinc-50'}`}>
-                                  <ChevronDown size={24} />
+                              
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                                <div className="space-y-2">
+                                  <p className="text-zinc-500 text-sm leading-relaxed italic">
+                                    "{transport?.description || 'No specific transport details'}"
+                                  </p>
                                 </div>
+                                <DayHighlightCarousel day={syntheticDayForCarousel} />
                               </div>
-                            </div>
-                            
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
-                              <div className="space-y-2">
-                                <p className="text-zinc-500 text-sm leading-relaxed italic">
-                                  "{day.transport.narrative}"
-                                </p>
-                              </div>
-                              <DayHighlightCarousel day={day} />
                             </div>
                           </div>
+
+                          {/* Expanded Content */}
+                          <AnimatePresence>
+                            {expandedDay === dayNum && (
+                              <motion.div
+                                initial={{ height: 0, opacity: 0 }}
+                                animate={{ height: 'auto', opacity: 1 }}
+                                exit={{ height: 0, opacity: 0 }}
+                                transition={{ duration: 0.5, ease: 'easeInOut' }}
+                              >
+                                <div className="px-6 md:px-8 pb-8 space-y-4">
+                                  
+                                  {transport && (
+                                    <PillarSection
+                                      title="Transport Mode"
+                                      icon={Plane}
+                                      isExpanded={expandedPillar === `${dayNum}-transport`}
+                                      onToggle={() => setExpandedPillar(expandedPillar === `${dayNum}-transport` ? null : `${dayNum}-transport`)}
+                                    >
+                                      <div className="flex items-start gap-6 p-6 bg-zinc-50 rounded-2xl border border-zinc-100 relative">
+                                        <div className="p-4 rounded-xl bg-white shadow-sm text-orange-500">
+                                          <Car size={24} />
+                                        </div>
+                                        <div className="space-y-2">
+                                          <h4 className="font-bold text-[#0A192F] text-lg">{transport.title}</h4>
+                                          <p className="text-zinc-600 leading-relaxed italic">"{transport.description}"</p>
+                                        </div>
+                                        <button
+                                          onClick={(e) => { e.stopPropagation(); setSpotToSave(transport.id); }}
+                                          className="absolute top-6 right-6 w-10 h-10 rounded-full bg-orange-500 text-white flex items-center justify-center shadow-lg hover:scale-110 transition-transform"
+                                        >
+                                          <Plus size={20} />
+                                        </button>
+                                      </div>
+                                    </PillarSection>
+                                  )}
+
+                                  {stay && (
+                                    <PillarSection
+                                      title="Stay Details"
+                                      icon={Bed}
+                                      isExpanded={expandedPillar === `${dayNum}-stay`}
+                                      onToggle={() => setExpandedPillar(expandedPillar === `${dayNum}-stay` ? null : `${dayNum}-stay`)}
+                                    >
+                                      <div className="bg-zinc-50 rounded-2xl p-6 border border-zinc-100 space-y-6 relative">
+                                        <div className="flex flex-col md:flex-row gap-6 items-start">
+                                          <div className="w-full md:w-1/3 aspect-video rounded-xl overflow-hidden shadow-md">
+                                            <SmartImage src={stay.image_url} alt={stay.title} locationName={stay.title} className="w-full h-full object-cover" />
+                                          </div>
+                                          <div className="flex-1 space-y-4">
+                                            <div className="flex items-center justify-between">
+                                              <h4 className="text-2xl font-display font-bold text-[#0A192F] pr-12">{stay.title}</h4>
+                                              <button
+                                                onClick={(e) => { e.stopPropagation(); setSpotToSave(stay.id); }}
+                                                className="absolute top-6 right-6 w-12 h-12 rounded-full bg-orange-500 text-white flex items-center justify-center shadow-lg hover:scale-110 transition-transform"
+                                              >
+                                                <Plus size={24} />
+                                              </button>
+                                            </div>
+                                            <p className="text-zinc-500 text-sm leading-relaxed">{stay.description}</p>
+                                            {stay.link_url && (
+                                              <a href={stay.link_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-orange-500 font-bold text-sm hover:underline">
+                                                Official Booking Site
+                                              </a>
+                                            )}
+                                          </div>
+                                        </div>
+                                      </div>
+                                    </PillarSection>
+                                  )}
+
+                                  {dining && (
+                                    <PillarSection
+                                      title="Dining"
+                                      icon={Utensils}
+                                      isExpanded={expandedPillar === `${dayNum}-dining`}
+                                      onToggle={() => setExpandedPillar(expandedPillar === `${dayNum}-dining` ? null : `${dayNum}-dining`)}
+                                    >
+                                      <div className="bg-zinc-50 rounded-2xl p-6 border border-zinc-100 space-y-6 relative">
+                                        <div className="flex flex-col md:flex-row gap-6 items-start">
+                                          <div className="w-full md:w-1/3 aspect-video rounded-xl overflow-hidden shadow-md">
+                                            <SmartImage src={dining.image_url} alt={dining.title} locationName={dining.title} className="w-full h-full object-cover" />
+                                          </div>
+                                          <div className="flex-1 space-y-4">
+                                            <div className="flex items-center justify-between">
+                                              <h4 className="text-2xl font-display font-bold text-[#0A192F] pr-12">{dining.title}</h4>
+                                              <button
+                                                onClick={(e) => { e.stopPropagation(); setSpotToSave(dining.id); }}
+                                                className="absolute top-6 right-6 w-12 h-12 rounded-full bg-orange-500 text-white flex items-center justify-center shadow-lg hover:scale-110 transition-transform"
+                                              >
+                                                <Plus size={24} />
+                                              </button>
+                                            </div>
+                                            <p className="text-zinc-500 text-sm leading-relaxed">{dining.description}</p>
+                                            {dining.link_url && (
+                                              <a href={dining.link_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-orange-500 font-bold text-sm hover:underline">
+                                                View Menu
+                                              </a>
+                                            )}
+                                          </div>
+                                        </div>
+                                      </div>
+                                    </PillarSection>
+                                  )}
+
+                                  {activities.length > 0 && (
+                                    <PillarSection
+                                      title="Activities"
+                                      icon={Camera}
+                                      isExpanded={expandedPillar === `${dayNum}-activities`}
+                                      onToggle={() => setExpandedPillar(expandedPillar === `${dayNum}-activities` ? null : `${dayNum}-activities`)}
+                                    >
+                                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        {activities.map((activity: any) => (
+                                          <div key={activity.id} className="bg-zinc-50 rounded-2xl overflow-hidden border border-zinc-100 flex flex-col">
+                                            <div className="relative h-48">
+                                              <SmartImage src={activity.image_url} alt={activity.title} locationName={activity.title} className="w-full h-full object-cover" />
+                                              <button
+                                                onClick={(e) => { e.stopPropagation(); setSpotToSave(activity.id); }}
+                                                className="absolute top-4 right-4 w-10 h-10 rounded-full bg-orange-500 text-white flex items-center justify-center shadow-lg hover:scale-110 transition-transform"
+                                              >
+                                                <Plus size={20} />
+                                              </button>
+                                            </div>
+                                            <div className="p-6 space-y-2">
+                                              <h4 className="font-bold text-[#0A192F] text-lg">{activity.title}</h4>
+                                              <p className="text-zinc-500 text-sm leading-relaxed">{activity.description}</p>
+                                            </div>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    </PillarSection>
+                                  )}
+
+                                </div>
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
                         </div>
-
-                        {/* Expanded Content */}
-                        <AnimatePresence>
-                          {expandedDay === day.id && (
-                            <motion.div
-                              initial={{ height: 0, opacity: 0 }}
-                              animate={{ height: 'auto', opacity: 1 }}
-                              exit={{ height: 0, opacity: 0 }}
-                              transition={{ duration: 0.5, ease: 'easeInOut' }}
-                            >
-                              <div className="px-6 md:px-8 pb-8 space-y-4">
-                                
-                                <PillarSection
-                                  title="Transport Mode"
-                                  icon={Plane}
-                                  isExpanded={expandedPillar === `${day.id}-transport`}
-                                  onToggle={() => setExpandedPillar(expandedPillar === `${day.id}-transport` ? null : `${day.id}-transport`)}
-                                >
-                                  <div className="flex items-start gap-6 p-6 bg-zinc-50 rounded-2xl border border-zinc-100">
-                                    <div className="p-4 rounded-xl bg-white shadow-sm text-orange-500">
-                                      <Car size={24} />
-                                    </div>
-                                    <div className="space-y-2">
-                                      <h4 className="font-bold text-[#0A192F] text-lg">{day.transport.mode}</h4>
-                                      <p className="text-zinc-600 leading-relaxed italic">"{day.transport.narrative}"</p>
-                                    </div>
-                                  </div>
-                                </PillarSection>
-
-                                <PillarSection
-                                  title="Stay Details"
-                                  icon={Bed}
-                                  isExpanded={expandedPillar === `${day.id}-stay`}
-                                  onToggle={() => setExpandedPillar(expandedPillar === `${day.id}-stay` ? null : `${day.id}-stay`)}
-                                >
-                                  <div className="bg-zinc-50 rounded-2xl p-6 border border-zinc-100 space-y-6">
-                                    <div className="flex flex-col md:flex-row gap-6 items-start">
-                                      <div className="w-full md:w-1/3 aspect-video rounded-xl overflow-hidden shadow-md">
-                                        <SmartImage src={day.stay.image} alt={day.stay.name} locationName={day.stay.name} className="w-full h-full object-cover" />
-                                      </div>
-                                      <div className="flex-1 space-y-4">
-                                        <div className="flex items-center justify-between">
-                                          <h4 className="text-2xl font-display font-bold text-[#0A192F]">{day.stay.name}</h4>
-                                          {(() => {
-                                            const isAdded = customTripSpots.some(s => s.description === day.stay.name);
-                                            return (
-                                              <button
-                                                onClick={(e) => { e.stopPropagation(); toggleCustomSpot({ description: day.stay.name, url: day.stay.image, day: day.day, category: 'Hotel' } as any); }}
-                                                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all ${isAdded ? 'bg-zinc-800 text-white hover:bg-zinc-700' : 'bg-orange-500 text-white shadow-lg shadow-orange-500/20 hover:bg-orange-400'}`}
-                                              >
-                                                {isAdded ? <Check size={16}/> : <Plus size={16}/>} {isAdded ? 'Added' : 'Add Check-In'}
-                                              </button>
-                                            );
-                                          })()}
-                                        </div>
-                                      </div>
-                                    </div>
-                                  </div>
-                                </PillarSection>
-
-                                <PillarSection
-                                  title="Dining"
-                                  icon={Utensils}
-                                  isExpanded={expandedPillar === `${day.id}-dining`}
-                                  onToggle={() => setExpandedPillar(expandedPillar === `${day.id}-dining` ? null : `${day.id}-dining`)}
-                                >
-                                  <div className="bg-zinc-50 rounded-2xl p-6 border border-zinc-100 space-y-6">
-                                    <div className="flex flex-col md:flex-row gap-6 items-start">
-                                      <div className="w-full md:w-1/3 aspect-video rounded-xl overflow-hidden shadow-md">
-                                        <SmartImage src={day.dining.image} alt={day.dining.name} locationName={day.dining.name} className="w-full h-full object-cover" />
-                                      </div>
-                                      <div className="flex-1 space-y-4">
-                                        <div className="flex items-center justify-between">
-                                          <h4 className="text-2xl font-display font-bold text-[#0A192F]">{day.dining.name}</h4>
-                                          {(() => {
-                                            const isAdded = customTripSpots.some(s => s.description === day.dining.name);
-                                            return (
-                                              <button
-                                                onClick={(e) => { e.stopPropagation(); toggleCustomSpot({ description: day.dining.name, url: day.dining.image, day: day.day, category: 'Restaurant' } as any); }}
-                                                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all ${isAdded ? 'bg-zinc-800 text-white hover:bg-zinc-700' : 'bg-orange-500 text-white shadow-lg shadow-orange-500/20 hover:bg-orange-400'}`}
-                                              >
-                                                {isAdded ? <Check size={16}/> : <Plus size={16}/>} {isAdded ? 'Added' : 'Add Dining'}
-                                              </button>
-                                            );
-                                          })()}
-                                        </div>
-                                      </div>
-                                    </div>
-                                  </div>
-                                </PillarSection>
-
-                                <PillarSection
-                                  title="Activities"
-                                  icon={Camera}
-                                  isExpanded={expandedPillar === `${day.id}-activities`}
-                                  onToggle={() => setExpandedPillar(expandedPillar === `${day.id}-activities` ? null : `${day.id}-activities`)}
-                                >
-                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    {day.activities.map((activity: any) => {
-                                      const isAdded = customTripSpots.some(s => s.description === activity.name);
-                                      return (
-                                        <div key={activity.id} className="bg-zinc-50 rounded-2xl overflow-hidden border border-zinc-100 flex flex-col">
-                                          <div className="relative h-48">
-                                            <SmartImage src={activity.image} alt={activity.name} locationName={activity.name} className="w-full h-full object-cover" />
-                                            <button
-                                              onClick={(e) => { e.stopPropagation(); toggleCustomSpot({ description: activity.name, url: activity.image, day: day.day, category: 'Activity' } as any); }}
-                                              className={`absolute top-4 right-4 flex items-center gap-2 px-3 py-1.5 rounded-xl text-sm font-bold transition-all ${isAdded ? 'bg-zinc-800 text-white hover:bg-zinc-700' : 'bg-orange-500 text-white shadow-lg shadow-orange-500/20 hover:bg-orange-400'}`}
-                                            >
-                                              {isAdded ? <Check size={14}/> : <Plus size={14}/>} {isAdded ? 'Added' : 'Add Activity'}
-                                            </button>
-                                          </div>
-                                          <div className="p-6 space-y-2">
-                                            <h4 className="font-bold text-[#0A192F] text-lg">{activity.name}</h4>
-                                            <p className="text-zinc-500 text-sm leading-relaxed">{activity.description}</p>
-                                          </div>
-                                        </div>
-                                      );
-                                    })}
-                                  </div>
-                                </PillarSection>
-                              </div>
-                            </motion.div>
-                          )}
-                        </AnimatePresence>
-                      </div>
-                    ));
+                      );
+                    });
                   })()}
                 </div>
               </div>
+              <SaveSpotModal isOpen={!!spotToSave} spotId={spotToSave} onClose={() => setSpotToSave(null)} />
             </motion.div>
           )}
           {!selectedPost && (
@@ -408,10 +472,10 @@ export default function Search() {
                    searchedUsers.map(u => (
                       <div 
                         key={u.id} 
-                        onClick={() => navigate(`/user/${u.username || u.id}`)}
-                        className="flex items-center gap-4 p-4 border-2 border-zinc-100 hover:border-[#0A192F] transition-all cursor-pointer group shadow-sm hover:shadow-md bg-white hover:-translate-y-0.5" style={{ borderRadius: '2px' }}
+                        onClick={() => navigate(`/profile/${u.username || u.id}`)}
+                        className="flex items-center gap-4 p-4 border-2 border-zinc-100 hover:border-orange-500 rounded-3xl transition-all cursor-pointer group shadow-sm hover:shadow-xl bg-white hover:-translate-y-1"
                       >
-                         <div className="w-16 h-16 bg-zinc-100 border-2 border-[#0A192F] shrink-0 overflow-hidden relative" style={{ borderRadius: '2px' }}>
+                         <div className="w-16 h-16 bg-zinc-100 border border-zinc-200 rounded-full shrink-0 overflow-hidden relative">
                            {u.avatar_url ? (
                              <img src={u.avatar_url} alt={u.username} className="w-full h-full object-cover filter contrast-125 saturate-150" />
                            ) : (

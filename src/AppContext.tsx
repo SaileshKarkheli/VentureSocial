@@ -113,9 +113,25 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       if (session?.user) {
         
         // Identity Sub-Layer Hydration
-        const { data: profData } = await supabase.from('profiles').select('*').eq('id', session.user.id).single();
+        const { data: profData, error: profErr } = await supabase.from('profiles').select('*').eq('id', session.user.id).single();
+        
         if (profData) {
           setActiveProfile(profData);
+        } else if (profErr && profErr.code === 'PGRST116') {
+          // PGRST116 indicates NO ROW FOUND. Bootstrapping legacy users who registered before Trigger injection.
+          const safeName = session.user.user_metadata?.name || session.user.email?.split('@')[0] || 'Explorer';
+          const randomSuffix = Math.floor(Math.random() * 1000);
+          
+          const newProfile = {
+            id: session.user.id,
+            full_name: safeName,
+            username: `${safeName.toLowerCase().replace(/[^a-z0-9]/g, '')}${randomSuffix}`,
+          };
+          
+          const { data: fallbackSync } = await supabase.from('profiles').insert(newProfile).select('*').single();
+          if (fallbackSync) {
+            setActiveProfile(fallbackSync);
+          }
         }
 
         await Promise.all([

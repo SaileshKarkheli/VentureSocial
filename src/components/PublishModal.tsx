@@ -11,7 +11,7 @@ interface PublishModalProps {
 }
 
 export default function PublishModal({ isOpen, onClose, preselectedTripId }: PublishModalProps) {
-  const { myTrips, addPublicPost } = useApp();
+  const { myTrips, addPublicPost, activeProfile, user } = useApp();
   const [selectedTripId, setSelectedTripId] = useState<string>(preselectedTripId || myTrips[0]?.id || '');
   const [caption, setCaption] = useState('');
   const [isPublishing, setIsPublishing] = useState(false);
@@ -58,10 +58,10 @@ export default function PublishModal({ isOpen, onClose, preselectedTripId }: Pub
     setTimeout(() => {
       addPublicPost({
         id: `p-${Date.now()}`,
-        userId: 'currentUser', 
+        userId: user?.id || 'currentUser', 
         tripId: selectedTrip.id,
-        user: 'Current User',
-        avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=100&q=80',
+        user: activeProfile?.full_name || activeProfile?.username || user?.name || 'Current User',
+        avatar: activeProfile?.avatar_url || user?.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=100&q=80',
         location: selectedTrip.country,
         images: postImagesToPublish,
         caption: caption,

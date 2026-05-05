@@ -15,7 +15,7 @@ import { supabase } from '../supabaseClient';
 type TabType = 'Feed' | 'Photos' | 'Videos';
 
 export default function Home() {
-  const { publicPosts, isLoadingFeed, searchQuery, setSearchQuery, addToRemixFolder, followedUsers, requestedUsers, toggleFollow, userInterestTags, addUserInterest, userLocation, requestLocation, userLikedPosts, togglePostLike } = useApp();
+  const { publicPosts, isLoadingFeed, searchQuery, setSearchQuery, addToRemixFolder, followedUsers, requestedUsers, toggleFollow, userInterestTags, addUserInterest, userLocation, requestLocation, userLikedPosts, togglePostLike, activeProfile, user } = useApp();
   const navigate = useNavigate();
   const [showFilters, setShowFilters] = useState(false);
   const [activeTab, setActiveTab] = useState<TabType>('Feed');
@@ -278,7 +278,7 @@ export default function Home() {
             {/* Create Post Prompt */}
             <div className="bg-white rounded-3xl p-5 shadow-sm border border-zinc-100 flex items-center gap-4">
               <div className="w-12 h-12 rounded-full overflow-hidden shrink-0 border-2 border-orange-500/20">
-                <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=100&q=80" alt="Current User" className="w-full h-full object-cover" />
+                <img src={activeProfile?.avatar_url || user?.avatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=100&q=80"} alt={activeProfile?.username || "Current User"} className="w-full h-full object-cover bg-zinc-100" />
               </div>
               <button 
                 onClick={() => setIsPublishModalOpen(true)}

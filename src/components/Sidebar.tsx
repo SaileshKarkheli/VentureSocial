@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useApp } from '../AppContext';
+import { useAuth } from '../context/AuthContext';
 
 const navItems = [
   { icon: Home, label: 'Home', path: '/home' },
@@ -40,7 +41,9 @@ interface SidebarProps {
 export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, isAuthenticated, logout } = useApp();
+  const { logout } = useApp();
+  const { session, userProfile } = useAuth();
+  const isAuthenticated = !!session;
 
   const handleAuthAction = () => {
     if (isAuthenticated) {
@@ -50,6 +53,9 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
       navigate('/login', { state: { from: location } });
     }
   };
+
+  const displayName = userProfile?.full_name || userProfile?.username || 'Explorer';
+  const displayAvatar = userProfile?.avatar_url || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150&q=80";
 
   return (
     <motion.aside
@@ -109,17 +115,17 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
 
       <div className="p-4 border-t border-zinc-100">
         <div className="flex items-center gap-3 px-4 py-3 whitespace-nowrap">
-          {isAuthenticated && user ? (
+          {isAuthenticated ? (
             <>
               <div className="w-10 h-10 rounded-full bg-orange-500 overflow-hidden border-2 border-orange-500/20 flex-shrink-0 cursor-pointer" onClick={() => navigate('/profile')}>
                 <img 
-                  src={user.avatar || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150&q=80"} 
-                  alt={user.name} 
+                  src={displayAvatar} 
+                  alt={displayName} 
                   className="w-full h-full object-cover"
                 />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-[#0A192F] truncate">{user.name}</p>
+                <p className="text-sm font-medium text-[#0A192F] truncate">{displayName}</p>
                 <button onClick={handleAuthAction} className="text-xs text-orange-500 hover:text-orange-600 truncate font-bold">Log Out</button>
               </div>
             </>

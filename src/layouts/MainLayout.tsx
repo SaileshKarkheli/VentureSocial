@@ -6,6 +6,7 @@ import { Menu, ShoppingBag } from 'lucide-react';
 import { useApp } from '../AppContext';
 import CheckoutModal from '../components/CheckoutModal';
 import DelayedAuthModal from '../components/DelayedAuthModal';
+import { NotificationBell } from '../components/navigation/NotificationBell';
 
 export default function MainLayout() {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
@@ -29,18 +30,23 @@ export default function MainLayout() {
         <Menu size={24} />
       </button>
 
-      {/* Global Shopping Cart Button */}
-      <button
-        onClick={() => setIsCheckoutOpen(true)}
-        className="fixed top-6 right-6 lg:right-12 z-50 p-4 rounded-2xl bg-[#0A192F] text-white shadow-2xl hover:bg-black transition-all group"
-      >
-        <ShoppingBag size={24} className="group-hover:scale-110 transition-transform" />
-        {cartItems.length > 0 && (
-          <span className="absolute -top-2 -right-2 w-6 h-6 bg-orange-500 text-white text-xs font-bold flex items-center justify-center rounded-full border-2 border-white shadow-md">
-            {cartItems.length}
-          </span>
-        )}
-      </button>
+      {/* Global Top Right Navigation */}
+      <div className="fixed top-6 right-6 lg:right-12 z-50 flex items-center gap-4">
+        <NotificationBell />
+        
+        {/* Global Shopping Cart Button */}
+        <button
+          onClick={() => setIsCheckoutOpen(true)}
+          className="relative p-4 rounded-2xl bg-[#0A192F] text-white shadow-2xl hover:bg-black transition-all group"
+        >
+          <ShoppingBag size={24} className="group-hover:scale-110 transition-transform" />
+          {cartItems.length > 0 && (
+            <span className="absolute -top-2 -right-2 w-6 h-6 bg-orange-500 text-white text-xs font-bold flex items-center justify-center rounded-full border-2 border-white shadow-md">
+              {cartItems.length}
+            </span>
+          )}
+        </button>
+      </div>
 
       <Sidebar isCollapsed={isSidebarCollapsed} onToggle={() => setIsSidebarCollapsed(!isSidebarCollapsed)} />
       

@@ -5,6 +5,7 @@ import Login from './pages/Login';
 import Home from './pages/Home';
 import Profile from './pages/Profile';
 import UserProfile from './pages/UserProfile';
+import DynamicProfile from './pages/profile/[username]';
 import MyTrips from './pages/MyTrips';
 import TripDetail from './pages/TripDetail';
 import RemixStudio from './pages/RemixStudio';
@@ -13,16 +14,21 @@ import BlogList from './pages/BlogList';
 import Search from './pages/Search';
 import TravelServices from './pages/TravelServices';
 import Messages from './pages/Messages';
+import Onboarding from './pages/Onboarding';
+import Dashboard from './pages/Dashboard';
 
 export default function App() {
   return (
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={<Login />} />
+        <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
+        <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
         
         <Route element={<MainLayout />}>
           <Route path="/home" element={<Home />} />
           <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+          <Route path="/profile/:username" element={<DynamicProfile />} />
           <Route path="/user/:username" element={<UserProfile />} />
           <Route path="/my-trips" element={<ProtectedRoute><MyTrips /></ProtectedRoute>} />
           <Route path="/trip/:id" element={<TripDetail />} />
