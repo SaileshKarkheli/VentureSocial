@@ -47,7 +47,7 @@ export default function RemixStudio() {
           return {
             ...folder,
             count: folder.saved_spots[0]?.count || 0,
-            cover_url: spotData?.trip_spots?.image_url || 'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?auto=format&fit=crop&w=800&q=80'
+            cover_url: (spotData?.trip_spots as any)?.image_url || 'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?auto=format&fit=crop&w=800&q=80'
           };
         }));
         setFolders(foldersWithCovers);

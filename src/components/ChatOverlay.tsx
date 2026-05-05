@@ -22,8 +22,7 @@ export default function ChatOverlay({ isOpen, onClose, targetUser }: ChatOverlay
       { id: '2', text: `Thanks! Feel free to remix any of my spots directly!`, sender: targetUser }
     ]);
     
-    const channel = SocialService.subscribeToMessages('temp_conv_id', (payload) => {
-       const newMsg = payload.new;
+    const channel = SocialService.subscribeToGlobalMessages((newMsg) => {
        setMessages(prev => [...prev, { id: newMsg.id, text: newMsg.content, sender: newMsg.sender_id }]);
     });
     return () => { supabase.removeChannel(channel); };

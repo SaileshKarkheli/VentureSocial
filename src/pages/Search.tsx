@@ -242,10 +242,11 @@ export default function Search() {
 
                     return Object.entries(spotsByDay).map(([dayNumStr, spots]) => {
                       const dayNum = parseInt(dayNumStr);
-                      const transport = spots.find(s => s.category === 'Transport');
-                      const stay = spots.find(s => s.category === 'Stay');
-                      const dining = spots.find(s => s.category === 'Dining');
-                      const activities = spots.filter(s => s.category === 'Activity');
+                      const typedSpots = spots as any[];
+                      const transport = typedSpots.find(s => s.category === 'Transport');
+                      const stay = typedSpots.find(s => s.category === 'Stay');
+                      const dining = typedSpots.find(s => s.category === 'Dining');
+                      const activities = typedSpots.filter(s => s.category === 'Activity');
 
                       // Synthetic day for the DayHighlightCarousel to maintain parity without breaking it
                       const syntheticDayForCarousel = {

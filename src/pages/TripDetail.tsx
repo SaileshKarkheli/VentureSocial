@@ -40,13 +40,14 @@ export default function TripDetail() {
     const fetchData = async () => {
       setIsLoading(true);
       // Fetch Master Post
-      const { data: postData } = await supabase.from('posts').select(`
-        *,
-        profiles!posts_user_id_fkey(full_name, username)
-      `).eq('id', id).single();
+      const { data: postData, error } = await supabase.from('posts').select('*').eq('id', id).single();
       
-      if (postData) {
-        setPost(postData);
+      if (postData && !error) {
+        // Fetch Profile manually because there is no direct FK from posts to profiles, only to auth.users
+        const { data: profile } = await supabase.from('profiles').select('full_name, username').eq('id', postData.user_id).single();
+        const postWithProfile = { ...postData, profiles: profile };
+        
+        setPost(postWithProfile);
         // Fetch Spots
         const { data: spotsData } = await supabase.from('trip_spots').select('*').eq('post_id', id).order('day_number');
         setTripSpots(spotsData || []);
@@ -135,10 +136,11 @@ export default function TripDetail() {
 
           return Object.entries(spotsByDay).map(([dayNumStr, spots]) => {
             const dayNum = parseInt(dayNumStr);
-            const transport = spots.find(s => s.category === 'Transport');
-            const stay = spots.find(s => s.category === 'Stay');
-            const dining = spots.find(s => s.category === 'Dining');
-            const activities = spots.filter(s => s.category === 'Activity');
+            const typedSpots = spots as any[];
+            const transport = typedSpots.find(s => s.category === 'Transport');
+            const stay = typedSpots.find(s => s.category === 'Stay');
+            const dining = typedSpots.find(s => s.category === 'Dining');
+            const activities = typedSpots.filter(s => s.category === 'Activity');
 
             const syntheticDayForCarousel = {
               stay: stay ? { image: stay.image_url, name: stay.title } : { image: 'https://images.unsplash.com/photo-1552832230-c0197dd311b5?auto=format&fit=crop&w=1200&q=80', name: 'No Stay' },
