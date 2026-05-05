@@ -31,24 +31,28 @@ export default function Profile() {
     
     const fetchProfile = async () => {
       setIsLoading(true);
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single();
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', user.id)
+          .single();
+          
+        if (data) {
+          setDbProfile(data);
+        }
+
+        // Fetch Dynamic Stats
+        const { count: trips } = await supabase.from('posts').select('id', { count: 'exact', head: true }).eq('user_id', user.id);
+        const { count: followers } = await supabase.from('connections').select('follower_id', { count: 'exact', head: true }).eq('following_id', user.id);
         
-      if (data) {
-        setDbProfile(data);
+        setTripCount(trips || 0);
+        setFollowersCount(followers || 0);
+      } catch (err) {
+        console.error("Error fetching profile data:", err);
+      } finally {
+        setIsLoading(false);
       }
-
-      // Fetch Dynamic Stats
-      const { count: trips } = await supabase.from('posts').select('id', { count: 'exact', head: true }).eq('user_id', user.id);
-      const { count: followers } = await supabase.from('follows').select('follower_id', { count: 'exact', head: true }).eq('following_id', user.id);
-      
-      setTripCount(trips || 0);
-      setFollowersCount(followers || 0);
-
-      setIsLoading(false);
     };
     
     fetchProfile();
