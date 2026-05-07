@@ -55,19 +55,23 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     };
 
     const initializeAuth = async () => {
-      const { data: { session: initialSession } } = await supabase.auth.getSession();
-      
-      if (!mounted) return;
-      
-      setSession(initialSession);
-      setUser(initialSession?.user ?? null);
+      try {
+        const { data: { session: initialSession }, error } = await supabase.auth.getSession();
+        
+        if (!mounted) return;
+        
+        setSession(initialSession);
+        setUser(initialSession?.user ?? null);
 
-      if (initialSession?.user) {
-        const profile = await fetchProfile(initialSession.user.id);
-        if (mounted) setUserProfile(profile);
+        if (initialSession?.user) {
+          const profile = await fetchProfile(initialSession.user.id);
+          if (mounted) setUserProfile(profile);
+        }
+      } catch (err) {
+        console.error("Auth initialization error:", err);
+      } finally {
+        if (mounted) setLoading(false);
       }
-      
-      if (mounted) setLoading(false);
     };
 
     initializeAuth();
@@ -75,17 +79,21 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
       if (!mounted) return;
       
-      setSession(currentSession);
-      setUser(currentSession?.user ?? null);
-      
-      if (currentSession?.user) {
-        const profile = await fetchProfile(currentSession.user.id);
-        if (mounted) setUserProfile(profile);
-      } else {
-        if (mounted) setUserProfile(null);
+      try {
+        setSession(currentSession);
+        setUser(currentSession?.user ?? null);
+        
+        if (currentSession?.user) {
+          const profile = await fetchProfile(currentSession.user.id);
+          if (mounted) setUserProfile(profile);
+        } else {
+          if (mounted) setUserProfile(null);
+        }
+      } catch (err) {
+        console.error("Auth state change error:", err);
+      } finally {
+        if (mounted) setLoading(false);
       }
-      
-      if (mounted) setLoading(false);
     });
 
     return () => {

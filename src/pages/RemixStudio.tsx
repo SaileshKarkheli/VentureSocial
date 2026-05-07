@@ -20,39 +20,47 @@ export default function RemixStudio() {
     if (!session?.user?.id) return;
     const fetchFolders = async () => {
       setIsLoading(true);
-      // Fetch folders and count of saved spots
-      const { data, error } = await supabase
-        .from('remix_folders')
-        .select(`
-          id,
-          name,
-          created_at,
-          saved_spots ( count )
-        `)
-        .eq('user_id', session.user.id)
-        .order('created_at', { ascending: false });
+      try {
+        // Fetch folders and count of saved spots
+        const { data, error } = await supabase
+          .from('remix_folders')
+          .select(`
+            id,
+            name,
+            created_at,
+            saved_spots ( count )
+          `)
+          .eq('user_id', session.user.id)
+          .order('created_at', { ascending: false });
 
-      if (!error && data) {
-        // Fetch a cover image for each folder (the first spot's image)
-        const foldersWithCovers = await Promise.all(data.map(async (folder: any) => {
-          const { data: spotData } = await supabase
-            .from('saved_spots')
-            .select(`
-              trip_spots ( image_url )
-            `)
-            .eq('folder_id', folder.id)
-            .limit(1)
-            .single();
-            
-          return {
-            ...folder,
-            count: folder.saved_spots[0]?.count || 0,
-            cover_url: (spotData?.trip_spots as any)?.image_url || 'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?auto=format&fit=crop&w=800&q=80'
-          };
-        }));
-        setFolders(foldersWithCovers);
+        if (!error && data) {
+          // Fetch a cover image for each folder (the first spot's image)
+          const foldersWithCovers = await Promise.all(data.map(async (folder: any) => {
+            const { data: spotData } = await supabase
+              .from('saved_spots')
+              .select(`
+                trip_spots ( image_url )
+              `)
+              .eq('folder_id', folder.id)
+              .limit(1)
+              .single();
+              
+            const savedSpotsArray = Array.isArray(folder.saved_spots) ? folder.saved_spots : [folder.saved_spots];
+            const count = savedSpotsArray[0]?.count || 0;
+
+            return {
+              ...folder,
+              count: count,
+              cover_url: (spotData?.trip_spots as any)?.image_url || 'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?auto=format&fit=crop&w=800&q=80'
+            };
+          }));
+          setFolders(foldersWithCovers);
+        }
+      } catch (err) {
+        console.error("Error fetching remix folders:", err);
+      } finally {
+        setIsLoading(false);
       }
-      setIsLoading(false);
     };
     fetchFolders();
   }, [session?.user?.id]);

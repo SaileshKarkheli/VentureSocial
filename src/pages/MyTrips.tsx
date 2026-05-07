@@ -33,34 +33,42 @@ export default function MyTrips() {
 
     const fetchMyTrips = async () => {
       setIsLoadingTrips(true);
-      // Fetch posts (trips) for the user and grab their associated first trip spot image
-      const { data, error } = await supabase
-        .from('posts')
-        .select(`
-          id,
-          location_name,
-          created_at,
-          trip_spots ( image_url )
-        `)
-        .eq('user_id', session.user.id)
-        .order('created_at', { ascending: false });
+      try {
+        // Fetch posts (trips) for the user and grab their associated first trip spot image
+        const { data, error } = await supabase
+          .from('posts')
+          .select(`
+            id,
+            location_name,
+            created_at,
+            trip_spots ( image_url )
+          `)
+          .eq('user_id', session.user.id)
+          .order('created_at', { ascending: false });
 
-      if (!error && data) {
-        const formatted = data.map((post: any) => {
-          // Attempt to find a valid image from trip spots
-          const spotWithImage = post.trip_spots?.find((s: any) => s.image_url);
-          const fallbackImage = 'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?auto=format&fit=crop&w=800&q=80';
-          
-          return {
-            id: post.id,
-            year: new Date(post.created_at).getFullYear().toString(),
-            country: post.location_name,
-            image: spotWithImage?.image_url || fallbackImage
-          };
-        });
-        setMyTrips(formatted);
+        if (!error && data) {
+          const formatted = data.map((post: any) => {
+            // Attempt to find a valid image from trip spots
+            const spotWithImage = Array.isArray(post.trip_spots) 
+              ? post.trip_spots.find((s: any) => s.image_url) 
+              : post.trip_spots?.image_url ? post.trip_spots : null;
+              
+            const fallbackImage = 'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?auto=format&fit=crop&w=800&q=80';
+            
+            return {
+              id: post.id,
+              year: new Date(post.created_at).getFullYear().toString(),
+              country: post.location_name,
+              image: spotWithImage?.image_url || fallbackImage
+            };
+          });
+          setMyTrips(formatted);
+        }
+      } catch (err) {
+        console.error("Error fetching trips:", err);
+      } finally {
+        setIsLoadingTrips(false);
       }
-      setIsLoadingTrips(false);
     };
 
     fetchMyTrips();
