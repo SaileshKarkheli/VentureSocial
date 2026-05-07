@@ -16,12 +16,14 @@ import TravelServices from './pages/TravelServices';
 import Messages from './pages/Messages';
 import Onboarding from './pages/Onboarding';
 import Dashboard from './pages/Dashboard';
+import UpdatePassword from './pages/UpdatePassword';
 
 export default function App() {
   return (
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={<Login />} />
+        <Route path="/update-password" element={<UpdatePassword />} />
         <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
         <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
         
