@@ -17,7 +17,10 @@ export default function RemixStudio() {
   const [activeFolder, setActiveFolder] = useState<any | null>(null);
 
   useEffect(() => {
-    if (!session?.user?.id) return;
+    if (!session?.user?.id) {
+      setIsLoading(false);
+      return;
+    }
     const fetchFolders = async () => {
       setIsLoading(true);
       try {

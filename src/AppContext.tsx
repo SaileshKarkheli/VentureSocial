@@ -259,13 +259,19 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         trip_spots ( image_url )
       `).eq('user_id', user.id).then(({ data, error }) => {
         if (!error && data) {
-          const formatted = data.map((post: any) => ({
-            id: post.id,
-            year: new Date(post.created_at).getFullYear().toString(),
-            country: post.location_name,
-            image: post.trip_spots?.find((s: any) => s.image_url)?.image_url || 'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?auto=format&fit=crop&w=800&q=80',
-            availableImages: []
-          }));
+          const formatted = data.map((post: any) => {
+            const spotWithImage = Array.isArray(post.trip_spots) 
+              ? post.trip_spots.find((s: any) => s.image_url) 
+              : post.trip_spots?.image_url ? post.trip_spots : null;
+              
+            return {
+              id: post.id,
+              year: new Date(post.created_at).getFullYear().toString(),
+              country: post.location_name,
+              image: spotWithImage?.image_url || 'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?auto=format&fit=crop&w=800&q=80',
+              availableImages: []
+            };
+          });
           setMyTrips(formatted);
         }
         setIsLoadingTrips(false);
