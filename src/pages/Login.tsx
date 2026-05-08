@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion } from 'motion/react';
 import { supabase } from '../supabaseClient';
 import { LoginForm } from '../components/auth/LoginForm';
 import { SignupForm } from '../components/auth/SignupForm';
 
 export default function Login() {
-  const [isLogin, setIsLogin] = useState(true);
+  const [isSignupOpen, setIsSignupOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   
@@ -33,7 +33,7 @@ export default function Login() {
       initial={{ opacity: 0 }} 
       animate={{ opacity: 1 }} 
       transition={{ duration: 0.6 }}
-      className="min-h-screen bg-zinc-50 flex flex-col md:flex-row"
+      className="min-h-screen bg-zinc-50 flex flex-col md:flex-row relative"
     >
       {/* Left: Travel-Themed Hero Image */}
       <div className="hidden md:block md:w-1/2 relative bg-zinc-200 overflow-hidden">
@@ -75,53 +75,18 @@ export default function Login() {
             <p className="text-sm text-zinc-500 mt-1">Your travel memories, shared with the world.</p>
           </div>
 
-          <AnimatePresence mode="wait">
-            {isLogin ? (
-              <motion.div
-                key="login"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                transition={{ duration: 0.3 }}
-              >
-                <LoginForm />
-                <div className="mt-6 text-center">
-                  <p className="text-zinc-600 text-sm font-medium">
-                    New here?{' '}
-                    <button 
-                      onClick={() => setIsLogin(false)}
-                      className="text-[#3B82F6] font-bold hover:text-blue-600 transition-colors hover:underline focus:outline-none"
-                    >
-                      Sign up
-                    </button>
-                  </p>
-                </div>
-              </motion.div>
-            ) : (
-              <motion.div
-                key="signup"
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 20 }}
-                transition={{ duration: 0.3 }}
-              >
-                <SignupForm />
-                <div className="mt-6 text-center">
-                  <p className="text-zinc-600 text-sm font-medium">
-                    Already have an account?{' '}
-                    <button 
-                      onClick={() => setIsLogin(true)}
-                      className="text-[#3B82F6] font-bold hover:text-blue-600 transition-colors hover:underline focus:outline-none"
-                    >
-                      Log in
-                    </button>
-                  </p>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            <LoginForm onOpenSignup={() => setIsSignupOpen(true)} />
+          </motion.div>
         </div>
       </div>
+
+      {/* Registration Modal Overlay */}
+      <SignupForm isOpen={isSignupOpen} onClose={() => setIsSignupOpen(false)} />
     </motion.div>
   );
 }
