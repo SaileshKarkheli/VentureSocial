@@ -44,7 +44,7 @@ export default function Profile() {
 
         // Fetch Dynamic Stats
         const { count: trips } = await supabase.from('posts').select('id', { count: 'exact', head: true }).eq('user_id', user.id);
-        const { count: followers } = await supabase.from('connections').select('follower_id', { count: 'exact', head: true }).eq('following_id', user.id);
+        const { count: followers } = await supabase.from('follows').select('follower_id', { count: 'exact', head: true }).eq('following_id', user.id);
         
         setTripCount(trips || 0);
         setFollowersCount(followers || 0);

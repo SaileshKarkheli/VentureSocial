@@ -103,9 +103,33 @@ export default function MyTrips() {
           <TripGridSkeleton />
         </div>
       ) : myTrips.length === 0 ? (
-        <div className="mt-12 text-center p-16 bg-white rounded-3xl border border-zinc-200 shadow-sm">
-           <h3 className="text-2xl font-display font-bold text-[#0A192F] mb-2">No trips recorded yet</h3>
-           <p className="text-zinc-500 max-w-sm mx-auto">You haven't added any trips yet. Click the button above to start your journey.</p>
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-y-16 gap-x-6 relative mt-12">
+          {/* Welcome Demo Trip */}
+          <div className="relative group opacity-80 hover:opacity-100 transition-opacity">
+            <motion.div
+              whileHover={{ scale: 1.05, y: -5 }}
+              onClick={() => setIsBuilderOpen(true)}
+              className="w-full aspect-square rounded-3xl overflow-hidden cursor-pointer shadow-2xl border-4 border-dashed border-zinc-300 relative z-10 group bg-zinc-100"
+            >
+              <div
+                className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-110 opacity-50"
+                style={{ backgroundImage: `url('https://images.unsplash.com/photo-1499856871958-5b9627545d1a?auto=format&fit=crop&w=800&q=80')` }}
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#0A192F]/90 via-[#0A192F]/40 to-transparent" />
+              
+              <div className="absolute inset-0 flex flex-col items-center justify-center p-4 text-center z-20">
+                <div className="w-12 h-12 rounded-full bg-white text-orange-500 flex items-center justify-center mb-4 shadow-lg group-hover:scale-110 transition-transform">
+                  <Plus size={24} />
+                </div>
+                <h3 className="text-white font-display font-bold text-xl leading-tight drop-shadow-md">
+                  Your First Adventure
+                </h3>
+                <p className="text-zinc-200 text-xs mt-2 max-w-[140px] drop-shadow-sm font-medium">
+                  Click here to start mapping your travel history
+                </p>
+              </div>
+            </motion.div>
+          </div>
         </div>
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-y-16 gap-x-6 relative mt-12">
