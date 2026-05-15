@@ -25,6 +25,8 @@ import {
 import SmartImage from './SmartImage';
 import SearchBox from './SearchBox';
 import { useApp } from '../AppContext';
+import { useAuth } from '../context/AuthContext';
+import { supabase } from '../supabaseClient';
 
 interface TripBuilderModalProps {
   isOpen: boolean;
@@ -89,7 +91,7 @@ export default function TripBuilderModal({ isOpen, onClose }: TripBuilderModalPr
     categoryCosts: {}
   });
 
-  const { addCustomTrip } = useApp();
+  const { session } = useAuth();
 
   const [destination, setDestination] = useState('');
   const [isBudgetPublic, setIsBudgetPublic] = useState(false);
@@ -173,8 +175,8 @@ export default function TripBuilderModal({ isOpen, onClose }: TripBuilderModalPr
     setCurrentDayIndex(0);
   };
 
-  const handleFinishTrip = () => {
-    if (!destination) return;
+  const handleFinishTrip = async () => {
+    if (!destination || !session?.user?.id) return;
 
     // Find the first high-res photo loaded in any day's category to use as Cover Photo
     let coverPhoto = 'https://images.unsplash.com/photo-1541844053589-3462d48979e2?auto=format&fit=crop&w=800&q=80';
@@ -186,13 +188,21 @@ export default function TripBuilderModal({ isOpen, onClose }: TripBuilderModalPr
       }
     }
 
-    addCustomTrip({
-      id: Math.random().toString(36).substr(2, 9),
-      country: destination,
-      year: new Date().getFullYear().toString(),
-      image: coverPhoto,
-      availableImages: [coverPhoto]
-    });
+    try {
+      const { data, error } = await supabase.from('posts').insert({
+        user_id: session.user.id,
+        location_name: destination,
+        content: `My Custom Trip to ${destination}`,
+      }).select().single();
+
+      if (!error && data) {
+        // Here we could insert all the trip_spots for the days...
+        // For now, we will just create the main trip shell so it appears in My Trips.
+        window.location.reload(); // Refresh to show new trip
+      }
+    } catch (err) {
+      console.error(err);
+    }
 
     onClose();
   };
