@@ -193,6 +193,7 @@ export default function TripBuilderModal({ isOpen, onClose }: TripBuilderModalPr
         user_id: session.user.id,
         location_name: destination,
         content: `My Custom Trip to ${destination}`,
+        base_price: totalBudget
       }).select().single();
 
       if (!error && data) {
@@ -226,10 +227,13 @@ export default function TripBuilderModal({ isOpen, onClose }: TripBuilderModalPr
     setShowManualEntry(null);
   };
 
-  const totalBudget = days.reduce((sum, day) => {
+  const getDayCost = (day: DayState) => {
+    if (day.budget > 0) return day.budget;
     const costs = Object.values(day.categoryCosts || {}) as number[];
-    return sum + costs.reduce((a, b) => a + b, 0);
-  }, 0);
+    return costs.reduce((a, b) => a + b, 0);
+  };
+
+  const totalBudget = days.reduce((sum, day) => sum + getDayCost(day), 0);
   const allRouteItems = days.flatMap(d => d.routeSummary);
 
   return createPortal(
@@ -295,6 +299,26 @@ export default function TripBuilderModal({ isOpen, onClose }: TripBuilderModalPr
                     >
                       <Plus size={16} /> Add Day
                     </button>
+                  </div>
+
+                  {/* Day Cost Estimate Input */}
+                  <div className="flex items-center gap-4 bg-zinc-50 border border-zinc-200 p-4 rounded-2xl w-full max-w-md mt-4">
+                    <div className="flex-1">
+                      <h4 className="text-xs font-bold text-[#0A192F] uppercase tracking-wider">
+                        {activeDay.title} Cost Estimate
+                      </h4>
+                      <p className="text-[10px] text-zinc-400">Enter the budget or spent amount for this day</p>
+                    </div>
+                    <div className="flex items-center gap-1 bg-white border border-zinc-200 rounded-xl px-3 py-1.5 shadow-sm focus-within:border-orange-500 transition-all">
+                      <span className="text-zinc-400 font-bold font-mono text-sm">$</span>
+                      <input
+                        type="number"
+                        placeholder="0"
+                        value={activeDay.budget || ''}
+                        onChange={(e) => updateActiveDay(prev => ({ ...prev, budget: parseFloat(e.target.value) || 0 }))}
+                        className="w-24 bg-transparent border-0 focus:ring-0 p-0 text-right font-mono text-sm font-bold text-[#0A192F]"
+                      />
+                    </div>
                   </div>
                 </div>
                 <button
@@ -794,7 +818,7 @@ export default function TripBuilderModal({ isOpen, onClose }: TripBuilderModalPr
                       <div key={day.id} className="mb-6 last:mb-2">
                         <div className="flex items-center justify-between mb-3">
                           <h6 className="font-bold text-orange-500 text-xs uppercase tracking-widest">{day.title}</h6>
-                          <span className="text-[10px] font-bold text-zinc-400">${day.budget}</span>
+                          <span className="text-[10px] font-bold text-zinc-400">${getDayCost(day)}</span>
                         </div>
 
                         {day.routeSummary.length === 0 ? (

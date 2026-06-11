@@ -54,7 +54,29 @@ export const SignupForm: React.FC<SignupModalProps> = ({ isOpen, onClose }) => {
         },
       });
 
-      if (signUpError) throw signUpError;
+      if (signUpError) {
+        if (signUpError.message.includes('fetch') || signUpError.message.includes('getaddrinfo') || signUpError.message.includes('Failed to fetch') || signUpError.message.includes('NetworkError')) {
+          console.warn('Supabase is offline. Falling back to local mock server...');
+          const response = await fetch('http://localhost:3001/api/auth/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name: fullName, email, password })
+          });
+          const result = await response.json();
+          if (response.ok && result.user) {
+            localStorage.setItem('venturesocial_mock_session', JSON.stringify({
+              user: result.user,
+              access_token: result.token
+            }));
+            onClose();
+            window.location.reload();
+            return;
+          } else {
+            throw new Error(result.error || 'Mock registration failed');
+          }
+        }
+        throw signUpError;
+      }
       
       onClose();
       navigate('/onboarding');

@@ -34,7 +34,6 @@ export default function MyTrips() {
     const fetchMyTrips = async () => {
       setIsLoadingTrips(true);
       try {
-        // Fetch posts (trips) for the user and grab their associated first trip spot image
         const { data, error } = await supabase
           .from('posts')
           .select(`
@@ -46,9 +45,10 @@ export default function MyTrips() {
           .eq('user_id', session.user.id)
           .order('created_at', { ascending: false });
 
-        if (!error && data) {
+        if (error) throw error;
+
+        if (data) {
           const formatted = data.map((post: any) => {
-            // Attempt to find a valid image from trip spots
             const spotWithImage = Array.isArray(post.trip_spots) 
               ? post.trip_spots.find((s: any) => s.image_url) 
               : post.trip_spots?.image_url ? post.trip_spots : null;
@@ -65,7 +65,14 @@ export default function MyTrips() {
           setMyTrips(formatted);
         }
       } catch (err) {
-        console.error("Error fetching trips:", err);
+        console.warn("Supabase fetch failed, falling back to local Express server:", err);
+        try {
+          const response = await fetch('http://localhost:3001/api/trips');
+          const data = await response.json();
+          setMyTrips(data);
+        } catch (localErr) {
+          console.error("Local mock server fetch failed:", localErr);
+        }
       } finally {
         setIsLoadingTrips(false);
       }

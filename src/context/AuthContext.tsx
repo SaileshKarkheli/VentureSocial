@@ -56,6 +56,28 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     const initializeAuth = async () => {
       try {
+        const mockSessionStr = localStorage.getItem('venturesocial_mock_session');
+        if (mockSessionStr) {
+          const mockData = JSON.parse(mockSessionStr);
+          if (mounted) {
+            setSession({
+              access_token: mockData.access_token,
+              token_type: 'bearer',
+              expires_in: 3600,
+              user: mockData.user,
+            } as any);
+            setUser(mockData.user);
+            setUserProfile({
+              id: mockData.user.id,
+              full_name: mockData.user.name || 'Alex Explorer',
+              avatar_url: mockData.user.avatar || '',
+              username: mockData.user.email ? mockData.user.email.split('@')[0] : 'alex_explorer'
+            });
+            setLoading(false);
+            return;
+          }
+        }
+
         const { data: { session: initialSession }, error } = await supabase.auth.getSession();
         
         if (!mounted) return;
@@ -80,6 +102,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       if (!mounted) return;
       
       try {
+        if (event === 'SIGNED_OUT') {
+          localStorage.removeItem('venturesocial_mock_session');
+          if (mounted) {
+            setSession(null);
+            setUser(null);
+            setUserProfile(null);
+          }
+          return;
+        }
+
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
         
@@ -87,7 +119,27 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           const profile = await fetchProfile(currentSession.user.id);
           if (mounted) setUserProfile(profile);
         } else {
-          if (mounted) setUserProfile(null);
+          const mockSessionStr = localStorage.getItem('venturesocial_mock_session');
+          if (mockSessionStr) {
+            const mockData = JSON.parse(mockSessionStr);
+            if (mounted) {
+              setSession({
+                access_token: mockData.access_token,
+                token_type: 'bearer',
+                expires_in: 3600,
+                user: mockData.user,
+              } as any);
+              setUser(mockData.user);
+              setUserProfile({
+                id: mockData.user.id,
+                full_name: mockData.user.name || 'Alex Explorer',
+                avatar_url: mockData.user.avatar || '',
+                username: mockData.user.email ? mockData.user.email.split('@')[0] : 'alex_explorer'
+              });
+            }
+          } else {
+            if (mounted) setUserProfile(null);
+          }
         }
       } catch (err) {
         console.error("Auth state change error:", err);
