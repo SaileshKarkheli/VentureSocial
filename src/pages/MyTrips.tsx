@@ -7,6 +7,7 @@ import PublishModal from '../components/PublishModal';
 import { TripGridSkeleton } from '../components/Skeletons';
 import { supabase } from '../supabaseClient';
 import { useAuth } from '../context/AuthContext';
+import { mockMyTrips } from '../utils/mockData';
 
 interface DbTrip {
   id: string;
@@ -33,6 +34,14 @@ export default function MyTrips() {
 
     const fetchMyTrips = async () => {
       setIsLoadingTrips(true);
+      const isMockMode = import.meta.env.VITE_ENABLE_MOCK_MODE === 'true' && !!localStorage.getItem('venturesocial_mock_session');
+      if (isMockMode) {
+        const customTripsStr = localStorage.getItem('venturesocial_custom_trips');
+        const customTrips = customTripsStr ? JSON.parse(customTripsStr) : [];
+        setMyTrips([...customTrips, ...mockMyTrips]);
+        setIsLoadingTrips(false);
+        return;
+      }
       try {
         const { data, error } = await supabase
           .from('posts')
@@ -65,13 +74,13 @@ export default function MyTrips() {
           setMyTrips(formatted);
         }
       } catch (err) {
-        console.warn("Supabase fetch failed, falling back to local Express server:", err);
-        try {
-          const response = await fetch('http://localhost:3001/api/trips');
-          const data = await response.json();
-          setMyTrips(data);
-        } catch (localErr) {
-          console.error("Local mock server fetch failed:", localErr);
+        if (import.meta.env.VITE_ENABLE_MOCK_MODE === 'true') {
+          console.warn("Supabase fetch failed, falling back to local mock data:", err);
+          const customTripsStr = localStorage.getItem('venturesocial_custom_trips');
+          const customTrips = customTripsStr ? JSON.parse(customTripsStr) : [];
+          setMyTrips([...customTrips, ...mockMyTrips]);
+        } else {
+          console.error("Supabase fetch failed in MyTrips:", err);
         }
       } finally {
         setIsLoadingTrips(false);
@@ -89,6 +98,7 @@ export default function MyTrips() {
           <p className="text-zinc-500">A chronological journey through the places you've explored.</p>
         </div>
         <button
+          id="add-trip-button"
           onClick={() => setIsBuilderOpen(true)}
           className="flex items-center gap-2 bg-orange-500 text-white px-8 py-4 rounded-2xl font-bold hover:bg-orange-400 transition-all shadow-xl shadow-orange-500/20"
         >

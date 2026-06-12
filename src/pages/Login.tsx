@@ -4,29 +4,21 @@ import { motion } from 'motion/react';
 import { supabase } from '../supabaseClient';
 import { LoginForm } from '../components/auth/LoginForm';
 import { SignupForm } from '../components/auth/SignupForm';
+import { useAuth } from '../context/AuthContext';
 
 export default function Login() {
   const [isSignupOpen, setIsSignupOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+  const { session } = useAuth();
   
   const from = location.state?.from?.pathname || '/home';
 
   useEffect(() => {
-    // 1. Instantly check current state upon component mount
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) navigate(from, { replace: true });
-    });
-
-    // 2. Map direct listener to Supabase OAuth events
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_IN' || session) {
-        navigate(from, { replace: true });
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, [navigate, from]);
+    if (session) {
+      navigate(from, { replace: true });
+    }
+  }, [session, navigate, from]);
 
   return (
     <motion.div 

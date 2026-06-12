@@ -196,13 +196,27 @@ export default function TripBuilderModal({ isOpen, onClose }: TripBuilderModalPr
         base_price: totalBudget
       }).select().single();
 
-      if (!error && data) {
+      if (error) throw error;
+
+      if (data) {
         // Here we could insert all the trip_spots for the days...
         // For now, we will just create the main trip shell so it appears in My Trips.
         window.location.reload(); // Refresh to show new trip
       }
     } catch (err) {
-      console.error(err);
+      console.warn("Supabase insert failed in TripBuilder, saving to localStorage:", err);
+      const customTripsStr = localStorage.getItem('venturesocial_custom_trips');
+      const customTrips = customTripsStr ? JSON.parse(customTripsStr) : [];
+      const newTrip = {
+        id: `custom-${Date.now()}`,
+        year: new Date().getFullYear().toString(),
+        country: destination,
+        image: coverPhoto,
+        base_price: totalBudget
+      };
+      customTrips.push(newTrip);
+      localStorage.setItem('venturesocial_custom_trips', JSON.stringify(customTrips));
+      window.location.reload(); // Refresh to show new trip
     }
 
     onClose();
@@ -748,6 +762,7 @@ export default function TripBuilderModal({ isOpen, onClose }: TripBuilderModalPr
                     <ChevronRight size={18} className="group-hover:translate-x-1 transition-transform" />
                   </button>
                   <button
+                    id="finish-trip-button"
                     onClick={handleFinishTrip}
                     className="bg-orange-500 text-white font-bold px-8 py-4 rounded-xl shadow-xl hover:bg-orange-600 transition-all flex items-center gap-2 whitespace-nowrap"
                   >

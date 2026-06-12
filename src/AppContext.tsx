@@ -2,6 +2,9 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { SavedItem, TimelineEvent, Post, User } from './types';
 import { supabase } from './supabaseClient';
 import { SocialService } from './lib/socialService';
+import { mockPublicPosts, mockTravelServices, mockFlights, mockRentalCars, mockMyTrips } from './utils/mockData';
+
+
 
 export interface MyTrip {
   id: string;
@@ -108,6 +111,26 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   // Supabase Auth Integration
   useEffect(() => {
+    const isMockEnabled = import.meta.env.VITE_ENABLE_MOCK_MODE === 'true';
+    const mockSessionStr = isMockEnabled ? localStorage.getItem('venturesocial_mock_session') : null;
+    if (mockSessionStr) {
+      const mockData = JSON.parse(mockSessionStr);
+      setUser({
+        id: mockData.user.id,
+        name: mockData.user.name || 'User',
+        email: mockData.user.email || '',
+        avatar: mockData.user.avatar || '',
+        bio: ''
+      });
+      setActiveProfile({
+        id: mockData.user.id,
+        full_name: mockData.user.name || 'Alex Explorer',
+        username: mockData.user.email ? mockData.user.email.split('@')[0] : 'alex_explorer'
+      });
+      setIsAuthInitializing(false);
+      return;
+    }
+
     const initializeSession = async (session: any) => {
       setUser(session?.user ? { id: session.user.id, name: session.user.user_metadata?.name || 'User', email: session.user.email || '', avatar: '', bio: '' } : null);
       if (session?.user) {
@@ -235,6 +258,23 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   // Fetch logic directly connected to Supabase
   useEffect(() => {
+    const isMockMode = import.meta.env.VITE_ENABLE_MOCK_MODE === 'true' && !!localStorage.getItem('venturesocial_mock_session');
+    if (isMockMode) {
+      setPublicPosts(mockPublicPosts as any);
+      setIsLoadingFeed(false);
+
+      const customTripsStr = localStorage.getItem('venturesocial_custom_trips');
+      const customTrips = customTripsStr ? JSON.parse(customTripsStr) : [];
+      setMyTrips([...customTrips, ...mockMyTrips]);
+      setIsLoadingTrips(false);
+
+      setTravelServices(mockTravelServices as any);
+      setFlights(mockFlights as any);
+      setRentalCars(mockRentalCars as any);
+      setIsLoadingServices(false);
+      return;
+    }
+
     SocialService.fetchFeed().then(data => {
       if (data && data.length > 0) {
         setPublicPosts(data as any);
@@ -248,7 +288,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       fetch('/api/feed').then(res => res.json()).then(data => {
         setPublicPosts(data);
         setIsLoadingFeed(false);
-      }).catch(() => setIsLoadingFeed(false));
+      }).catch(() => {
+        setPublicPosts(mockPublicPosts as any);
+        setIsLoadingFeed(false);
+      });
     });
 
     if (user) {
@@ -285,8 +328,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       setFlights(data.flights || []);
       setRentalCars(data.rentalCars || []);
       setIsLoadingServices(false);
-    }).catch(() => setIsLoadingServices(false));
-  }, []);
+    }).catch(() => {
+      setTravelServices(mockTravelServices as any);
+      setFlights(mockFlights as any);
+      setRentalCars(mockRentalCars as any);
+      setIsLoadingServices(false);
+    });
+  }, [user]);
 
   const addCustomTrip = (trip: MyTrip) => {
     // Pipeline to save new trips directly to the UI immediately, bypassing mock APIs

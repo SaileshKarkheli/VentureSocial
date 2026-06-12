@@ -23,6 +23,25 @@ export default function RemixStudio() {
     }
     const fetchFolders = async () => {
       setIsLoading(true);
+      const isMockMode = import.meta.env.VITE_ENABLE_MOCK_MODE === 'true' && !!localStorage.getItem('venturesocial_mock_session');
+      if (isMockMode) {
+        setFolders([
+          {
+            id: 'mock-folder-1',
+            name: 'Kyoto Getaway',
+            count: 3,
+            cover_url: 'https://images.unsplash.com/photo-1490806843957-31f4c9a91c65?auto=format&fit=crop&w=800&q=80'
+          },
+          {
+            id: 'mock-folder-2',
+            name: 'Venice Explorer',
+            count: 2,
+            cover_url: 'https://images.unsplash.com/photo-1523906834658-6e24ef2386f9?auto=format&fit=crop&w=800&q=80'
+          }
+        ]);
+        setIsLoading(false);
+        return;
+      }
       try {
         const { data, error } = await supabase
           .from('remix_folders')
@@ -193,6 +212,43 @@ function WorkspaceView({ folder, onClose }: { folder: any, onClose: () => void }
 
   const fetchSpots = async () => {
     setIsLoading(true);
+    const isMockMode = import.meta.env.VITE_ENABLE_MOCK_MODE === 'true' && !!localStorage.getItem('venturesocial_mock_session');
+    if (isMockMode) {
+      if (folder.id === 'mock-folder-1') {
+        setSpots([
+          {
+            id: 'mock-spot-1',
+            custom_day: 1,
+            trip_spots: { id: 'ms-1', title: 'Bullet Train to Kyoto', description: 'Smooth ride on Shinkansen', category: 'Transport', image_url: 'https://images.unsplash.com/photo-1490806843957-31f4c9a91c65?auto=format&fit=crop&w=800&q=80' }
+          },
+          {
+            id: 'mock-spot-2',
+            custom_day: 1,
+            trip_spots: { id: 'ms-2', title: 'Traditional Ryokan', description: 'Authentic Ryokan inn', category: 'Stay', image_url: 'https://images.unsplash.com/photo-1542051841857-5f90071e7989?auto=format&fit=crop&w=800&q=80' }
+          },
+          {
+            id: 'mock-spot-3',
+            custom_day: 2,
+            trip_spots: { id: 'ms-3', title: 'Fushimi Inari Shrine', description: 'Walking the Torii Gates', category: 'Activity', image_url: 'https://images.unsplash.com/photo-1492571350019-22de08371fd3?auto=format&fit=crop&w=800&q=80' }
+          }
+        ]);
+      } else {
+        setSpots([
+          {
+            id: 'mock-spot-4',
+            custom_day: 1,
+            trip_spots: { id: 'ms-4', title: 'Private Gondola Tour', description: 'Exploring Venice canals', category: 'Transport', image_url: 'https://images.unsplash.com/photo-1523906834658-6e24ef2386f9?auto=format&fit=crop&w=800&q=80' }
+          },
+          {
+            id: 'mock-spot-5',
+            custom_day: 1,
+            trip_spots: { id: 'ms-5', title: 'St Mark Square Hotel', description: 'Boutique stay in the center', category: 'Stay', image_url: 'https://images.unsplash.com/photo-1552832230-c0197dd311b5?auto=format&fit=crop&w=800&q=80' }
+          }
+        ]);
+      }
+      setIsLoading(false);
+      return;
+    }
     try {
       const { data, error } = await supabase
         .from('saved_spots')

@@ -55,27 +55,25 @@ export const SignupForm: React.FC<SignupModalProps> = ({ isOpen, onClose }) => {
       });
 
       if (signUpError) {
-        if (signUpError.message.includes('fetch') || signUpError.message.includes('getaddrinfo') || signUpError.message.includes('Failed to fetch') || signUpError.message.includes('NetworkError')) {
-          console.warn('Supabase is offline. Falling back to local mock server...');
-          const response = await fetch('http://localhost:3001/api/auth/register', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name: fullName, email, password })
-          });
-          const result = await response.json();
-          if (response.ok && result.user) {
-            localStorage.setItem('venturesocial_mock_session', JSON.stringify({
-              user: result.user,
-              access_token: result.token
-            }));
-            onClose();
-            window.location.reload();
-            return;
-          } else {
-            throw new Error(result.error || 'Mock registration failed');
-          }
+        if (import.meta.env.VITE_ENABLE_MOCK_MODE === 'true') {
+          console.warn('Supabase signup failed, falling back to client-side mock session:', signUpError.message);
+          localStorage.setItem('venturesocial_mock_session', JSON.stringify({
+            user: {
+              id: 'u123',
+              name: fullName || 'Alex Explorer',
+              email: email || 'alex@venturesocial.com',
+              avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=100&h=100'
+            },
+            token: 'mock_jwt_token_123'
+          }));
+          onClose();
+          window.location.reload(); // Reload to initialize with mock session
+          return;
+        } else {
+          setError(signUpError.message);
+          setLoading(false);
+          return;
         }
-        throw signUpError;
       }
       
       onClose();

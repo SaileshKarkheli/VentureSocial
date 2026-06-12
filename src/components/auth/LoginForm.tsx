@@ -41,23 +41,21 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onOpenSignup }) => {
         password,
       });
       if (error) {
-        // Fallback: If Supabase fails for any reason (offline or invalid credentials), use local mock server
-        console.warn('Supabase auth failed, falling back to mock Express server:', error.message);
-        const response = await fetch('http://localhost:3001/api/auth/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, password })
-        });
-        const result = await response.json();
-        if (response.ok && result.user) {
+        if (import.meta.env.VITE_ENABLE_MOCK_MODE === 'true') {
+          console.warn('Supabase auth failed, falling back to client-side mock session:', error.message);
           localStorage.setItem('venturesocial_mock_session', JSON.stringify({
-            user: result.user,
-            access_token: result.token
+            user: {
+              id: 'u123',
+              name: 'Alex Explorer',
+              email: email || 'alex@venturesocial.com',
+              avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=100&h=100'
+            },
+            token: 'mock_jwt_token_123'
           }));
-          window.location.reload(); // Reload page to boot context with mock session
+          window.location.reload();
           return;
         } else {
-          throw new Error(result.error || 'Mock login failed');
+          throw error;
         }
       }
     } catch (err: any) {
@@ -78,6 +76,8 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onOpenSignup }) => {
     }));
     window.location.reload();
   };
+
+  const isMockEnabled = import.meta.env.VITE_ENABLE_MOCK_MODE === 'true';
 
   return (
     <div className="bg-white p-8 rounded-3xl shadow-xl border border-zinc-100 w-full max-w-md">
@@ -105,13 +105,15 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onOpenSignup }) => {
           Continue with Google
         </button>
 
-        <button
-          type="button"
-          onClick={handleMockBypass}
-          className="w-full py-3 px-4 bg-orange-500 hover:bg-orange-600 text-white font-bold rounded-xl shadow-lg shadow-orange-500/20 transition-all flex items-center justify-center gap-2"
-        >
-          Bypass Login (Offline Mock Mode)
-        </button>
+        {isMockEnabled && (
+          <button
+            type="button"
+            onClick={handleMockBypass}
+            className="w-full py-3 px-4 bg-orange-500 hover:bg-orange-600 text-white font-bold rounded-xl shadow-lg shadow-orange-500/20 transition-all flex items-center justify-center gap-2"
+          >
+            Bypass Login (Offline Mock Mode)
+          </button>
+        )}
       </div>
 
       <div className="flex items-center justify-between mb-6">
