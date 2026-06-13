@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useApp } from '../AppContext';
-import { SocialService } from '../lib/socialService';
-import { supabase } from '../supabaseClient';
+import { messageService } from '../services/messageService';
 import { Loader2, Send, Search, ArrowLeft } from 'lucide-react';
 import SmartImage from '../components/SmartImage';
 
@@ -30,11 +29,11 @@ export default function Messages() {
       try {
         // If coming explicitly from a profile hook, actively bootstrap the thread
         if (targetUserId) {
-          const newConvoId = await SocialService.getOrCreateConversation(user.id, targetUserId);
+          const newConvoId = await messageService.getOrCreateConversation(user.id, targetUserId);
           setActiveConversationId(newConvoId);
         }
 
-        const convos = await SocialService.fetchUserConversations(user.id);
+        const convos = await messageService.fetchUserConversations(user.id);
         setConversations(convos);
         
         if (!targetUserId && convos.length > 0) {
@@ -53,21 +52,19 @@ export default function Messages() {
     if (!activeConversationId) return;
 
     const loadMessages = async () => {
-      const msgs = await SocialService.fetchMessages(activeConversationId);
+      const msgs = await messageService.fetchMessages(activeConversationId);
       setMessages(msgs);
       scrollToBottom();
     };
     loadMessages();
 
     // Attach hyper-local active listener to the open UI thread
-    const ch = supabase.channel(`active_thread`)
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: `conversation_id=eq.${activeConversationId}` }, (payload) => {
-        setMessages(prev => [...prev, payload.new]);
-        scrollToBottom();
-      })
-      .subscribe();
+    const subscription = messageService.subscribeToThreadMessages(activeConversationId, (payload) => {
+      setMessages(prev => [...prev, payload.new]);
+      scrollToBottom();
+    });
 
-    return () => { supabase.removeChannel(ch); };
+    return () => { subscription.unsubscribe(); };
   }, [activeConversationId]);
 
   const scrollToBottom = () => {
@@ -82,7 +79,7 @@ export default function Messages() {
     
     const textSnapshot = inputText;
     setInputText('');
-    await SocialService.sendMessage(activeConversationId, user.id, textSnapshot);
+    await messageService.sendMessage(activeConversationId, user.id, textSnapshot);
   };
 
   const activePartner = conversations.find(c => c.id === activeConversationId)?.p1?.id === user?.id 

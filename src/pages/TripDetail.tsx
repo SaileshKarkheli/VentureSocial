@@ -19,11 +19,7 @@ import {
   LayoutGrid,
   Users
 } from 'lucide-react';
-import { useApp } from '../AppContext';
-import React, { useState, useEffect } from 'react';
-import { supabase } from '../supabaseClient';
-import { SaveSpotModal } from '../components/remix/SaveSpotModal';
-import { mockPublicPosts } from '../utils/mockData';
+import { tripsService } from '../services/tripsService';
 
 export default function TripDetail() {
   const { id } = useParams();
@@ -40,129 +36,12 @@ export default function TripDetail() {
     if (!id) return;
     const fetchData = async () => {
       setIsLoading(true);
-      const isMockMode = import.meta.env.VITE_ENABLE_MOCK_MODE === 'true' && !!localStorage.getItem('venturesocial_mock_session');
-      if (isMockMode) {
-        const matchedPost = mockPublicPosts.find((p: any) => p.id === id || p.tripId === id);
-        if (matchedPost) {
-          setPost({
-            id: matchedPost.id,
-            location_name: matchedPost.location,
-            caption: matchedPost.caption,
-            base_price: matchedPost.price || 0,
-            profiles: { full_name: matchedPost.user, username: matchedPost.user.toLowerCase().replace(/ /g, '') }
-          });
-          const spots = matchedPost.images.map((img: any, idx: number) => ({
-            id: `spot-${idx}`,
-            day_number: img.day,
-            title: img.description,
-            description: img.activities.join(', '),
-            category: idx === 0 ? 'Transport' : (idx === 1 ? 'Stay' : 'Activity'),
-            image_url: img.url
-          }));
-          setTripSpots(spots);
-        } else {
-          // Check localStorage custom trips
-          const customTripsStr = localStorage.getItem('venturesocial_custom_trips');
-          const customTrips = customTripsStr ? JSON.parse(customTripsStr) : [];
-          const matchedCustom = customTrips.find((t: any) => t.id === id);
-          if (matchedCustom) {
-            setPost({
-              id: matchedCustom.id,
-              location_name: matchedCustom.country,
-              caption: `My custom trip to ${matchedCustom.country}`,
-              base_price: matchedCustom.base_price || 0,
-              profiles: { full_name: 'Alex Explorer', username: 'alex_explorer' }
-            });
-            setTripSpots([
-              { id: '1', day_number: 1, title: 'Arrival & Setup', description: 'Arrive at destination and settle in.', category: 'Transport', image_url: matchedCustom.image }
-            ]);
-          } else {
-            setPost({
-              id: id,
-              location_name: 'Kyoto, Japan',
-              caption: 'Exploring ancient temples and Ryokans.',
-              base_price: 1500,
-              profiles: { full_name: 'Alex Explorer', username: 'alex_explorer' }
-            });
-            setTripSpots([
-              { id: '1', day_number: 1, title: 'Bullet Train to Kyoto', description: 'Smooth ride on the Shinkansen.', category: 'Transport', image_url: 'https://images.unsplash.com/photo-1490806843957-31f4c9a91c65?auto=format&fit=crop&w=1200&q=80' },
-              { id: '2', day_number: 1, title: 'Traditional Ryokan', description: 'Authentic Japanese inn experience.', category: 'Stay', image_url: 'https://images.unsplash.com/photo-1542051841857-5f90071e7989?auto=format&fit=crop&w=1200&q=80' },
-              { id: '3', day_number: 2, title: 'Fushimi Inari Shrine', description: 'Walking through the thousand Torii gates.', category: 'Activity', image_url: 'https://images.unsplash.com/photo-1492571350019-22de08371fd3?auto=format&fit=crop&w=1200&q=80' }
-            ]);
-          }
-        }
-        setIsLoading(false);
-        return;
-      }
-
       try {
-        const { data: postData, error } = await supabase.from('posts').select('*').eq('id', id).single();
-        
-        if (error) throw error;
-
-        if (postData) {
-          const { data: profile } = await supabase.from('profiles').select('full_name, username').eq('id', postData.user_id).single();
-          const postWithProfile = { ...postData, profiles: profile };
-          
-          setPost(postWithProfile);
-          const { data: spotsData } = await supabase.from('trip_spots').select('*').eq('post_id', id).order('day_number');
-          setTripSpots(spotsData || []);
-        }
+        const { post: postData, spots } = await tripsService.fetchTripDetail(id);
+        setPost(postData);
+        setTripSpots(spots);
       } catch (err) {
-        if (import.meta.env.VITE_ENABLE_MOCK_MODE === 'true') {
-          console.warn("Supabase fetch failed in TripDetail, trying client-side mock fallback:", err);
-          const matchedPost = mockPublicPosts.find((p: any) => p.id === id || p.tripId === id);
-          if (matchedPost) {
-            setPost({
-              id: matchedPost.id,
-              location_name: matchedPost.location,
-              caption: matchedPost.caption,
-              base_price: matchedPost.price || 0,
-              profiles: { full_name: matchedPost.user, username: matchedPost.user.toLowerCase().replace(/ /g, '') }
-            });
-            const spots = matchedPost.images.map((img: any, idx: number) => ({
-              id: `spot-${idx}`,
-              day_number: img.day,
-              title: img.description,
-              description: img.activities.join(', '),
-              category: idx === 0 ? 'Transport' : (idx === 1 ? 'Stay' : 'Activity'),
-              image_url: img.url
-            }));
-            setTripSpots(spots);
-          } else {
-            // Check localStorage custom trips
-            const customTripsStr = localStorage.getItem('venturesocial_custom_trips');
-            const customTrips = customTripsStr ? JSON.parse(customTripsStr) : [];
-            const matchedCustom = customTrips.find((t: any) => t.id === id);
-            if (matchedCustom) {
-              setPost({
-                id: matchedCustom.id,
-                location_name: matchedCustom.country,
-                caption: `My custom trip to ${matchedCustom.country}`,
-                base_price: matchedCustom.base_price || 0,
-                profiles: { full_name: 'Alex Explorer', username: 'alex_explorer' }
-              });
-              setTripSpots([
-                { id: '1', day_number: 1, title: 'Arrival & Setup', description: 'Arrive at destination and settle in.', category: 'Transport', image_url: matchedCustom.image }
-              ]);
-            } else {
-              setPost({
-                id: id,
-                location_name: 'Kyoto, Japan',
-                caption: 'Exploring ancient temples and Ryokans.',
-                base_price: 1500,
-                profiles: { full_name: 'Alex Explorer', username: 'alex_explorer' }
-              });
-              setTripSpots([
-                { id: '1', day_number: 1, title: 'Bullet Train to Kyoto', description: 'Smooth ride on the Shinkansen.', category: 'Transport', image_url: 'https://images.unsplash.com/photo-1490806843957-31f4c9a91c65?auto=format&fit=crop&w=1200&q=80' },
-                { id: '2', day_number: 1, title: 'Traditional Ryokan', description: 'Authentic Japanese inn experience.', category: 'Stay', image_url: 'https://images.unsplash.com/photo-1542051841857-5f90071e7989?auto=format&fit=crop&w=1200&q=80' },
-                { id: '3', day_number: 2, title: 'Fushimi Inari Shrine', description: 'Walking through the thousand Torii gates.', category: 'Activity', image_url: 'https://images.unsplash.com/photo-1492571350019-22de08371fd3?auto=format&fit=crop&w=1200&q=80' }
-              ]);
-            }
-          }
-        } else {
-          console.error("Supabase fetch failed in TripDetail:", err);
-        }
+        console.error("Supabase fetch failed in TripDetail:", err);
       } finally {
         setIsLoading(false);
       }

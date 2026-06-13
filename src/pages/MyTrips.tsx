@@ -7,7 +7,7 @@ import PublishModal from '../components/PublishModal';
 import { TripGridSkeleton } from '../components/Skeletons';
 import { supabase } from '../supabaseClient';
 import { useAuth } from '../context/AuthContext';
-import { mockMyTrips } from '../utils/mockData';
+import { tripsService } from '../services/tripsService';
 
 interface DbTrip {
   id: string;
@@ -34,54 +34,11 @@ export default function MyTrips() {
 
     const fetchMyTrips = async () => {
       setIsLoadingTrips(true);
-      const isMockMode = import.meta.env.VITE_ENABLE_MOCK_MODE === 'true' && !!localStorage.getItem('venturesocial_mock_session');
-      if (isMockMode) {
-        const customTripsStr = localStorage.getItem('venturesocial_custom_trips');
-        const customTrips = customTripsStr ? JSON.parse(customTripsStr) : [];
-        setMyTrips([...customTrips, ...mockMyTrips]);
-        setIsLoadingTrips(false);
-        return;
-      }
       try {
-        const { data, error } = await supabase
-          .from('posts')
-          .select(`
-            id,
-            location_name,
-            created_at,
-            trip_spots ( image_url )
-          `)
-          .eq('user_id', session.user.id)
-          .order('created_at', { ascending: false });
-
-        if (error) throw error;
-
-        if (data) {
-          const formatted = data.map((post: any) => {
-            const spotWithImage = Array.isArray(post.trip_spots) 
-              ? post.trip_spots.find((s: any) => s.image_url) 
-              : post.trip_spots?.image_url ? post.trip_spots : null;
-              
-            const fallbackImage = 'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?auto=format&fit=crop&w=800&q=80';
-            
-            return {
-              id: post.id,
-              year: new Date(post.created_at).getFullYear().toString(),
-              country: post.location_name,
-              image: spotWithImage?.image_url || fallbackImage
-            };
-          });
-          setMyTrips(formatted);
-        }
+        const data = await tripsService.fetchMyTrips(session.user.id);
+        setMyTrips(data);
       } catch (err) {
-        if (import.meta.env.VITE_ENABLE_MOCK_MODE === 'true') {
-          console.warn("Supabase fetch failed, falling back to local mock data:", err);
-          const customTripsStr = localStorage.getItem('venturesocial_custom_trips');
-          const customTrips = customTripsStr ? JSON.parse(customTripsStr) : [];
-          setMyTrips([...customTrips, ...mockMyTrips]);
-        } else {
-          console.error("Supabase fetch failed in MyTrips:", err);
-        }
+        console.error("Supabase fetch failed in MyTrips:", err);
       } finally {
         setIsLoadingTrips(false);
       }

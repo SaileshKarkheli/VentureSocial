@@ -3,9 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Wand2, FolderOpen, MapPin, X, ArrowRight, ShoppingBag, Clock, Navigation, Bed, Utensils, Camera, Plane, Trash2, AlertCircle, Store, Car, ChevronDown, CheckCircle2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import SmartImage from '../components/SmartImage';
-import { supabase } from '../supabaseClient';
-import { useAuth } from '../context/AuthContext';
-import { DayHighlightCarousel, PillarSection } from './TripDetail';
+import { remixService } from '../services/remixService';
 
 export default function RemixStudio() {
   const { session } = useAuth();
@@ -23,77 +21,11 @@ export default function RemixStudio() {
     }
     const fetchFolders = async () => {
       setIsLoading(true);
-      const isMockMode = import.meta.env.VITE_ENABLE_MOCK_MODE === 'true' && !!localStorage.getItem('venturesocial_mock_session');
-      if (isMockMode) {
-        setFolders([
-          {
-            id: 'mock-folder-1',
-            name: 'Kyoto Getaway',
-            count: 3,
-            cover_url: 'https://images.unsplash.com/photo-1490806843957-31f4c9a91c65?auto=format&fit=crop&w=800&q=80'
-          },
-          {
-            id: 'mock-folder-2',
-            name: 'Venice Explorer',
-            count: 2,
-            cover_url: 'https://images.unsplash.com/photo-1523906834658-6e24ef2386f9?auto=format&fit=crop&w=800&q=80'
-          }
-        ]);
-        setIsLoading(false);
-        return;
-      }
       try {
-        const { data, error } = await supabase
-          .from('remix_folders')
-          .select(`
-            id,
-            name,
-            created_at,
-            saved_spots ( count )
-          `)
-          .eq('user_id', session.user.id)
-          .order('created_at', { ascending: false });
-
-        if (error) throw error;
-
-        if (data) {
-          const foldersWithCovers = await Promise.all(data.map(async (folder: any) => {
-            const { data: spotData } = await supabase
-              .from('saved_spots')
-              .select(`
-                trip_spots ( image_url )
-              `)
-              .eq('folder_id', folder.id)
-              .limit(1)
-              .single();
-              
-            const savedSpotsArray = Array.isArray(folder.saved_spots) ? folder.saved_spots : [folder.saved_spots];
-            const count = savedSpotsArray[0]?.count || 0;
-
-            return {
-              ...folder,
-              count: count,
-              cover_url: (spotData?.trip_spots as any)?.image_url || 'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?auto=format&fit=crop&w=800&q=80'
-            };
-          }));
-          setFolders(foldersWithCovers);
-        }
+        const foldersData = await remixService.fetchFolders(session.user.id);
+        setFolders(foldersData);
       } catch (err) {
-        console.warn("Supabase fetch failed in RemixStudio, falling back to mock folders:", err);
-        setFolders([
-          {
-            id: 'mock-folder-1',
-            name: 'Kyoto Getaway',
-            count: 3,
-            cover_url: 'https://images.unsplash.com/photo-1490806843957-31f4c9a91c65?auto=format&fit=crop&w=800&q=80'
-          },
-          {
-            id: 'mock-folder-2',
-            name: 'Venice Explorer',
-            count: 2,
-            cover_url: 'https://images.unsplash.com/photo-1523906834658-6e24ef2386f9?auto=format&fit=crop&w=800&q=80'
-          }
-        ]);
+        console.error("Supabase fetch failed in RemixStudio:", err);
       } finally {
         setIsLoading(false);
       }
@@ -103,9 +35,13 @@ export default function RemixStudio() {
 
   const handleDeleteFolder = async (e: React.MouseEvent, folderId: string) => {
     e.stopPropagation();
-    await supabase.from('remix_folders').delete().eq('id', folderId);
-    setFolders(folders.filter(f => f.id !== folderId));
-    if (activeFolder?.id === folderId) setActiveFolder(null);
+    try {
+      await remixService.deleteFolder(folderId);
+      setFolders(folders.filter(f => f.id !== folderId));
+      if (activeFolder?.id === folderId) setActiveFolder(null);
+    } catch (err) {
+      console.error("Error deleting folder:", err);
+    }
   };
 
   return (
@@ -212,93 +148,11 @@ function WorkspaceView({ folder, onClose }: { folder: any, onClose: () => void }
 
   const fetchSpots = async () => {
     setIsLoading(true);
-    const isMockMode = import.meta.env.VITE_ENABLE_MOCK_MODE === 'true' && !!localStorage.getItem('venturesocial_mock_session');
-    if (isMockMode) {
-      if (folder.id === 'mock-folder-1') {
-        setSpots([
-          {
-            id: 'mock-spot-1',
-            custom_day: 1,
-            trip_spots: { id: 'ms-1', title: 'Bullet Train to Kyoto', description: 'Smooth ride on Shinkansen', category: 'Transport', image_url: 'https://images.unsplash.com/photo-1490806843957-31f4c9a91c65?auto=format&fit=crop&w=800&q=80' }
-          },
-          {
-            id: 'mock-spot-2',
-            custom_day: 1,
-            trip_spots: { id: 'ms-2', title: 'Traditional Ryokan', description: 'Authentic Ryokan inn', category: 'Stay', image_url: 'https://images.unsplash.com/photo-1542051841857-5f90071e7989?auto=format&fit=crop&w=800&q=80' }
-          },
-          {
-            id: 'mock-spot-3',
-            custom_day: 2,
-            trip_spots: { id: 'ms-3', title: 'Fushimi Inari Shrine', description: 'Walking the Torii Gates', category: 'Activity', image_url: 'https://images.unsplash.com/photo-1492571350019-22de08371fd3?auto=format&fit=crop&w=800&q=80' }
-          }
-        ]);
-      } else {
-        setSpots([
-          {
-            id: 'mock-spot-4',
-            custom_day: 1,
-            trip_spots: { id: 'ms-4', title: 'Private Gondola Tour', description: 'Exploring Venice canals', category: 'Transport', image_url: 'https://images.unsplash.com/photo-1523906834658-6e24ef2386f9?auto=format&fit=crop&w=800&q=80' }
-          },
-          {
-            id: 'mock-spot-5',
-            custom_day: 1,
-            trip_spots: { id: 'ms-5', title: 'St Mark Square Hotel', description: 'Boutique stay in the center', category: 'Stay', image_url: 'https://images.unsplash.com/photo-1552832230-c0197dd311b5?auto=format&fit=crop&w=800&q=80' }
-          }
-        ]);
-      }
-      setIsLoading(false);
-      return;
-    }
     try {
-      const { data, error } = await supabase
-        .from('saved_spots')
-        .select(`
-          id,
-          custom_day,
-          trip_spots (
-            id, title, description, category, image_url, link_url, day_number,
-            post_id,
-            posts ( id, user_id )
-          )
-        `)
-        .eq('folder_id', folder.id);
-      
-      if (error) throw error;
-      if (data) setSpots(data);
+      const data = await remixService.fetchFolderSpots(folder.id);
+      setSpots(data);
     } catch (err) {
-      console.warn("Supabase fetch failed in WorkspaceView, falling back to mock spots:", err);
-      if (folder.id === 'mock-folder-1') {
-        setSpots([
-          {
-            id: 'mock-spot-1',
-            custom_day: 1,
-            trip_spots: { id: 'ms-1', title: 'Bullet Train to Kyoto', description: 'Smooth ride on Shinkansen', category: 'Transport', image_url: 'https://images.unsplash.com/photo-1490806843957-31f4c9a91c65?auto=format&fit=crop&w=800&q=80' }
-          },
-          {
-            id: 'mock-spot-2',
-            custom_day: 1,
-            trip_spots: { id: 'ms-2', title: 'Traditional Ryokan', description: 'Authentic Ryokan inn', category: 'Stay', image_url: 'https://images.unsplash.com/photo-1542051841857-5f90071e7989?auto=format&fit=crop&w=800&q=80' }
-          },
-          {
-            id: 'mock-spot-3',
-            custom_day: 2,
-            trip_spots: { id: 'ms-3', title: 'Fushimi Inari Shrine', description: 'Walking the Torii Gates', category: 'Activity', image_url: 'https://images.unsplash.com/photo-1492571350019-22de08371fd3?auto=format&fit=crop&w=800&q=80' }
-          }
-        ]);
-      } else {
-        setSpots([
-          {
-            id: 'mock-spot-4',
-            custom_day: 1,
-            trip_spots: { id: 'ms-4', title: 'Private Gondola Tour', description: 'Exploring Venice canals', category: 'Transport', image_url: 'https://images.unsplash.com/photo-1523906834658-6e24ef2386f9?auto=format&fit=crop&w=800&q=80' }
-          },
-          {
-            id: 'mock-spot-5',
-            custom_day: 1,
-            trip_spots: { id: 'ms-5', title: 'St Mark Square Hotel', description: 'Boutique stay in the center', category: 'Stay', image_url: 'https://images.unsplash.com/photo-1552832230-c0197dd311b5?auto=format&fit=crop&w=800&q=80' }
-          }
-        ]);
-      }
+      console.error("Supabase fetch failed in WorkspaceView:", err);
     } finally {
       setIsLoading(false);
     }
@@ -312,13 +166,20 @@ function WorkspaceView({ folder, onClose }: { folder: any, onClose: () => void }
   const handleReassignDay = async (savedSpotId: string, newDay: number) => {
     // Update local state optimistically
     setSpots(spots.map(s => s.id === savedSpotId ? { ...s, custom_day: newDay } : s));
-    // Update DB
-    await supabase.from('saved_spots').update({ custom_day: newDay }).eq('id', savedSpotId);
+    try {
+      await remixService.reassignSpotDay(savedSpotId, newDay);
+    } catch (err) {
+      console.error("Error reassigning day:", err);
+    }
   };
 
   const handleRemoveSpot = async (savedSpotId: string) => {
     setSpots(spots.filter(s => s.id !== savedSpotId));
-    await supabase.from('saved_spots').delete().eq('id', savedSpotId);
+    try {
+      await remixService.removeSpot(savedSpotId);
+    } catch (err) {
+      console.error("Error deleting spot:", err);
+    }
   };
 
   const handleFinalize = async () => {
