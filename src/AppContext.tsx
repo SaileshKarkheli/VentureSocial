@@ -63,6 +63,7 @@ interface AppContextType {
   isAuthInitializing: boolean;
   activeProfile: any;
   updateActiveProfile: (newData: any) => void;
+  currentUserProfile: any;
 }
 
 export interface FlightOption {
@@ -242,6 +243,26 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       }
     });
     return () => { supabase.removeChannel(channel); };
+  }, [user]);
+
+  // Real-Time Profile Updates Interceptor
+  useEffect(() => {
+    if (!user) return;
+    const channel = supabase
+      .channel('public:profiles')
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', filter: `id=eq.${user.id}` },
+        (payload) => {
+          if (payload.new) {
+            updateActiveProfile(payload.new);
+          }
+        }
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [user]);
 
   // Data States
@@ -592,7 +613,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       hasUnreadMessages, setHasUnreadMessages,
       userLocation, requestLocation,
       remixFolders, addToRemixFolder, removeFromRemixFolder,
-      addCustomTrip, activeProfile, updateActiveProfile
+      addCustomTrip, activeProfile, updateActiveProfile,
+      currentUserProfile: activeProfile
     }}>
       {children}
     </AppContext.Provider>

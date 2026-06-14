@@ -15,7 +15,7 @@ import { supabase } from '../supabaseClient';
 type TabType = 'Feed' | 'Photos' | 'Videos';
 
 export default function Home() {
-  const { publicPosts, isLoadingFeed, searchQuery, setSearchQuery, addToRemixFolder, followedUsers, requestedUsers, toggleFollow, userInterestTags, addUserInterest, userLocation, requestLocation, userLikedPosts, togglePostLike, activeProfile, user } = useApp();
+  const { publicPosts, isLoadingFeed, searchQuery, setSearchQuery, addToRemixFolder, followedUsers, requestedUsers, toggleFollow, userInterestTags, addUserInterest, userLocation, requestLocation, userLikedPosts, togglePostLike, activeProfile, user, currentUserProfile } = useApp();
   const navigate = useNavigate();
   const [showFilters, setShowFilters] = useState(false);
   const [activeTab, setActiveTab] = useState<TabType>('Feed');
@@ -152,7 +152,7 @@ export default function Home() {
                             </div>
                           )}
                         </div>
-
+ 
                         <div className="px-5 py-4 bg-white">
                           <h3 className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-2"><MapPinIcon size={12}/> Top Itineraries</h3>
                           {topTrips.length === 0 ? <p className="text-xs text-zinc-400 font-medium mt-2">No trip locations match.</p> : (
@@ -201,7 +201,7 @@ export default function Home() {
                 Search
               </button>
             </div>
-
+ 
             <AnimatePresence>
               {showFilters && (
                 <motion.div
@@ -217,7 +217,7 @@ export default function Home() {
           </form>
         </div>
       </section>
-
+ 
       {/* Discovery Tabs Section */}
       <div className="flex items-center justify-center -mt-8">
         <div className="bg-white/50 backdrop-blur-md border border-zinc-200 p-1.5 rounded-2xl flex gap-1">
@@ -241,9 +241,9 @@ export default function Home() {
           ))}
         </div>
       </div>
-
+ 
       <PublishModal isOpen={isPublishModalOpen} onClose={() => setIsPublishModalOpen(false)} />
-
+ 
       <AnimatePresence mode="wait">
         {activeTab === 'Feed' ? (
           <motion.div
@@ -274,11 +274,11 @@ export default function Home() {
                 </button>
               </div>
             </div>
-
+ 
             {/* Create Post Prompt */}
             <div className="bg-white rounded-3xl p-5 shadow-sm border border-zinc-100 flex items-center gap-4">
               <div className="w-12 h-12 rounded-full overflow-hidden shrink-0 border-2 border-orange-500/20">
-                <img src={activeProfile?.avatar_url || user?.avatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=100&q=80"} alt={activeProfile?.username || "Current User"} className="w-full h-full object-cover bg-zinc-100" />
+                <img src={currentUserProfile?.avatar_url || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=100&h=100"} alt={currentUserProfile?.username || "Current User"} className="w-full h-full object-cover bg-zinc-100" />
               </div>
               <button 
                 onClick={() => setIsPublishModalOpen(true)}

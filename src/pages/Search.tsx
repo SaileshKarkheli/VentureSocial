@@ -12,7 +12,7 @@ import { SaveSpotModal } from '../components/remix/SaveSpotModal';
 import { useNavigate } from 'react-router-dom';
 
 export default function Search() {
-  const { publicPosts, searchQuery, setSearchQuery, filters, sortBy, customTripSpots, toggleCustomSpot } = useApp();
+  const { publicPosts, searchQuery, setSearchQuery, filters, sortBy, customTripSpots, toggleCustomSpot, currentUserProfile } = useApp();
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
   const navigate = useNavigate();
   

@@ -9,7 +9,7 @@ import ImageCropperModal from '../components/ImageCropperModal';
 import ImageViewerModal from '../components/ImageViewerModal';
 
 export default function Profile() {
-  const { savedItems, followedUsers, user } = useApp();
+  const { savedItems, followedUsers, user, currentUserProfile } = useApp();
   const [isPrivateAccount, setIsPrivateAccount] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -87,14 +87,14 @@ export default function Profile() {
   };
 
   const userData = {
-    name: dbProfile?.full_name || user?.name || 'New Explorer',
-    dob: dbProfile?.dob || '',
+    name: currentUserProfile?.full_name || dbProfile?.full_name || user?.name || 'New Explorer',
+    dob: currentUserProfile?.dob || dbProfile?.dob || '',
     email: user?.email || '',
-    location: dbProfile?.location || '',
-    education: dbProfile?.education || '',
-    bio: dbProfile?.bio || '',
-    avatar: dbProfile?.avatar_url || user?.avatar || "",
-    cover: dbProfile?.cover_photo_url || "",
+    location: currentUserProfile?.location || dbProfile?.location || '',
+    education: currentUserProfile?.education || dbProfile?.education || '',
+    bio: currentUserProfile?.bio || dbProfile?.bio || '',
+    avatar: currentUserProfile?.avatar_url || dbProfile?.avatar_url || user?.avatar || "",
+    cover: currentUserProfile?.cover_photo_url || dbProfile?.cover_photo_url || "",
     stats: [
       { label: 'Trips', value: tripCount.toString() },
       { label: 'Following', value: followedUsers.length.toString() },
