@@ -19,9 +19,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onOpenSignup }) => {
       setError(null);
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
-        options: {
-          redirectTo: window.location.origin + '/home'
-        }
+        options: { redirectTo: window.location.origin }
       });
       if (error) throw error;
     } catch (err: any) {
