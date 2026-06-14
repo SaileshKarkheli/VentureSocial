@@ -15,6 +15,64 @@ export default function Search() {
   const { publicPosts, searchQuery, setSearchQuery, filters, sortBy, customTripSpots, toggleCustomSpot, currentUserProfile } = useApp();
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
   const navigate = useNavigate();
+
+  // Local database states for direct fetching
+  const [dbPosts, setDbPosts] = useState<any[]>([]);
+  const [isDbLoading, setIsDbLoading] = useState(true);
+
+  React.useEffect(() => {
+    const fetchSearchFeed = async () => {
+      setIsDbLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from('posts')
+          .select(`
+            *,
+            profile:profiles!inner(id, username, full_name, avatar_url),
+            trip_spots(*),
+            likes(count),
+            comments(count),
+            remix_stats(count)
+          `)
+          .order('created_at', { ascending: false });
+
+        if (error) throw error;
+
+        const mapped = (data || []).map((row: any) => ({
+          id: row.id,
+          userId: row.user_id,
+          tripId: row.id,
+          user: row.profile?.full_name || row.profile?.username || 'Anonymous Explorer',
+          avatar: row.profile?.avatar_url || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=100&h=100',
+          location: row.location_name,
+          images: (row.trip_spots || []).map((spot: any) => ({
+            id: spot.id,
+            url: spot.image_url || 'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?auto=format&fit=crop&w=800&q=80',
+            day: spot.day_number,
+            description: spot.description || '',
+            activities: spot.activities || [],
+            coordinates: spot.lat && spot.lng ? { lat: parseFloat(spot.lat), lng: parseFloat(spot.lng) } : undefined
+          })).sort((a: any, b: any) => a.day - b.day),
+          caption: row.caption || row.category || '',
+          likes: row.likes?.[0]?.count || 0,
+          comments: row.comments?.[0]?.count || 0,
+          remixes: row.remix_stats?.[0]?.count || 0,
+          rating: row.rating || 5,
+          activities: row.activities || [],
+          hotelType: row.hotel_type || row.category || 'Boutique',
+          price: row.price || row.base_price || 0,
+          isPrivate: row.is_private || false
+        }));
+        setDbPosts(mapped);
+      } catch (err) {
+        console.error("Error fetching database feed:", err);
+      } finally {
+        setIsDbLoading(false);
+      }
+    };
+
+    fetchSearchFeed();
+  }, []);
   
   // Timeline State
   const [expandedDay, setExpandedDay] = useState<number | null>(1);
@@ -72,7 +130,7 @@ export default function Search() {
     return () => clearTimeout(timeoutId);
   }, [searchQuery, searchTab]);
 
-  const filteredPosts = publicPosts
+  const filteredPosts = dbPosts
     .filter(post => {
       const matchesSearch = post.location.toLowerCase().includes(searchQuery.toLowerCase()) ||
                            post.caption.toLowerCase().includes(searchQuery.toLowerCase());
