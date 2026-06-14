@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Globe2, Sparkles, Send, CheckCircle2 } from 'lucide-react';
 import { useApp } from '../AppContext';
+import { supabase } from '../supabaseClient';
 
 interface PublishModalProps {
   isOpen: boolean;
@@ -43,39 +44,63 @@ export default function PublishModal({ isOpen, onClose, preselectedTripId }: Pub
     );
   };
 
-  const handlePublish = () => {
+  const handlePublish = async () => {
     if (!selectedTrip || selectedImages.length === 0) return;
     setIsPublishing(true);
 
-    // Map selected photo URLs back into Post Image objects
-    const postImagesToPublish = selectedImages.map((imgUrl, idx) => ({
-      url: imgUrl,
-      day: idx + 1,
-      description: `Highlight from ${selectedTrip.country}`
-    }));
+    try {
+      if (!user) {
+        alert("Must be logged in to publish itineraries!");
+        setIsPublishing(false);
+        return;
+      }
 
-    // Simulate network delay
-    setTimeout(() => {
-      addPublicPost({
-        id: `p-${Date.now()}`,
-        userId: user?.id || 'currentUser', 
-        tripId: selectedTrip.id,
-        user: activeProfile?.full_name || activeProfile?.username || user?.name || 'Current User',
-        avatar: activeProfile?.avatar_url || user?.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=100&q=80',
-        location: selectedTrip.country,
-        images: postImagesToPublish,
-        caption: caption,
-        likes: 0,
-        comments: 0,
-        rating: 5,
-        activities: ['Exploration'],
-        hotelType: 'Various',
-        price: 1500
-      });
-      setIsPublishing(false);
+      // 1. Insert parent record into public.posts
+      const { data: parentPost, error: parentError } = await supabase
+        .from('posts')
+        .insert({
+          user_id: user.id,
+          location_name: selectedTrip.country,
+          caption: caption,
+          rating: 5,
+          hotel_type: 'Resort',
+          price: 1500,
+          activities: ['Exploration'],
+          category: 'Activity' // Safely matches constraints checking
+        })
+        .select()
+        .single();
+
+      if (parentError) throw parentError;
+
+      // 2. Insert detailed itinerary spots mapping via post_id
+      const spotsToInsert = selectedImages.map((imgUrl, idx) => ({
+        post_id: parentPost.id,
+        day_number: idx + 1,
+        title: `Day ${idx + 1} Highlight`,
+        description: `Highlight from ${selectedTrip.country}`,
+        category: 'Activity',
+        image_url: imgUrl,
+        activities: ['Exploration']
+      }));
+
+      const { error: spotsError } = await supabase
+        .from('trip_spots')
+        .insert(spotsToInsert);
+
+      if (spotsError) throw spotsError;
+
+      // 3. Automatically trigger update by reloading feed locally
+      window.location.reload();
+
       onClose();
       setCaption('');
-    }, 1000);
+    } catch (err: any) {
+      console.error("Error publishing itinerary:", err.message);
+      alert(`Failed to publish: ${err.message}`);
+    } finally {
+      setIsPublishing(false);
+    }
   };
 
   return createPortal(
