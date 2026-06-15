@@ -41,8 +41,8 @@ interface SidebarProps {
 export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
   const navigate = useNavigate();
   const location = useLocation();
-  const { logout, currentUserProfile } = useApp();
-  const { session, userProfile } = useAuth();
+  const { logout, activeProfile } = useApp();
+  const { session } = useAuth();
   const isAuthenticated = !!session;
 
   const handleAuthAction = () => {
@@ -54,8 +54,9 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
     }
   };
 
-  const displayName = currentUserProfile?.full_name || currentUserProfile?.username || userProfile?.full_name || userProfile?.username || 'Explorer';
-  const displayAvatar = currentUserProfile?.avatar_url || userProfile?.avatar_url || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150&q=80";
+  const displayName = activeProfile?.full_name || activeProfile?.username || 'Explorer';
+  const displayAvatar = activeProfile?.avatar_url || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150&q=80";
+
 
   return (
     <motion.aside
