@@ -9,7 +9,7 @@ import ImageCropperModal from '../components/ImageCropperModal';
 import ImageViewerModal from '../components/ImageViewerModal';
 
 export default function Profile() {
-  const { savedItems, followedUsers, user, currentUserProfile } = useApp();
+  const { savedItems, followedUsers, user, currentUserProfile, updateActiveProfile } = useApp();
   const [isPrivateAccount, setIsPrivateAccount] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -81,6 +81,7 @@ export default function Profile() {
     try {
       const { error } = await supabase.from('profiles').update({ [currentField]: base64Str }).eq('id', user.id);
       if (error) throw error;
+      updateActiveProfile({ [currentField]: base64Str });
     } catch (err: any) {
       alert('Failed to save image permanently. Database failure.');
     }

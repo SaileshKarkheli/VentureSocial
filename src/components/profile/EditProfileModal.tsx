@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Upload, Loader2 } from 'lucide-react';
 import { supabase } from '../../supabaseClient';
 import { useAuth } from '../../context/AuthContext';
+import { useApp } from '../../AppContext';
 
 interface EditProfileModalProps {
   isOpen: boolean;
@@ -11,10 +12,23 @@ interface EditProfileModalProps {
 
 export const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onClose }) => {
   const { session, userProfile, refreshProfile } = useAuth();
-  const [fullName, setFullName] = useState(userProfile?.full_name || '');
-  const [bio, setBio] = useState(userProfile?.bio || '');
+  const { activeProfile, updateActiveProfile } = useApp();
+  const [fullName, setFullName] = useState('');
+  const [bio, setBio] = useState('');
+  const [location, setLocation] = useState('');
+  const [education, setEducation] = useState('');
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      setFullName(activeProfile?.full_name || userProfile?.full_name || '');
+      setBio(activeProfile?.bio || userProfile?.bio || '');
+      setLocation(activeProfile?.location || '');
+      setEducation(activeProfile?.education || '');
+      setAvatarFile(null);
+    }
+  }, [isOpen, activeProfile, userProfile]);
 
   if (!isOpen) return null;
 
@@ -23,7 +37,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onCl
     setIsUploading(true);
 
     try {
-      let finalAvatarUrl = userProfile?.avatar_url;
+      let finalAvatarUrl = activeProfile?.avatar_url || userProfile?.avatar_url;
 
       if (avatarFile) {
         const fileExt = avatarFile.name.split('.').pop();
@@ -40,17 +54,25 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onCl
         finalAvatarUrl = data.publicUrl;
       }
 
+      const updatePayload: any = {
+        full_name: fullName,
+        bio: bio,
+        location: location,
+        education: education
+      };
+
+      if (avatarFile && finalAvatarUrl && finalAvatarUrl.trim() !== '') {
+        updatePayload.avatar_url = finalAvatarUrl;
+      }
+
       const { error: updateError } = await supabase
         .from('profiles')
-        .update({
-          full_name: fullName,
-          bio: bio,
-          avatar_url: finalAvatarUrl
-        })
+        .update(updatePayload)
         .eq('id', session.user.id);
 
       if (updateError) throw updateError;
 
+      updateActiveProfile(updatePayload);
       await refreshProfile();
       onClose();
     } catch (err) {
@@ -75,7 +97,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onCl
           initial={{ scale: 0.95, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.95, opacity: 0 }}
-          className="relative w-full max-w-lg bg-white rounded-3xl shadow-2xl p-6 border border-zinc-100"
+          className="relative w-full max-w-lg bg-white rounded-3xl shadow-2xl p-6 border border-zinc-100 max-h-[90vh] overflow-y-auto custom-scrollbar"
         >
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-2xl font-display font-bold text-[#0A192F]">Edit Profile</h2>
@@ -92,6 +114,8 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onCl
                 <div className="w-16 h-16 rounded-3xl bg-zinc-100 overflow-hidden shrink-0 border border-zinc-200 shadow-sm">
                   {avatarFile ? (
                     <img src={URL.createObjectURL(avatarFile)} alt="Preview" className="w-full h-full object-cover" />
+                  ) : activeProfile?.avatar_url ? (
+                    <img src={activeProfile.avatar_url} alt="Current" className="w-full h-full object-cover" />
                   ) : userProfile?.avatar_url ? (
                     <img src={userProfile.avatar_url} alt="Current" className="w-full h-full object-cover" />
                   ) : null}
@@ -117,6 +141,30 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onCl
                 onChange={(e) => setFullName(e.target.value)}
                 className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all placeholder:text-zinc-400"
                 placeholder="Your Name"
+              />
+            </div>
+
+            {/* Location */}
+            <div>
+              <label className="block text-sm font-bold text-zinc-700 mb-2">Location</label>
+              <input
+                type="text"
+                value={location}
+                onChange={(e) => setLocation(e.target.value)}
+                className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all placeholder:text-zinc-400"
+                placeholder="e.g. Paris, France"
+              />
+            </div>
+
+            {/* Education */}
+            <div>
+              <label className="block text-sm font-bold text-zinc-700 mb-2">Education</label>
+              <input
+                type="text"
+                value={education}
+                onChange={(e) => setEducation(e.target.value)}
+                className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all placeholder:text-zinc-400"
+                placeholder="e.g. Master's in English"
               />
             </div>
 

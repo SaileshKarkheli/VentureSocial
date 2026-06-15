@@ -49,17 +49,17 @@ export default function EditProfileModal({ isOpen, onClose, currentProfile, onPr
     
     setIsLoading(true);
     try {
+      const updatePayload: any = {
+        full_name: formData.full_name,
+        bio: formData.bio,
+        location: formData.location,
+        education: formData.education,
+        dob: formData.dob
+      };
+
       const { error } = await supabase
         .from('profiles')
-        .update({
-          full_name: formData.full_name,
-          bio: formData.bio,
-          location: formData.location,
-          education: formData.education,
-          dob: formData.dob,
-          avatar_url: formData.avatar_url,
-          cover_photo_url: formData.cover_photo_url
-        })
+        .update(updatePayload)
         .eq('id', user.id);
         
       if (error) throw error;
