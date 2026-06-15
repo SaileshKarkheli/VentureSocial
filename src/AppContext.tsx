@@ -481,9 +481,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       // Unfollow in Database
       const { error } = await supabase.from('follows').delete().eq('follower_id', user.id).eq('following_id', targetId);
       if (error) {
-        setFollowedUsers(prev => [...prev, targetId]);
         showToast("Error unfollowing");
       }
+      await fetchUserFollows(user.id);
     } else {
       // Optimistic Follow
       setFollowedUsers(prev => [...prev, targetId]);
@@ -491,9 +491,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       // Bind connection in Database
       const { error } = await supabase.from('follows').insert({ follower_id: user.id, following_id: targetId });
       if (error) {
-        setFollowedUsers(prev => prev.filter(u => u !== targetId));
         showToast("Error executing follow relation.");
       }
+      await fetchUserFollows(user.id);
     }
   };
 

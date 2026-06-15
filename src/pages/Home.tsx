@@ -51,7 +51,7 @@ export default function Home() {
     const fetchHomeFeed = async () => {
       setIsDbLoading(true);
       try {
-        const { data, error } = await supabase
+        let query = supabase
           .from('posts')
           .select(`
             *,
@@ -63,6 +63,21 @@ export default function Home() {
           `)
           .order('created_at', { ascending: false });
 
+        if (feedMode === 'Following') {
+          const followedUuids = followedUsers.filter(id => 
+            /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)
+          );
+          
+          if (followedUuids.length > 0) {
+            query = query.in('user_id', followedUuids);
+          } else {
+            setDbPosts([]);
+            setIsDbLoading(false);
+            return;
+          }
+        }
+
+        const { data, error } = await query;
         if (error) throw error;
 
         const mapped = (data || []).map((row: any) => ({
@@ -99,7 +114,7 @@ export default function Home() {
     };
 
     fetchHomeFeed();
-  }, []);
+  }, [feedMode, followedUsers]);
 
   const topTrips = dbPosts
     .filter(p => p.location.toLowerCase().includes(searchQuery.toLowerCase()) || p.caption.toLowerCase().includes(searchQuery.toLowerCase()))
@@ -107,11 +122,11 @@ export default function Home() {
 
   // Home feed shows all posts (Social Discovery) + Recommendation Engine Sorting
   const homePosts = [...dbPosts]
-    .filter(post => feedMode === 'Discover' || followedUsers.includes(post.user))
+    .filter(post => feedMode === 'Discover' || followedUsers.includes(post.userId))
     .sort((a: any, b: any) => {
        // Priority 0: Followed users ALWAYS float to the absolute top of the Discover feed
-       const aFollowed = followedUsers.includes(a.user) ? 1 : 0;
-       const bFollowed = followedUsers.includes(b.user) ? 1 : 0;
+       const aFollowed = followedUsers.includes(a.userId) ? 1 : 0;
+       const bFollowed = followedUsers.includes(b.userId) ? 1 : 0;
        if (aFollowed !== bFollowed) return bFollowed - aFollowed;
 
        // Priority 1: Live Geography Distances (if active)
@@ -440,19 +455,19 @@ export default function Home() {
                           <button 
                             onClick={(e) => {
                               e.stopPropagation();
-                              toggleFollow(post.user, post.isPrivate || false);
+                              toggleFollow(post.userId, post.isPrivate || false);
                             }}
                             className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border transition-colors ${
-                              followedUsers.includes(post.user)
+                              followedUsers.includes(post.userId)
                                 ? 'bg-zinc-50 text-zinc-500 border-zinc-200 hover:border-rose-200 hover:text-rose-500 hover:bg-rose-50' // Following (gives unfollow context on hover)
-                                : requestedUsers.includes(post.user)
+                                : requestedUsers.includes(post.userId)
                                 ? 'bg-zinc-100 text-zinc-500 border-zinc-200 hover:bg-zinc-200' // Requested
                                 : 'bg-blue-500 text-white border-blue-500 hover:bg-blue-600' // Not Following (Public or Private)
                             }`}
                           >
-                            {followedUsers.includes(post.user) 
+                            {followedUsers.includes(post.userId) 
                               ? 'Following' 
-                              : requestedUsers.includes(post.user)
+                              : requestedUsers.includes(post.userId)
                               ? 'Requested'
                               : 'Follow'}
                           </button>
