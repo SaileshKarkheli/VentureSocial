@@ -45,6 +45,8 @@ interface AppContextType {
   globalToast: string | null;
   setGlobalToast: (msg: string | null) => void;
   followedUsers: string[];
+  requestedUsers: string[];
+  toggleFollow: (targetId: string, isPrivate: boolean) => Promise<void>;
   userInterestTags: string[];
   addUserInterest: (tag: string) => void;
   customTripSpots: import('./types').PostImage[];
