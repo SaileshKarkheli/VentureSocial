@@ -10,6 +10,7 @@ import { DayHighlightCarousel, PillarSection } from './TripDetail';
 import { supabase } from '../supabaseClient';
 import { SaveSpotModal } from '../components/remix/SaveSpotModal';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 export default function Search() {
   const { publicPosts, searchQuery, setSearchQuery, filters, sortBy, customTripSpots, toggleCustomSpot, currentUserProfile } = useApp();
@@ -19,6 +20,28 @@ export default function Search() {
   // Local database states for direct fetching
   const [dbPosts, setDbPosts] = useState<any[]>([]);
   const [isDbLoading, setIsDbLoading] = useState(true);
+
+  // User Auth and Remixed Spots check layer
+  const { session } = useAuth();
+  const [remixedSpotIds, setRemixedSpotIds] = useState<string[]>([]);
+
+  React.useEffect(() => {
+    if (!session?.user?.id) return;
+    const fetchRemixedSpots = async () => {
+      const { data } = await supabase
+        .from('remix_folders')
+        .select('saved_spots(spot_id)')
+        .eq('user_id', session.user.id);
+        
+      if (data) {
+        const ids = data.flatMap((folder: any) => 
+          (folder.saved_spots || []).map((s: any) => s.spot_id)
+        );
+        setRemixedSpotIds(ids);
+      }
+    };
+    fetchRemixedSpots();
+  }, [session?.user?.id, spotToSave]); // Loaded on init, re-syncs when modal opens/closes
 
   React.useEffect(() => {
     const fetchSearchFeed = async () => {
@@ -387,7 +410,7 @@ export default function Search() {
                                           onClick={(e) => { e.stopPropagation(); setSpotToSave(transport.id); }}
                                           className="absolute top-6 right-6 w-10 h-10 rounded-full bg-orange-500 text-white flex items-center justify-center shadow-lg hover:scale-110 transition-transform"
                                         >
-                                          <Plus size={20} />
+                                          {remixedSpotIds.includes(transport.id) ? <Check size={20} /> : <Plus size={20} />}
                                         </button>
                                       </div>
                                     </PillarSection>
@@ -412,7 +435,7 @@ export default function Search() {
                                                 onClick={(e) => { e.stopPropagation(); setSpotToSave(stay.id); }}
                                                 className="absolute top-6 right-6 w-12 h-12 rounded-full bg-orange-500 text-white flex items-center justify-center shadow-lg hover:scale-110 transition-transform"
                                               >
-                                                <Plus size={24} />
+                                                {remixedSpotIds.includes(stay.id) ? <Check size={24} /> : <Plus size={24} />}
                                               </button>
                                             </div>
                                             <p className="text-zinc-500 text-sm leading-relaxed">{stay.description}</p>
@@ -446,7 +469,7 @@ export default function Search() {
                                                 onClick={(e) => { e.stopPropagation(); setSpotToSave(dining.id); }}
                                                 className="absolute top-6 right-6 w-12 h-12 rounded-full bg-orange-500 text-white flex items-center justify-center shadow-lg hover:scale-110 transition-transform"
                                               >
-                                                <Plus size={24} />
+                                                {remixedSpotIds.includes(dining.id) ? <Check size={24} /> : <Plus size={24} />}
                                               </button>
                                             </div>
                                             <p className="text-zinc-500 text-sm leading-relaxed">{dining.description}</p>
@@ -477,7 +500,7 @@ export default function Search() {
                                                 onClick={(e) => { e.stopPropagation(); setSpotToSave(activity.id); }}
                                                 className="absolute top-4 right-4 w-10 h-10 rounded-full bg-orange-500 text-white flex items-center justify-center shadow-lg hover:scale-110 transition-transform"
                                               >
-                                                <Plus size={20} />
+                                                {remixedSpotIds.includes(activity.id) ? <Check size={20} /> : <Plus size={20} />}
                                               </button>
                                             </div>
                                             <div className="p-6 space-y-2">
