@@ -1,3 +1,4 @@
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import SmartImage from '../components/SmartImage';
@@ -20,6 +21,9 @@ import {
   Users
 } from 'lucide-react';
 import { tripsService } from '../services/tripsService';
+import { SaveSpotModal } from '../components/remix/SaveSpotModal';
+
+
 
 export default function TripDetail() {
   const { id } = useParams();

@@ -24,6 +24,7 @@ export default function Search() {
   // User Auth and Remixed Spots check layer
   const { session } = useAuth();
   const [remixedSpotIds, setRemixedSpotIds] = useState<string[]>([]);
+  const [spotToSave, setSpotToSave] = useState<string | null>(null);
 
   React.useEffect(() => {
     if (!session?.user?.id) return;
@@ -109,7 +110,6 @@ export default function Search() {
   // Add Trip Spots State
   const [tripSpots, setTripSpots] = useState<any[]>([]);
   const [isSpotsLoading, setIsSpotsLoading] = useState(false);
-  const [spotToSave, setSpotToSave] = useState<string | null>(null);
 
   React.useEffect(() => {
     if (!selectedPost?.id) {

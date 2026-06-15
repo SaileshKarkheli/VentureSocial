@@ -383,22 +383,34 @@ export default function Home() {
             
             {isDbLoading ? (
               <FeedSkeleton />
-            ) : homePosts.length === 0 && feedMode === 'Following' ? (
-              <div className="bg-white rounded-3xl p-12 text-center border border-zinc-100 shadow-sm flex flex-col items-center">
-                <div className="w-16 h-16 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center mb-4">
-                  <Users size={32} />
+            ) : homePosts.length === 0 ? (
+              feedMode === 'Following' ? (
+                <div className="bg-white rounded-3xl p-12 text-center border border-zinc-100 shadow-sm flex flex-col items-center">
+                  <div className="w-16 h-16 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center mb-4">
+                    <Users size={32} />
+                  </div>
+                  <h3 className="text-xl font-bold text-[#0A192F] mb-2">Build Your Network</h3>
+                  <p className="text-zinc-500 max-w-sm mb-6">
+                    You aren't following anyone yet. Switch to the Discover feed to find incredible creators and itineraries to be inspired by!
+                  </p>
+                  <button 
+                    onClick={() => setFeedMode('Discover')}
+                    className="bg-orange-500 text-white font-bold px-6 py-3 rounded-xl hover:bg-orange-600 transition-colors shadow-lg shadow-orange-500/20"
+                  >
+                    Explore Discover Flow
+                  </button>
                 </div>
-                <h3 className="text-xl font-bold text-[#0A192F] mb-2">Build Your Network</h3>
-                <p className="text-zinc-500 max-w-sm mb-6">
-                  You aren't following anyone yet. Switch to the Discover feed to find incredible creators and itineraries to be inspired by!
-                </p>
-                <button 
-                  onClick={() => setFeedMode('Discover')}
-                  className="bg-orange-500 text-white font-bold px-6 py-3 rounded-xl hover:bg-orange-600 transition-colors shadow-lg shadow-orange-500/20"
-                >
-                  Explore Discover Flow
-                </button>
-              </div>
+              ) : (
+                <div className="bg-white rounded-[2rem] p-16 text-center border border-zinc-200 shadow-sm flex flex-col items-center">
+                  <div className="w-20 h-20 bg-orange-500/10 text-orange-500 rounded-full flex items-center justify-center mb-6">
+                    <MapPinIcon size={40} />
+                  </div>
+                  <h3 className="text-2xl font-bold text-[#0A192F] mb-4">No trips published yet</h3>
+                  <p className="text-zinc-500 max-w-md mx-auto mb-8">
+                    Be the first to share an itinerary with the community! Click the button above to publish your travel history.
+                  </p>
+                </div>
+              )
             ) : (
               homePosts.map((post) => (
                 <motion.div
