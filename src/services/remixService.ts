@@ -53,14 +53,23 @@ export const remixService = {
 
       if (data) {
         const foldersWithCovers = await Promise.all(data.map(async (folder: any) => {
-          const { data: spotData } = await supabase
-            .from('saved_spots')
-            .select(`
-              trip_spots ( image_url )
-            `)
-            .eq('folder_id', folder.id)
-            .limit(1)
-            .single();
+          let cover_url = 'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?auto=format&fit=crop&w=800&q=80';
+          try {
+            const { data: spotData, error: spotError } = await supabase
+              .from('saved_spots')
+              .select(`
+                trip_spots ( image_url )
+              `)
+              .eq('folder_id', folder.id)
+              .limit(1);
+
+            if (!spotError && spotData && spotData.length > 0) {
+              const url = (spotData[0]?.trip_spots as any)?.image_url;
+              if (url) cover_url = url;
+            }
+          } catch (e) {
+            console.error("Error fetching cover image for folder:", e);
+          }
 
           const savedSpotsArray = Array.isArray(folder.saved_spots) ? folder.saved_spots : [folder.saved_spots];
           const count = savedSpotsArray[0]?.count || 0;
@@ -69,7 +78,7 @@ export const remixService = {
             id: folder.id,
             name: folder.name,
             count: count,
-            cover_url: (spotData?.trip_spots as any)?.image_url || 'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?auto=format&fit=crop&w=800&q=80'
+            cover_url: cover_url
           };
         }));
         return foldersWithCovers;

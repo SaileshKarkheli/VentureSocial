@@ -82,7 +82,7 @@ export default function RemixStudio() {
               <div className="w-20 h-20 bg-orange-500/10 text-orange-500 rounded-full flex items-center justify-center mb-6">
                 <FolderOpen size={40} />
               </div>
-              <h3 className="text-2xl font-bold text-[#0A192F] mb-4">Your studio is empty</h3>
+              <h3 className="text-2xl font-bold text-[#0A192F] mb-4">No trips remixed yet. Start exploring!</h3>
               <p className="text-zinc-500 max-w-md mx-auto mb-8">
                 Explore the discover feed or search for destinations. When you find an itinerary you love, click the + button to start building your custom trip here.
               </p>

@@ -18,6 +18,7 @@ import TravelServices from './pages/TravelServices';
 import Messages from './pages/Messages';
 import Onboarding from './pages/Onboarding';
 import Dashboard from './pages/Dashboard';
+import Settings from './pages/Settings';
 
 export default function App() {
   return (
@@ -47,7 +48,7 @@ export default function App() {
           <Route path="/photos" element={<ProtectedRoute><div className="p-8 text-center text-zinc-500">Photos coming soon...</div></ProtectedRoute>} />
           <Route path="/videos" element={<ProtectedRoute><div className="p-8 text-center text-zinc-500">Videos coming soon...</div></ProtectedRoute>} />
           <Route path="/clubs" element={<ProtectedRoute><div className="p-8 text-center text-zinc-500">Travel Clubs coming soon...</div></ProtectedRoute>} />
-          <Route path="/settings" element={<ProtectedRoute><div className="p-8 text-center text-zinc-500">Settings coming soon...</div></ProtectedRoute>} />
+          <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
         </Route>
         <Route path="/" element={<Login />} />
       </Routes>

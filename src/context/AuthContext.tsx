@@ -87,7 +87,19 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
         if (initialSession?.user) {
           const profile = await fetchProfile(initialSession.user.id);
-          if (mounted) setUserProfile(profile);
+          if (mounted) {
+            if (profile) {
+              setUserProfile(profile);
+            } else {
+              const safeName = initialSession.user.user_metadata?.name || initialSession.user.email?.split('@')[0] || 'Explorer';
+              setUserProfile({
+                id: initialSession.user.id,
+                full_name: safeName,
+                username: safeName.toLowerCase().replace(/[^a-z0-9]/g, '') || 'explorer',
+                avatar_url: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&h=150',
+              });
+            }
+          }
         }
       } catch (err) {
         console.error("Auth initialization error:", err);
@@ -98,54 +110,72 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     initializeAuth();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, currentSession) => {
       if (!mounted) return;
       
-      try {
-        if (event === 'SIGNED_OUT') {
-          localStorage.removeItem('venturesocial_mock_session');
-          if (mounted) {
-            setSession(null);
-            setUser(null);
-            setUserProfile(null);
-          }
-          return;
-        }
-
-        setSession(currentSession);
-        setUser(currentSession?.user ?? null);
-        
-        if (currentSession?.user) {
-          const profile = await fetchProfile(currentSession.user.id);
-          if (mounted) setUserProfile(profile);
-        } else {
-          const mockSessionStr = localStorage.getItem('venturesocial_mock_session');
-          if (mockSessionStr) {
-            const mockData = JSON.parse(mockSessionStr);
+      const updateStates = async () => {
+        try {
+          if (event === 'SIGNED_OUT') {
+            localStorage.removeItem('venturesocial_mock_session');
             if (mounted) {
-              setSession({
-                access_token: mockData.access_token,
-                token_type: 'bearer',
-                expires_in: 3600,
-                user: mockData.user,
-              } as any);
-              setUser(mockData.user);
-              setUserProfile({
-                id: mockData.user.id,
-                full_name: mockData.user.name || 'Alex Explorer',
-                avatar_url: mockData.user.avatar || '',
-                username: mockData.user.email ? mockData.user.email.split('@')[0] : 'alex_explorer'
-              });
+              setSession(null);
+              setUser(null);
+              setUserProfile(null);
+            }
+            return;
+          }
+
+          if (mounted) {
+            setSession(currentSession);
+            setUser(currentSession?.user ?? null);
+          }
+          
+          if (currentSession?.user) {
+            const profile = await fetchProfile(currentSession.user.id);
+            if (mounted) {
+              if (profile) {
+                setUserProfile(profile);
+              } else {
+                const safeName = currentSession.user.user_metadata?.name || currentSession.user.email?.split('@')[0] || 'Explorer';
+                setUserProfile({
+                  id: currentSession.user.id,
+                  full_name: safeName,
+                  username: safeName.toLowerCase().replace(/[^a-z0-9]/g, '') || 'explorer',
+                  avatar_url: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&h=150',
+                });
+              }
             }
           } else {
-            if (mounted) setUserProfile(null);
+            const mockSessionStr = localStorage.getItem('venturesocial_mock_session');
+            if (mockSessionStr) {
+              const mockData = JSON.parse(mockSessionStr);
+              if (mounted) {
+                setSession({
+                  access_token: mockData.access_token,
+                  token_type: 'bearer',
+                  expires_in: 3600,
+                  user: mockData.user,
+                } as any);
+                setUser(mockData.user);
+                setUserProfile({
+                  id: mockData.user.id,
+                  full_name: mockData.user.name || 'Alex Explorer',
+                  avatar_url: mockData.user.avatar || '',
+                  username: mockData.user.email ? mockData.user.email.split('@')[0] : 'alex_explorer'
+                });
+              }
+            } else {
+              if (mounted) setUserProfile(null);
+            }
           }
+        } catch (err) {
+          console.error("Auth state change error:", err);
+        } finally {
+          if (mounted) setLoading(false);
         }
-      } catch (err) {
-        console.error("Auth state change error:", err);
-      } finally {
-        if (mounted) setLoading(false);
-      }
+      };
+
+      updateStates();
     });
 
     return () => {

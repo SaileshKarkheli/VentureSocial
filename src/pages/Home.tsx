@@ -455,7 +455,7 @@ export default function Home() {
             {/* Create Post Prompt */}
             <div className="bg-white rounded-3xl p-5 shadow-sm border border-zinc-100 flex items-center gap-4">
               <div className="w-12 h-12 rounded-full overflow-hidden shrink-0 border-2 border-orange-500/20">
-                <img src={activeProfile?.avatar_url || currentUserProfile?.avatar_url || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=100&h=100"} alt={activeProfile?.username || currentUserProfile?.username || "Current User"} className="w-full h-full object-cover bg-zinc-100" />
+                <img src={activeProfile?.avatar_url || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&h=150"} alt={activeProfile?.username || "Current User"} className="w-full h-full object-cover bg-zinc-100" />
               </div>
               <button 
                 onClick={() => setIsPublishModalOpen(true)}

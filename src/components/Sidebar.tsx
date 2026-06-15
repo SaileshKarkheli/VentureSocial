@@ -55,7 +55,7 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
   };
 
   const displayName = activeProfile?.full_name || activeProfile?.username || 'Explorer';
-  const displayAvatar = activeProfile?.avatar_url || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150&q=80";
+  const displayAvatar = activeProfile?.avatar_url || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&h=150";
 
 
   return (

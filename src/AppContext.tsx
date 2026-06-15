@@ -135,51 +135,99 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
 
     const initializeSession = async (session: any) => {
-      setUser(session?.user ? { id: session.user.id, name: session.user.user_metadata?.name || 'User', email: session.user.email || '', avatar: '', bio: '' } : null);
-      if (session?.user) {
-        
-        // Identity Sub-Layer Hydration
-        const { data: profData, error: profErr } = await supabase.from('profiles').select('*').eq('id', session.user.id).single();
-        
-        if (profData) {
-          if (!profData.avatar_url) {
-            const fallbackAvatar = 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&h=150';
-            const { data: updatedProf } = await supabase
-              .from('profiles')
-              .update({ avatar_url: fallbackAvatar })
-              .eq('id', session.user.id)
-              .select('*')
-              .single();
-            setActiveProfile(updatedProf || profData);
-          } else {
-            setActiveProfile(profData);
+      try {
+        setUser(session?.user ? { id: session.user.id, name: session.user.user_metadata?.name || 'User', email: session.user.email || '', avatar: '', bio: '' } : null);
+        if (session?.user) {
+          let profData = null;
+          try {
+            const { data, error: profErr } = await supabase.from('profiles').select('*').eq('id', session.user.id).single();
+            if (profErr) {
+              if (profErr.code === 'PGRST116') {
+                // PGRST116 indicates NO ROW FOUND. Bootstrapping legacy users who registered before Trigger injection.
+                const safeName = session.user.user_metadata?.name || session.user.email?.split('@')[0] || 'Explorer';
+                const randomSuffix = Math.floor(Math.random() * 1000);
+                
+                const newProfile = {
+                  id: session.user.id,
+                  full_name: safeName,
+                  username: `${safeName.toLowerCase().replace(/[^a-z0-9]/g, '')}${randomSuffix}`,
+                  avatar_url: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&h=150',
+                };
+                
+                const { data: fallbackSync, error: insertErr } = await supabase.from('profiles').insert(newProfile).select('*').single();
+                if (insertErr) {
+                  console.error('Error inserting fallback profile:', insertErr.message);
+                  profData = newProfile;
+                } else {
+                  profData = fallbackSync;
+                }
+              } else {
+                throw profErr;
+              }
+            } else {
+              profData = data;
+            }
+          } catch (profileError) {
+            console.error('Failed to get/bootstrap profile, using local fallback:', profileError);
+            const safeName = session.user.user_metadata?.name || session.user.email?.split('@')[0] || 'Explorer';
+            profData = {
+              id: session.user.id,
+              full_name: safeName,
+              username: safeName.toLowerCase().replace(/[^a-z0-9]/g, '') || 'explorer',
+              avatar_url: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&h=150',
+            };
           }
-        } else if (profErr && profErr.code === 'PGRST116') {
-          // PGRST116 indicates NO ROW FOUND. Bootstrapping legacy users who registered before Trigger injection.
+
+          if (profData) {
+            if (!profData.avatar_url) {
+              const fallbackAvatar = 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&h=150';
+              try {
+                const { data: updatedProf, error: updateErr } = await supabase
+                  .from('profiles')
+                  .update({ avatar_url: fallbackAvatar })
+                  .eq('id', session.user.id)
+                  .select('*')
+                  .single();
+                if (updateErr) {
+                  console.error('Error updating fallback avatar:', updateErr.message);
+                  setActiveProfile({ ...profData, avatar_url: fallbackAvatar });
+                } else {
+                  setActiveProfile(updatedProf || { ...profData, avatar_url: fallbackAvatar });
+                }
+              } catch (updateErr) {
+                console.error('Failed to update fallback avatar:', updateErr);
+                setActiveProfile({ ...profData, avatar_url: fallbackAvatar });
+              }
+            } else {
+              setActiveProfile(profData);
+            }
+          }
+
+          try {
+            await Promise.all([
+              fetchUserFollows(session.user.id).catch(err => console.error("fetchUserFollows failed", err)),
+              fetchUserLikesCache(session.user.id).catch(err => console.error("fetchUserLikesCache failed", err))
+            ]);
+          } catch (err) {
+            console.error("Promise.all follows/likes hydration failed", err);
+          }
+        } else {
+          setActiveProfile(null);
+        }
+      } catch (err) {
+        console.error("initializeSession unexpected error:", err);
+        if (session?.user) {
           const safeName = session.user.user_metadata?.name || session.user.email?.split('@')[0] || 'Explorer';
-          const randomSuffix = Math.floor(Math.random() * 1000);
-          
-          const newProfile = {
+          setActiveProfile({
             id: session.user.id,
             full_name: safeName,
-            username: `${safeName.toLowerCase().replace(/[^a-z0-9]/g, '')}${randomSuffix}`,
+            username: safeName.toLowerCase().replace(/[^a-z0-9]/g, '') || 'explorer',
             avatar_url: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&h=150',
-          };
-          
-          const { data: fallbackSync } = await supabase.from('profiles').insert(newProfile).select('*').single();
-          if (fallbackSync) {
-            setActiveProfile(fallbackSync);
-          }
+          });
         }
-
-        await Promise.all([
-          fetchUserFollows(session.user.id),
-          fetchUserLikesCache(session.user.id)
-        ]);
-      } else {
-        setActiveProfile(null);
+      } finally {
+        setIsAuthInitializing(false);
       }
-      setIsAuthInitializing(false);
     };
 
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -310,23 +358,33 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    SocialService.fetchFeed().then(data => {
-      setPublicPosts(data || []);
-      setIsLoadingFeed(false);
-    }).catch((err) => {
-      console.warn("Supabase feed fetch failed, falling back to mock data:", err.message);
-      setPublicPosts(mockPublicPosts as any);
-      setIsLoadingFeed(false);
-    });
+    const fetchFeedData = async () => {
+      setIsLoadingFeed(true);
+      try {
+        const data = await SocialService.fetchFeed();
+        setPublicPosts(data || []);
+      } catch (err: any) {
+        console.warn("Supabase feed fetch failed, falling back to mock data:", err?.message || err);
+        setPublicPosts(mockPublicPosts as any);
+      } finally {
+        setIsLoadingFeed(false);
+      }
+    };
+    fetchFeedData();
 
-    if (user) {
-      supabase.from('posts').select(`
-        id,
-        location_name,
-        created_at,
-        trip_spots ( image_url )
-      `).eq('user_id', user.id).then(({ data, error }) => {
-        if (!error && data) {
+    const fetchUserTrips = async () => {
+      setIsLoadingTrips(true);
+      try {
+        const { data, error } = await supabase.from('posts').select(`
+          id,
+          location_name,
+          created_at,
+          trip_spots ( image_url )
+        `).eq('user_id', user.id);
+
+        if (error) throw error;
+
+        if (data) {
           const formatted = data.map((post: any) => {
             const spotWithImage = Array.isArray(post.trip_spots) 
               ? post.trip_spots.find((s: any) => s.image_url) 
@@ -334,20 +392,28 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
               
             return {
               id: post.id,
-              year: new Date(post.created_at).getFullYear().toString(),
+              year: post.created_at ? new Date(post.created_at).getFullYear().toString() : new Date().getFullYear().toString(),
               country: post.location_name,
               image: spotWithImage?.image_url || 'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?auto=format&fit=crop&w=800&q=80',
               availableImages: []
             };
           });
           setMyTrips(formatted);
+        } else {
+          setMyTrips([]);
         }
-        setIsLoadingTrips(false);
-      }, (err) => {
+      } catch (err) {
         console.error("Supabase myTrips fetch error:", err);
+        setMyTrips([]);
+      } finally {
         setIsLoadingTrips(false);
-      });
+      }
+    };
+
+    if (user) {
+      fetchUserTrips();
     } else {
+      setMyTrips([]);
       setIsLoadingTrips(false);
     }
 
