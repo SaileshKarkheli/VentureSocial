@@ -297,22 +297,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
 
     SocialService.fetchFeed().then(data => {
-      if (data && data.length > 0) {
-        setPublicPosts(data as any);
-        setIsLoadingFeed(false);
-      } else {
-        throw new Error("Supabase tables currently empty. Falling back to local data source.");
-      }
+      setPublicPosts(data || []);
+      setIsLoadingFeed(false);
     }).catch((err) => {
-      console.warn(err.message);
-      // Fallback bridge for pristine UI loading when DB is structurally empty
-      fetch('/api/feed').then(res => res.json()).then(data => {
-        setPublicPosts(data);
-        setIsLoadingFeed(false);
-      }).catch(() => {
-        setPublicPosts(mockPublicPosts as any);
-        setIsLoadingFeed(false);
-      });
+      console.warn("Supabase feed fetch failed, falling back to mock data:", err.message);
+      setPublicPosts(mockPublicPosts as any);
+      setIsLoadingFeed(false);
     });
 
     if (user) {
@@ -339,22 +329,20 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           setMyTrips(formatted);
         }
         setIsLoadingTrips(false);
+      }, (err) => {
+        console.error("Supabase myTrips fetch error:", err);
+        setIsLoadingTrips(false);
       });
     } else {
       setIsLoadingTrips(false);
     }
 
-    fetch('/api/services').then(res => res.json()).then(data => {
-      setTravelServices(data.travelServices || []);
-      setFlights(data.flights || []);
-      setRentalCars(data.rentalCars || []);
-      setIsLoadingServices(false);
-    }).catch(() => {
-      setTravelServices(mockTravelServices as any);
-      setFlights(mockFlights as any);
-      setRentalCars(mockRentalCars as any);
-      setIsLoadingServices(false);
-    });
+
+    setTravelServices(mockTravelServices as any);
+    setFlights(mockFlights as any);
+    setRentalCars(mockRentalCars as any);
+    setIsLoadingServices(false);
+
   }, [user]);
 
   const addCustomTrip = (trip: MyTrip) => {
