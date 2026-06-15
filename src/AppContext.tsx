@@ -142,7 +142,18 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         const { data: profData, error: profErr } = await supabase.from('profiles').select('*').eq('id', session.user.id).single();
         
         if (profData) {
-          setActiveProfile(profData);
+          if (!profData.avatar_url) {
+            const fallbackAvatar = 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&h=150';
+            const { data: updatedProf } = await supabase
+              .from('profiles')
+              .update({ avatar_url: fallbackAvatar })
+              .eq('id', session.user.id)
+              .select('*')
+              .single();
+            setActiveProfile(updatedProf || profData);
+          } else {
+            setActiveProfile(profData);
+          }
         } else if (profErr && profErr.code === 'PGRST116') {
           // PGRST116 indicates NO ROW FOUND. Bootstrapping legacy users who registered before Trigger injection.
           const safeName = session.user.user_metadata?.name || session.user.email?.split('@')[0] || 'Explorer';
@@ -152,6 +163,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
             id: session.user.id,
             full_name: safeName,
             username: `${safeName.toLowerCase().replace(/[^a-z0-9]/g, '')}${randomSuffix}`,
+            avatar_url: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&h=150',
           };
           
           const { data: fallbackSync } = await supabase.from('profiles').insert(newProfile).select('*').single();
