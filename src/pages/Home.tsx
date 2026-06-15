@@ -300,7 +300,11 @@ export default function Home() {
         </div>
       </div>
  
-      <PublishModal isOpen={isPublishModalOpen} onClose={() => setIsPublishModalOpen(false)} />
+      <PublishModal 
+        isOpen={isPublishModalOpen} 
+        onClose={() => setIsPublishModalOpen(false)} 
+        onPublishSuccess={(newPost) => setDbPosts(prev => [newPost, ...prev])} 
+      />
  
       <AnimatePresence mode="wait">
         {activeTab === 'Feed' ? (

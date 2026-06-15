@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Globe2, Sparkles, Send, CheckCircle2 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useApp } from '../AppContext';
 import { supabase } from '../supabaseClient';
 
@@ -9,9 +10,11 @@ interface PublishModalProps {
   isOpen: boolean;
   onClose: () => void;
   preselectedTripId?: string;
+  onPublishSuccess?: (newPost: any) => void;
 }
 
-export default function PublishModal({ isOpen, onClose, preselectedTripId }: PublishModalProps) {
+export default function PublishModal({ isOpen, onClose, preselectedTripId, onPublishSuccess }: PublishModalProps) {
+  const navigate = useNavigate();
   const { myTrips, addPublicPost, activeProfile, user } = useApp();
   const [selectedTripId, setSelectedTripId] = useState<string>(preselectedTripId || myTrips[0]?.id || '');
   const [caption, setCaption] = useState('');
@@ -90,8 +93,39 @@ export default function PublishModal({ isOpen, onClose, preselectedTripId }: Pub
 
       if (spotsError) throw spotsError;
 
-      // 3. Automatically trigger update by reloading feed locally
-      window.location.reload();
+      // 3. Construct a fully formatted local Post object
+      const formattedPost = {
+        id: parentPost.id,
+        userId: user.id,
+        tripId: parentPost.id,
+        user: activeProfile?.full_name || activeProfile?.username || user?.name || 'Current User',
+        avatar: activeProfile?.avatar_url || user?.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=100&h=100',
+        location: selectedTrip.country,
+        images: spotsToInsert.map((spot, idx) => ({
+          id: `temp-spot-${idx}`,
+          url: spot.image_url,
+          day: spot.day_number,
+          description: spot.description,
+          activities: spot.activities,
+          coordinates: undefined
+        })),
+        caption: caption,
+        likes: 0,
+        comments: 0,
+        remixes: 0,
+        rating: 5,
+        activities: ['Exploration'],
+        hotelType: 'Resort',
+        price: 1500,
+        isPrivate: false
+      };
+
+      // 4. Update parent states reactively or redirect smoothly
+      if (onPublishSuccess) {
+        onPublishSuccess(formattedPost);
+      } else {
+        navigate('/home');
+      }
 
       onClose();
       setCaption('');
