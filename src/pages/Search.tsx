@@ -24,6 +24,7 @@ export default function Search() {
   // User Auth and Remixed Spots check layer
   const { session } = useAuth();
   const [remixedSpotIds, setRemixedSpotIds] = useState<string[]>([]);
+  const [spotToSave, setSpotToSave] = useState<string | null>(null);
 
   React.useEffect(() => {
     if (!session?.user?.id) return;
@@ -44,6 +45,13 @@ export default function Search() {
   }, [session?.user?.id, spotToSave]); // Loaded on init, re-syncs when modal opens/closes
 
   React.useEffect(() => {
+    const isMockMode = import.meta.env.VITE_ENABLE_MOCK_MODE === 'true' && !!localStorage.getItem('venturesocial_mock_session');
+    if (isMockMode) {
+      setDbPosts(publicPosts);
+      setIsDbLoading(false);
+      return;
+    }
+
     const fetchSearchFeed = async () => {
       setIsDbLoading(true);
       try {
@@ -95,7 +103,7 @@ export default function Search() {
     };
 
     fetchSearchFeed();
-  }, []);
+  }, [publicPosts]);
   
   // Timeline State
   const [expandedDay, setExpandedDay] = useState<number | null>(1);
@@ -109,7 +117,6 @@ export default function Search() {
   // Add Trip Spots State
   const [tripSpots, setTripSpots] = useState<any[]>([]);
   const [isSpotsLoading, setIsSpotsLoading] = useState(false);
-  const [spotToSave, setSpotToSave] = useState<string | null>(null);
 
   React.useEffect(() => {
     if (!selectedPost?.id) {

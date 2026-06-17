@@ -29,6 +29,23 @@ export default function Profile() {
       return;
     }
     
+    const isMockMode = import.meta.env.VITE_ENABLE_MOCK_MODE === 'true' && !!localStorage.getItem('venturesocial_mock_session');
+    if (isMockMode) {
+      setDbProfile({
+        full_name: user.name || 'Alex Explorer',
+        username: user.email ? user.email.split('@')[0] : 'alex_explorer',
+        bio: "Adventure seeker, photography enthusiast, and coffee lover. Mapping the world one city at a time.",
+        location: "San Francisco, CA",
+        education: "Stanford University",
+        avatar_url: user.avatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=100&h=100",
+        cover_photo_url: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80"
+      });
+      setTripCount(3);
+      setFollowersCount(15);
+      setIsLoading(false);
+      return;
+    }
+    
     const fetchProfile = async () => {
       setIsLoading(true);
       try {

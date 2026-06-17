@@ -48,6 +48,13 @@ export default function Home() {
   }, [searchQuery, showDropdown]);
 
   useEffect(() => {
+    const isMockMode = import.meta.env.VITE_ENABLE_MOCK_MODE === 'true' && !!localStorage.getItem('venturesocial_mock_session');
+    if (isMockMode) {
+      setDbPosts(publicPosts);
+      setIsDbLoading(false);
+      return;
+    }
+
     const fetchHomeFeed = async () => {
       setIsDbLoading(true);
       try {
@@ -99,7 +106,7 @@ export default function Home() {
     };
 
     fetchHomeFeed();
-  }, []);
+  }, [publicPosts]);
 
   const topTrips = dbPosts
     .filter(p => p.location.toLowerCase().includes(searchQuery.toLowerCase()) || p.caption.toLowerCase().includes(searchQuery.toLowerCase()))

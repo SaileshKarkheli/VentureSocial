@@ -21,6 +21,129 @@ export default function UserProfile() {
   useEffect(() => {
     if (!username) return;
     
+    const isMockMode = import.meta.env.VITE_ENABLE_MOCK_MODE === 'true' && !!localStorage.getItem('venturesocial_mock_session');
+    if (isMockMode) {
+      const mockProfiles: Record<string, any> = {
+        'u123': {
+          id: 'u123',
+          full_name: 'Alex Explorer',
+          username: 'alex_explorer',
+          bio: 'Adventure seeker, photography enthusiast, and coffee lover. Mapping the world one city at a time.',
+          location: 'San Francisco, CA',
+          education: 'Stanford University',
+          avatar_url: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=100&h=100',
+          cover_photo_url: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80',
+          followers: 15,
+          following: 2
+        },
+        'alex_explorer': {
+          id: 'u123',
+          full_name: 'Alex Explorer',
+          username: 'alex_explorer',
+          bio: 'Adventure seeker, photography enthusiast, and coffee lover. Mapping the world one city at a time.',
+          location: 'San Francisco, CA',
+          education: 'Stanford University',
+          avatar_url: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=100&h=100',
+          cover_photo_url: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80',
+          followers: 15,
+          following: 2
+        },
+        'u1': {
+          id: 'u1',
+          full_name: 'Sarah Miller',
+          username: 'sarah_miller',
+          bio: 'Music enthusiast and foodie traveler. Living life one song and BBQ joint at a time.',
+          location: 'Nashville, TN',
+          education: 'Vanderbilt University',
+          avatar_url: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=100&q=80',
+          cover_photo_url: 'https://images.unsplash.com/photo-1513829096996-c85c54be37cd?auto=format&fit=crop&w=1200&q=80',
+          followers: 42,
+          following: 10
+        },
+        'sarah_miller': {
+          id: 'u1',
+          full_name: 'Sarah Miller',
+          username: 'sarah_miller',
+          bio: 'Music enthusiast and foodie traveler. Living life one song and BBQ joint at a time.',
+          location: 'Nashville, TN',
+          education: 'Vanderbilt University',
+          avatar_url: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=100&q=80',
+          cover_photo_url: 'https://images.unsplash.com/photo-1513829096996-c85c54be37cd?auto=format&fit=crop&w=1200&q=80',
+          followers: 42,
+          following: 10
+        },
+        'u2': {
+          id: 'u2',
+          full_name: 'Alex Chen',
+          username: 'alex_chen',
+          bio: 'History buff and pasta lover. Exploring ancient ruins and searching for the gelato spots.',
+          location: 'Rome, Italy',
+          education: 'University of Bologna',
+          avatar_url: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=100&q=80',
+          cover_photo_url: 'https://images.unsplash.com/photo-1529260830199-42c24126f198?auto=format&fit=crop&w=1200&q=80',
+          followers: 89,
+          following: 25
+        },
+        'alex_chen': {
+          id: 'u2',
+          full_name: 'Alex Chen',
+          username: 'alex_chen',
+          bio: 'History buff and pasta lover. Exploring ancient ruins and searching for the gelato spots.',
+          location: 'Rome, Italy',
+          education: 'University of Bologna',
+          avatar_url: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=100&q=80',
+          cover_photo_url: 'https://images.unsplash.com/photo-1529260830199-42c24126f198?auto=format&fit=crop&w=1200&q=80',
+          followers: 89,
+          following: 25
+        },
+        'u3': {
+          id: 'u3',
+          full_name: 'Emma Wilson',
+          username: 'emma_wilson',
+          bio: 'Yogi, beach bum, and travel blogger. Finding peace and adventures in tropical paradises.',
+          location: 'Ubud, Bali',
+          education: 'UC Berkeley',
+          avatar_url: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=100&q=80',
+          cover_photo_url: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80',
+          followers: 156,
+          following: 40
+        },
+        'emma_wilson': {
+          id: 'u3',
+          full_name: 'Emma Wilson',
+          username: 'emma_wilson',
+          bio: 'Yogi, beach bum, and travel blogger. Finding peace and adventures in tropical paradises.',
+          location: 'Ubud, Bali',
+          education: 'UC Berkeley',
+          avatar_url: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=100&q=80',
+          cover_photo_url: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80',
+          followers: 156,
+          following: 40
+        }
+      };
+
+      const matched = mockProfiles[username.toLowerCase()];
+      if (matched) {
+        setTargetProfile(matched);
+        setMetrics({ followers: matched.followers, following: matched.following });
+      } else {
+        const defaultMock = {
+          id: 'u-fallback',
+          full_name: username.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()),
+          username: username,
+          bio: 'Travel Enthusiast on VentureSocial.',
+          location: 'Everywhere',
+          education: 'World Travel Academy',
+          avatar_url: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=100&h=100',
+          cover_photo_url: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80'
+        };
+        setTargetProfile(defaultMock);
+        setMetrics({ followers: 10, following: 5 });
+      }
+      setIsLoading(false);
+      return;
+    }
+
     const fetchTargetProfile = async () => {
       setIsLoading(true);
       // Query flexibly by ID or Username to handle all entry points
