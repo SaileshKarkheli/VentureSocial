@@ -34,28 +34,13 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onOpenSignup }) => {
     setError(null);
 
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
+      const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
-      if (error) {
-        if (import.meta.env.VITE_ENABLE_MOCK_MODE === 'true') {
-          console.warn('Supabase auth failed, falling back to client-side mock session:', error.message);
-          localStorage.setItem('venturesocial_mock_session', JSON.stringify({
-            user: {
-              id: 'u123',
-              name: 'Alex Explorer',
-              email: email || 'alex@venturesocial.com',
-              avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=100&h=100'
-            },
-            token: 'mock_jwt_token_123'
-          }));
-          window.location.reload();
-          return;
-        } else {
-          throw error;
-        }
-      }
+      // Always surface the error — no silent mock fallback in submit handler.
+      // Use the "Bypass Login" button below for offline development.
+      if (error) throw error;
     } catch (err: any) {
       setError(err.message || 'An error occurred during login.');
       setLoading(false);

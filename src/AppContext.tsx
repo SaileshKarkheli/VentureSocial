@@ -112,26 +112,33 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   // Supabase Auth Integration
   useEffect(() => {
+    // ─── DEVELOPMENT ONLY: Mock session bypass ───────────────────────────────
+    // This block is dead code in production (VITE_ENABLE_MOCK_MODE is not 'true').
+    // It allows offline development without a real Supabase account.
     const isMockEnabled = import.meta.env.VITE_ENABLE_MOCK_MODE === 'true';
-    const mockSessionStr = isMockEnabled ? localStorage.getItem('venturesocial_mock_session') : null;
-    if (mockSessionStr) {
-      const mockData = JSON.parse(mockSessionStr);
-      setUser({
-        id: mockData.user.id,
-        name: mockData.user.name || 'User',
-        email: mockData.user.email || '',
-        avatar: mockData.user.avatar || '',
-        bio: ''
-      });
-      setActiveProfile({
-        id: mockData.user.id,
-        full_name: mockData.user.name || 'Alex Explorer',
-        username: mockData.user.email ? mockData.user.email.split('@')[0] : 'alex_explorer'
-      });
-      setIsAuthInitializing(false);
-      return;
+    if (isMockEnabled) {
+      const mockSessionStr = localStorage.getItem('venturesocial_mock_session');
+      if (mockSessionStr) {
+        const mockData = JSON.parse(mockSessionStr);
+        setUser({
+          id: mockData.user.id,
+          name: mockData.user.name || 'User',
+          email: mockData.user.email || '',
+          avatar: mockData.user.avatar || '',
+          bio: ''
+        });
+        setActiveProfile({
+          id: mockData.user.id,
+          full_name: mockData.user.name || 'Alex Explorer',
+          username: mockData.user.email ? mockData.user.email.split('@')[0] : 'alex_explorer'
+        });
+        setIsAuthInitializing(false);
+        return; // Do NOT proceed to Supabase auth in mock mode
+      }
     }
+    // ─── END DEVELOPMENT ONLY ────────────────────────────────────────────────
 
+    // Production auth: Supabase is always the sole source of truth.
     const initializeSession = async (session: any) => {
       setUser(session?.user ? { id: session.user.id, name: session.user.user_metadata?.name || 'User', email: session.user.email || '', avatar: '', bio: '' } : null);
       if (session?.user) {

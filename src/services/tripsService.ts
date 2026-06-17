@@ -149,7 +149,8 @@ export const tripsService = {
       const { data, error } = await supabase.from('posts').insert({
         user_id: userId,
         location_name: destination,
-        content: `My Custom Trip to ${destination}`,
+        caption: `My Custom Trip to ${destination}`,
+        category: 'Activity', // Required NOT NULL column in posts schema
         base_price: totalBudget
       }).select().single();
 
