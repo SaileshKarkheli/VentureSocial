@@ -66,6 +66,7 @@ interface AppContextType {
   activeProfile: any;
   updateActiveProfile: (newData: any) => void;
   currentUserProfile: any;
+  hasConnectionTimeout: boolean;
 }
 
 export interface FlightOption {
@@ -110,7 +111,26 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [activeProfile, setActiveProfile] = useState<any>(null);
   const [isAuthInitializing, setIsAuthInitializing] = useState(true);
+  const [hasConnectionTimeout, setHasConnectionTimeout] = useState(false);
   const isAuthenticated = !!user;
+
+  // Strict 5-second connection timeout fallback
+  useEffect(() => {
+    if (!isAuthInitializing && !isLoadingFeed && !isLoadingTrips) {
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      console.warn("Database connection took longer than 5 seconds. Triggering timeout override.");
+      setHasConnectionTimeout(true);
+      setIsAuthInitializing(false);
+      setIsLoadingFeed(false);
+      setIsLoadingTrips(false);
+      setIsLoadingServices(false);
+    }, 5000);
+
+    return () => clearTimeout(timer);
+  }, [isAuthInitializing, isLoadingFeed, isLoadingTrips]);
 
   // Supabase Auth Integration
   useEffect(() => {
@@ -682,7 +702,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       userLocation, requestLocation,
       remixFolders, addToRemixFolder, removeFromRemixFolder,
       addCustomTrip, activeProfile, updateActiveProfile,
-      currentUserProfile: activeProfile
+      currentUserProfile: activeProfile,
+      hasConnectionTimeout
     }}>
       {children}
     </AppContext.Provider>

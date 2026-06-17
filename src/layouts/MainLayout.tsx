@@ -11,7 +11,7 @@ import { NotificationBell } from '../components/navigation/NotificationBell';
 export default function MainLayout() {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
-  const { cartItems, globalToast } = useApp();
+  const { cartItems, globalToast, hasConnectionTimeout } = useApp();
 
   return (
     <div className="flex min-h-screen bg-zinc-50 relative overflow-x-hidden text-zinc-900">
@@ -51,6 +51,17 @@ export default function MainLayout() {
       <Sidebar isCollapsed={isSidebarCollapsed} onToggle={() => setIsSidebarCollapsed(!isSidebarCollapsed)} />
       
       <main className="flex-1 relative z-10 pt-8 sm:pt-0">
+        {hasConnectionTimeout && (
+          <div className="w-full bg-red-600 text-white text-center py-4 px-6 font-bold text-sm flex items-center justify-center gap-3 relative z-50 border-b border-red-700 shadow-md">
+            <span>⚠️ Cloud Network Timeout - Please Refresh</span>
+            <button 
+              onClick={() => window.location.reload()} 
+              className="bg-white/20 hover:bg-white/30 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-all border border-white/20"
+            >
+              Refresh Page
+            </button>
+          </div>
+        )}
         <motion.div
           layout
           initial={{ opacity: 0, y: 10 }}
