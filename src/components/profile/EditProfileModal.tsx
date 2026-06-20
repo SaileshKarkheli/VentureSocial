@@ -11,7 +11,7 @@ interface EditProfileModalProps {
 }
 
 export const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onClose }) => {
-  const { session, userProfile, refreshProfile } = useAuth();
+  const { session, userProfile, refreshProfile, updateUserProfile } = useAuth();
   const { activeProfile, updateActiveProfile } = useApp();
   const [fullName, setFullName] = useState('');
   const [bio, setBio] = useState('');
@@ -40,9 +40,37 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onCl
     if (!session?.user?.id) return;
     setIsUploading(true);
 
+    const isMockMode = import.meta.env.VITE_ENABLE_MOCK_MODE === 'true' && !!localStorage.getItem('venturesocial_mock_session');
+
     try {
       let finalAvatarUrl = activeProfile?.avatar_url || userProfile?.avatar_url;
       let finalCoverUrl = activeProfile?.cover_photo_url || userProfile?.cover_photo_url;
+
+      if (isMockMode) {
+        if (avatarFile) {
+          finalAvatarUrl = URL.createObjectURL(avatarFile);
+        }
+        if (coverFile) {
+          finalCoverUrl = URL.createObjectURL(coverFile);
+        }
+        const updatePayload: any = {
+          full_name: fullName,
+          bio: bio,
+          location: location,
+          education: education,
+          dob: dob
+        };
+        if (avatarFile && finalAvatarUrl && finalAvatarUrl.trim() !== '') {
+          updatePayload.avatar_url = finalAvatarUrl;
+        }
+        if (coverFile && finalCoverUrl && finalCoverUrl.trim() !== '') {
+          updatePayload.cover_photo_url = finalCoverUrl;
+        }
+        updateActiveProfile(updatePayload);
+        updateUserProfile(updatePayload);
+        onClose();
+        return;
+      }
 
       if (avatarFile) {
         const fileExt = avatarFile.name.split('.').pop();
