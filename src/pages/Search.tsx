@@ -561,7 +561,7 @@ export default function Search() {
                    searchedUsers.map(u => (
                       <div 
                         key={u.id} 
-                        onClick={() => navigate(`/profile/${u.username || u.id}`)}
+                        onClick={() => navigate(`/user/${u.username || u.id}`)}
                         className="flex items-center gap-4 p-4 border-2 border-zinc-100 hover:border-orange-500 rounded-3xl transition-all cursor-pointer group shadow-sm hover:shadow-xl bg-white hover:-translate-y-1"
                       >
                          <div className="w-16 h-16 bg-zinc-100 border border-zinc-200 rounded-full shrink-0 overflow-hidden relative">
