@@ -4,8 +4,7 @@ import { User as UserIcon, Mail, Calendar, MapPin, Camera, Edit2, Bookmark, Exte
 import { useApp } from '../AppContext';
 import ChatOverlay from '../components/ChatOverlay';
 import { supabase } from '../supabaseClient';
-import EditProfileModal from '../components/EditProfileModal';
-import ImageCropperModal from '../components/ImageCropperModal';
+import { EditProfileModal } from '../components/profile/EditProfileModal';
 import ImageViewerModal from '../components/ImageViewerModal';
 
 export default function Profile() {
@@ -15,9 +14,6 @@ export default function Profile() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedFullImage, setSelectedFullImage] = useState<string | null>(null);
   
-  // Cropper Pipeline State
-  const [cropperState, setCropperState] = useState<{ src: string, aspect: number, field: string } | null>(null);
-
   const [isLoading, setIsLoading] = useState(true);
   const [dbProfile, setDbProfile] = useState<any>(null);
   const [tripCount, setTripCount] = useState(0);
@@ -75,34 +71,7 @@ export default function Profile() {
     fetchProfile();
   }, [user]);
 
-  const initiateCropPipeline = (e: React.ChangeEvent<HTMLInputElement>, fieldName: string, aspect: number) => {
-    if (!user) return;
-    const file = e.target.files?.[0];
-    if (!file) return;
 
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      setCropperState({ src: event.target?.result as string, aspect, field: fieldName });
-    };
-    reader.readAsDataURL(file);
-    e.target.value = ''; // Reset strictly to allow re-uploading same file
-  };
-
-  const handleCropComplete = async (base64Str: string) => {
-    if (!user || !cropperState) return;
-    
-    setDbProfile((prev: any) => ({ ...prev, [cropperState.field]: base64Str }));
-    const currentField = cropperState.field;
-    setCropperState(null); // Instantly drop modal
-    
-    try {
-      const { error } = await supabase.from('profiles').update({ [currentField]: base64Str }).eq('id', user.id);
-      if (error) throw error;
-      updateActiveProfile({ [currentField]: base64Str });
-    } catch (err: any) {
-      alert('Failed to save image permanently. Database failure.');
-    }
-  };
 
   const userData = {
     name: currentUserProfile?.full_name || dbProfile?.full_name || user?.name || 'New Explorer',
@@ -140,15 +109,12 @@ export default function Profile() {
             <Camera size={48} className="text-[#0A192F]/20" />
           </div>
         )}
-        <label className="absolute bottom-4 right-4 bg-white/80 backdrop-blur-md text-zinc-900 p-2 rounded-full hover:bg-white transition-colors border border-zinc-200 shadow-lg cursor-pointer z-10">
-          <input 
-            type="file" 
-            accept="image/*"
-            className="hidden"
-            onChange={(e) => initiateCropPipeline(e, 'cover_photo_url', 16/9)}
-          />
+        <button 
+          onClick={() => setIsEditModalOpen(true)}
+          className="absolute bottom-4 right-4 bg-white/80 backdrop-blur-md text-zinc-900 p-2 rounded-full hover:bg-white transition-colors border border-zinc-200 shadow-lg cursor-pointer z-10"
+        >
           <Camera size={20} />
-        </label>
+        </button>
       </div>
 
       <div className="relative px-8 -mt-20">
@@ -169,15 +135,12 @@ export default function Profile() {
                 </div>
               )}
             </div>
-            <label className="absolute bottom-2 right-2 bg-orange-500 text-white p-2 rounded-xl shadow-lg hover:bg-orange-400 transition-colors cursor-pointer z-10">
-              <input 
-                type="file" 
-                accept="image/*"
-                className="hidden"
-                onChange={(e) => initiateCropPipeline(e, 'avatar_url', 1)}
-              />
+            <button 
+              onClick={() => setIsEditModalOpen(true)}
+              className="absolute bottom-2 right-2 bg-orange-500 text-white p-2 rounded-xl shadow-lg hover:bg-orange-400 transition-colors cursor-pointer z-10"
+            >
               <Camera size={16} />
-            </label>
+            </button>
           </div>
 
           <div className="flex-1 pb-4">
@@ -379,8 +342,6 @@ export default function Profile() {
           <EditProfileModal 
             isOpen={isEditModalOpen} 
             onClose={() => setIsEditModalOpen(false)} 
-            currentProfile={dbProfile} 
-            onProfileUpdate={(newData) => setDbProfile(prev => ({ ...prev, ...newData }))} 
           />
         )}
         
@@ -389,15 +350,6 @@ export default function Profile() {
           imageSrc={selectedFullImage} 
           onClose={() => setSelectedFullImage(null)} 
         />
-        
-        {cropperState && (
-          <ImageCropperModal
-            imageSrc={cropperState.src}
-            aspectRatio={cropperState.aspect}
-            onCropComplete={handleCropComplete}
-            onClose={() => setCropperState(null)}
-          />
-        )}
       </AnimatePresence>
     </div>
   );
