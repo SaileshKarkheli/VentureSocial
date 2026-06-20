@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { SavedItem, TimelineEvent, Post, User } from './types';
 import { supabase } from './supabaseClient';
+import { useAuth } from './context/AuthContext';
 import { SocialService } from './lib/socialService';
 import { mockPublicPosts, mockTravelServices, mockFlights, mockRentalCars, mockMyTrips } from './utils/mockData';
 
@@ -105,86 +106,24 @@ interface FilterState {
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [activeProfile, setActiveProfile] = useState<any>(null);
-  const [isAuthInitializing, setIsAuthInitializing] = useState(true);
+  const { user: authUser, userProfile, loading: authLoading, updateUserProfile } = useAuth();
+
+  // Alias properties to keep API parity with context consumers
+  const user = authUser;
+  const activeProfile = userProfile;
+  const isAuthInitializing = authLoading;
   const isAuthenticated = !!user;
 
-  // Supabase Auth Integration
+  // Trigger cache fetches when authenticated user state loads/changes
   useEffect(() => {
-    // ─── DEVELOPMENT ONLY: Mock session bypass ───────────────────────────────
-    // This block is dead code in production (VITE_ENABLE_MOCK_MODE is not 'true').
-    // It allows offline development without a real Supabase account.
-    const isMockEnabled = import.meta.env.VITE_ENABLE_MOCK_MODE === 'true';
-    if (isMockEnabled) {
-      const mockSessionStr = localStorage.getItem('venturesocial_mock_session');
-      if (mockSessionStr) {
-        const mockData = JSON.parse(mockSessionStr);
-        setUser({
-          id: mockData.user.id,
-          name: mockData.user.name || 'User',
-          email: mockData.user.email || '',
-          avatar: mockData.user.avatar || '',
-          bio: ''
-        });
-        setActiveProfile({
-          id: mockData.user.id,
-          full_name: mockData.user.name || 'Alex Explorer',
-          username: mockData.user.email ? mockData.user.email.split('@')[0] : 'alex_explorer'
-        });
-        setIsAuthInitializing(false);
-        return; // Do NOT proceed to Supabase auth in mock mode
-      }
+    if (user?.id) {
+      fetchUserFollows(user.id);
+      fetchUserLikesCache(user.id);
+    } else {
+      setFollowedUsers([]);
+      setUserLikedPosts([]);
     }
-    // ─── END DEVELOPMENT ONLY ────────────────────────────────────────────────
-
-    // Production auth: Supabase is always the sole source of truth.
-    const initializeSession = async (session: any) => {
-      setUser(session?.user ? { id: session.user.id, name: session.user.user_metadata?.name || 'User', email: session.user.email || '', avatar: '', bio: '' } : null);
-      if (session?.user) {
-        
-        // Identity Sub-Layer Hydration
-        const { data: profData, error: profErr } = await supabase.from('profiles').select('*').eq('id', session.user.id).single();
-        
-        if (profData) {
-          setActiveProfile(profData);
-        } else if (profErr && profErr.code === 'PGRST116') {
-          // PGRST116 indicates NO ROW FOUND. Bootstrapping legacy users who registered before Trigger injection.
-          const safeName = session.user.user_metadata?.name || session.user.email?.split('@')[0] || 'Explorer';
-          const randomSuffix = Math.floor(Math.random() * 1000);
-          
-          const newProfile = {
-            id: session.user.id,
-            full_name: safeName,
-            username: `${safeName.toLowerCase().replace(/[^a-z0-9]/g, '')}${randomSuffix}`,
-          };
-          
-          const { data: fallbackSync } = await supabase.from('profiles').insert(newProfile).select('*').single();
-          if (fallbackSync) {
-            setActiveProfile(fallbackSync);
-          }
-        }
-
-        await Promise.all([
-          fetchUserFollows(session.user.id),
-          fetchUserLikesCache(session.user.id)
-        ]);
-      } else {
-        setActiveProfile(null);
-      }
-      setIsAuthInitializing(false);
-    };
-
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      initializeSession(session);
-    });
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      initializeSession(session);
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
+  }, [user?.id]);
 
   const fetchUserFollows = async (userId: string) => {
     // Relational join to extract the explicit username attached to the following_id, mapped safely via Supabase foreign keys
@@ -389,7 +328,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const logout = async () => {
     await supabase.auth.signOut();
-    setUser(null);
   };
 
   const [savedItems, setSavedItems] = useState<SavedItem[]>([]);
@@ -580,14 +518,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     showToast('Removed from Remix Studio.');
   };
 
-  const updateActiveProfile = (newData: any) => {
-    setActiveProfile((prev: any) => ({ ...prev, ...newData }));
+  // Zero-Refresh Matrix Overwrite reactively triggered on canonical profile changes
+  useEffect(() => {
+    if (!activeProfile || !user) return;
     
-    // Zero-Refresh Matrix Overwrite
-    const nextName = newData.full_name || newData.username || 'Anonymous Explorer';
-    const nextAvatar = newData.avatar_url;
+    const nextName = activeProfile.full_name || activeProfile.username || 'Anonymous Explorer';
+    const nextAvatar = activeProfile.avatar_url;
     
-    const patchIdentity = (p: Post) => p.userId === user?.id 
+    const patchIdentity = (p: Post) => p.userId === user.id 
       ? { ...p, user: nextName, avatar: nextAvatar || p.avatar } 
       : p;
 
@@ -601,6 +539,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       });
       return patched;
     });
+  }, [activeProfile, user?.id]);
+
+  const updateActiveProfile = (newData: any) => {
+    updateUserProfile(newData);
   };
 
   return (

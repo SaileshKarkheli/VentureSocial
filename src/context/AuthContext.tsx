@@ -16,6 +16,7 @@ interface AuthContextType {
   userProfile: UserProfile | null;
   loading: boolean;
   refreshProfile: () => Promise<void>;
+  updateUserProfile: (newData: any) => void;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -24,6 +25,7 @@ const AuthContext = createContext<AuthContextType>({
   userProfile: null,
   loading: true,
   refreshProfile: async () => {},
+  updateUserProfile: () => {},
 });
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
@@ -39,7 +41,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       try {
         const { data, error } = await supabase
           .from('profiles')
-          .select('id, full_name, avatar_url, username')
+          .select('*')
           .eq('id', userId)
           .single();
 
@@ -153,7 +155,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         // cover_photo_url is the canonical DB column (cover_url does not exist in schema)
         const { data, error } = await supabase
           .from('profiles')
-          .select('id, full_name, avatar_url, username, bio, cover_photo_url')
+          .select('*')
           .eq('id', user.id)
           .single();
 
@@ -166,8 +168,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
+  const updateUserProfile = (newData: any) => {
+    setUserProfile(prev => prev ? { ...prev, ...newData } : null);
+  };
+
   return (
-    <AuthContext.Provider value={{ session, user, userProfile, loading, refreshProfile }}>
+    <AuthContext.Provider value={{ session, user, userProfile, loading, refreshProfile, updateUserProfile }}>
       {children}
     </AuthContext.Provider>
   );

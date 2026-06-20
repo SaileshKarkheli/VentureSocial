@@ -4,6 +4,9 @@ import { Wand2, FolderOpen, MapPin, X, ArrowRight, ShoppingBag, Clock, Navigatio
 import { useNavigate } from 'react-router-dom';
 import SmartImage from '../components/SmartImage';
 import { remixService } from '../services/remixService';
+import { useAuth } from '../context/AuthContext';
+import { supabase } from '../supabaseClient';
+import { DayHighlightCarousel, PillarSection } from './TripDetail';
 
 export default function RemixStudio() {
   const { session } = useAuth();
