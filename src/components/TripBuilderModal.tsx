@@ -200,20 +200,79 @@ export default function TripBuilderModal({ isOpen, onClose }: TripBuilderModalPr
       if (error) throw error;
 
       if (data) {
-        // Here we could insert all the trip_spots for the days...
-        // For now, we will just create the main trip shell so it appears in My Trips.
+        const spotsToInsert = days.flatMap((day, idx) => {
+          return day.routeSummary.map(item => {
+            const categoryMap: Record<string, 'Transport' | 'Stay' | 'Dining' | 'Activity'> = {
+              transport: 'Transport',
+              hotel: 'Stay',
+              dining: 'Dining',
+              activity: 'Activity'
+            };
+            const cost = day.categoryCosts?.[item.type];
+            let description = `Details for ${item.title}.`;
+            if (cost !== undefined && cost > 0) {
+              description += ` Cost: $${cost}.`;
+            }
+            return {
+              post_id: data.id,
+              day_number: idx + 1,
+              title: item.title,
+              description,
+              category: categoryMap[item.type],
+              image_url: day.categoryImages?.[item.type] || null,
+              link_url: item.link,
+              location_coords: item.coordinates ? `(${item.coordinates.lng},${item.coordinates.lat})` : null
+            };
+          });
+        });
+
+        if (spotsToInsert.length > 0) {
+          const { error: spotsError } = await supabase.from('trip_spots').insert(spotsToInsert);
+          if (spotsError) {
+            console.error("Failed to insert trip spots:", spotsError);
+            alert(`Failed to save trip spots: ${spotsError.message}`);
+            return;
+          }
+        }
         window.location.reload(); // Refresh to show new trip
       }
-    } catch (err) {
+    } catch (err: any) {
       console.warn("Supabase insert failed in TripBuilder, saving to localStorage:", err);
       const customTripsStr = localStorage.getItem('venturesocial_custom_trips');
       const customTrips = customTripsStr ? JSON.parse(customTripsStr) : [];
+
+      const spots = days.flatMap((day, idx) => {
+        return day.routeSummary.map(item => {
+          const categoryMap: Record<string, 'Transport' | 'Stay' | 'Dining' | 'Activity'> = {
+            transport: 'Transport',
+            hotel: 'Stay',
+            dining: 'Dining',
+            activity: 'Activity'
+          };
+          const cost = day.categoryCosts?.[item.type];
+          let description = `Details for ${item.title}.`;
+          if (cost !== undefined && cost > 0) {
+            description += ` Cost: $${cost}.`;
+          }
+          return {
+            id: item.id,
+            day_number: idx + 1,
+            title: item.title,
+            description,
+            category: categoryMap[item.type],
+            image_url: day.categoryImages?.[item.type] || null,
+            link_url: item.link
+          };
+        });
+      });
+
       const newTrip = {
         id: `custom-${Date.now()}`,
         year: new Date().getFullYear().toString(),
         country: destination,
         image: coverPhoto,
-        base_price: totalBudget
+        base_price: totalBudget,
+        spots
       };
       customTrips.push(newTrip);
       localStorage.setItem('venturesocial_custom_trips', JSON.stringify(customTrips));
