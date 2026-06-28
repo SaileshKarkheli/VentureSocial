@@ -365,7 +365,7 @@ export default function Home() {
                 <div>
                   <h4 className="font-bold text-[#0A192F] text-sm md:text-base">Local Discovery</h4>
                   {userLocation ? (
-                    <p className="text-blue-600 text-xs md:text-sm font-medium">📍 Sorting by real-time geographical proximity</p>
+                    <p className="text-blue-600 text-xs md:text-sm font-medium">Sorting by real-time geographical proximity</p>
                   ) : (
                     <p className="text-zinc-500 text-xs md:text-sm">Turn on live location for precise local recommendations.</p>
                   )}
@@ -428,19 +428,19 @@ export default function Home() {
                           <button 
                             onClick={(e) => {
                               e.stopPropagation();
-                              toggleFollow(post.user, post.isPrivate || false);
+                              toggleFollow(post.userId, post.isPrivate || false);
                             }}
                             className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border transition-colors ${
-                              followedUsers.includes(post.user)
+                              followedUsers.includes(post.userId)
                                 ? 'bg-zinc-50 text-zinc-500 border-zinc-200 hover:border-rose-200 hover:text-rose-500 hover:bg-rose-50' // Following (gives unfollow context on hover)
-                                : requestedUsers.includes(post.user)
+                                : requestedUsers.includes(post.userId)
                                 ? 'bg-zinc-100 text-zinc-500 border-zinc-200 hover:bg-zinc-200' // Requested
                                 : 'bg-blue-500 text-white border-blue-500 hover:bg-blue-600' // Not Following (Public or Private)
                             }`}
                           >
-                            {followedUsers.includes(post.user) 
+                            {followedUsers.includes(post.userId) 
                               ? 'Following' 
-                              : requestedUsers.includes(post.user)
+                              : requestedUsers.includes(post.userId)
                               ? 'Requested'
                               : 'Follow'}
                           </button>
