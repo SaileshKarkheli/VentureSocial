@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Wand2, FolderOpen, MapPin, X, ArrowRight, ShoppingBag, Clock, Navigation, Bed, Utensils, Camera, Plane, Trash2, AlertCircle, Store, Car, ChevronDown, CheckCircle2, ArrowUp, ArrowDown } from 'lucide-react';
+import { Wand2, FolderOpen, MapPin, X, ArrowRight, ShoppingBag, Clock, Navigation, Bed, Utensils, Camera, Plane, Trash2, AlertCircle, Store, Car, ChevronDown, CheckCircle2, ArrowUp, ArrowDown, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import SmartImage from '../components/SmartImage';
 import { remixService } from '../services/remixService';
@@ -501,5 +501,95 @@ function WorkspaceView({ folder, onClose }: { folder: any, onClose: () => void }
         )}
       </div>
     </motion.div>
+  );
+}
+
+function PillarSection({ title, icon: Icon, isExpanded, onToggle, children }: {
+  title: string;
+  icon: any;
+  isExpanded: boolean;
+  onToggle: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="rounded-2xl border border-zinc-200 bg-white overflow-hidden">
+      <button
+        onClick={onToggle}
+        className="w-full flex items-center justify-between p-5 hover:bg-zinc-50 transition-colors"
+      >
+        <div className="flex items-center gap-3">
+          <Icon size={18} className="text-orange-500" />
+          <span className="font-bold text-sm text-[#0A192F]">{title}</span>
+        </div>
+        <motion.div
+          animate={{ rotate: isExpanded ? 180 : 0 }}
+          transition={{ duration: 0.2 }}
+        >
+          <ChevronDown size={18} className="text-zinc-400" />
+        </motion.div>
+      </button>
+      <AnimatePresence>
+        {isExpanded && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            <div className="p-5 pt-0">
+              {children}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+function DayHighlightCarousel({ day }: { day: any }) {
+  const [activeIdx, setActiveIdx] = useState(0);
+  const slides = [
+    { type: 'stay', label: 'Stay', image: day.stay.image, name: day.stay.name },
+    { type: 'dining', label: 'Dining', image: day.dining.image, name: day.dining.name },
+    ...(day.activities || []).map((a: any, i: number) => ({ type: 'activity', label: `Activity ${i + 1}`, image: a.image, name: a.name }))
+  ];
+
+  return (
+    <div className="relative rounded-2xl overflow-hidden shadow-lg bg-zinc-100 aspect-[16/9]">
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={activeIdx}
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: -20 }}
+          transition={{ duration: 0.3 }}
+          className="absolute inset-0"
+        >
+          <img src={slides[activeIdx].image} alt={slides[activeIdx].name} className="w-full h-full object-cover" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+          <div className="absolute bottom-3 left-3 right-3">
+            <span className="text-[9px] font-bold text-orange-400 uppercase tracking-widest">{slides[activeIdx].label}</span>
+            <p className="text-white font-bold text-sm truncate">{slides[activeIdx].name}</p>
+          </div>
+        </motion.div>
+      </AnimatePresence>
+      {slides.length > 1 && (
+        <div className="absolute bottom-2 right-2 flex items-center gap-1">
+          <button
+            onClick={() => setActiveIdx(prev => prev === 0 ? slides.length - 1 : prev - 1)}
+            className="p-1 rounded-full bg-white/20 backdrop-blur-sm text-white hover:bg-white/40 transition-colors"
+          >
+            <ChevronRight size={12} className="rotate-180" />
+          </button>
+          <span className="text-[9px] font-bold text-white">{activeIdx + 1}/{slides.length}</span>
+          <button
+            onClick={() => setActiveIdx(prev => prev === slides.length - 1 ? 0 : prev + 1)}
+            className="p-1 rounded-full bg-white/20 backdrop-blur-sm text-white hover:bg-white/40 transition-colors"
+          >
+            <ChevronRight size={12} />
+          </button>
+        </div>
+      )}
+    </div>
   );
 }
