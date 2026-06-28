@@ -22,11 +22,13 @@ export default function EditProfileModal({ isOpen, onClose, currentProfile, onPr
     education: '',
     dob: '',
     avatar_url: '',
-    cover_photo_url: ''
+    cover_photo_url: '',
+    social_links: { instagram: '', twitter: '', website: '' }
   });
 
   useEffect(() => {
     if (currentProfile) {
+      const social = currentProfile.social_links || {};
       setFormData({
         full_name: currentProfile.full_name || '',
         bio: currentProfile.bio || '',
@@ -34,13 +36,25 @@ export default function EditProfileModal({ isOpen, onClose, currentProfile, onPr
         education: currentProfile.education || '',
         dob: currentProfile.dob || '',
         avatar_url: currentProfile.avatar_url || '',
-        cover_photo_url: currentProfile.cover_photo_url || ''
+        cover_photo_url: currentProfile.cover_photo_url || '',
+        social_links: {
+          instagram: social.instagram || '',
+          twitter: social.twitter || '',
+          website: social.website || ''
+        }
       });
     }
   }, [currentProfile]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
+  };
+
+  const handleSocialChange = (platform: string, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      social_links: { ...prev.social_links, [platform]: value }
+    }));
   };
 
   const handleSave = async (e: React.FormEvent) => {
@@ -54,7 +68,8 @@ export default function EditProfileModal({ isOpen, onClose, currentProfile, onPr
         bio: formData.bio,
         location: formData.location,
         education: formData.education,
-        dob: formData.dob
+        dob: formData.dob,
+        social_links: formData.social_links
       };
 
       const { error } = await supabase
@@ -168,6 +183,43 @@ export default function EditProfileModal({ isOpen, onClose, currentProfile, onPr
                   placeholder="Introduce yourself to the global travel community..."
                   className="w-full bg-zinc-50 border border-zinc-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-orange-500/50 outline-none resize-none"
                 />
+              </div>
+            </div>
+
+            {/* Social Links */}
+            <div className="space-y-6">
+              <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-widest border-b border-zinc-100 pb-2">Social Links</h3>
+              <div className="grid grid-cols-1 gap-4">
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-[#0A192F]">Instagram</label>
+                  <input 
+                    type="url" 
+                    value={formData.social_links.instagram}
+                    onChange={(e) => handleSocialChange('instagram', e.target.value)}
+                    placeholder="https://instagram.com/yourhandle"
+                    className="w-full bg-zinc-50 border border-zinc-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-orange-500/50 outline-none"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-[#0A192F]">Twitter / X</label>
+                  <input 
+                    type="url" 
+                    value={formData.social_links.twitter}
+                    onChange={(e) => handleSocialChange('twitter', e.target.value)}
+                    placeholder="https://x.com/yourhandle"
+                    className="w-full bg-zinc-50 border border-zinc-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-orange-500/50 outline-none"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-[#0A192F]">Personal Website</label>
+                  <input 
+                    type="url" 
+                    value={formData.social_links.website}
+                    onChange={(e) => handleSocialChange('website', e.target.value)}
+                    placeholder="https://yourwebsite.com"
+                    className="w-full bg-zinc-50 border border-zinc-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-orange-500/50 outline-none"
+                  />
+                </div>
               </div>
             </div>
 
