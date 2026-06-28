@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Wand2, FolderOpen, MapPin, X, ArrowRight, ShoppingBag, Clock, Navigation, Bed, Utensils, Camera, Plane, Trash2, AlertCircle, Store, Car, ChevronDown, CheckCircle2 } from 'lucide-react';
+import { Wand2, FolderOpen, MapPin, X, ArrowRight, ShoppingBag, Clock, Navigation, Bed, Utensils, Camera, Plane, Trash2, AlertCircle, Store, Car, ChevronDown, CheckCircle2, ArrowUp, ArrowDown } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import SmartImage from '../components/SmartImage';
 import { remixService } from '../services/remixService';
+import { supabase } from '../supabaseClient';
+import { useAuth } from '../context/AuthContext';
 
 export default function RemixStudio() {
   const { session } = useAuth();
@@ -219,6 +221,7 @@ function WorkspaceView({ folder, onClose }: { folder: any, onClose: () => void }
 
   // Ensure Days are sorted
   const sortedDays = Object.keys(spotsByDay).map(Number).sort((a, b) => a - b);
+  const maxDay = sortedDays.length > 0 ? Math.max(...sortedDays) : 1;
   // Auto expand first available day if expandedDay is null
   useEffect(() => {
     if (sortedDays.length > 0 && expandedDay === null) {
@@ -226,18 +229,25 @@ function WorkspaceView({ folder, onClose }: { folder: any, onClose: () => void }
     }
   }, [sortedDays, expandedDay]);
 
-  const DayReassignSelect = ({ savedSpotId, currentDay }: { savedSpotId: string, currentDay: number }) => (
-    <div className="absolute top-6 right-16 flex items-center gap-2 z-10" onClick={e => e.stopPropagation()}>
-      <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Move to Day</span>
-      <select 
-        value={currentDay}
-        onChange={(e) => { e.stopPropagation(); handleReassignDay(savedSpotId, parseInt(e.target.value)); }}
-        className="bg-zinc-50 border border-zinc-200 text-[#0A192F] font-bold rounded-lg px-2 py-1 text-sm focus:outline-none focus:border-orange-500 shadow-sm cursor-pointer"
+  const DayMoveButtons = ({ savedSpotId, currentDay }: { savedSpotId: string, currentDay: number }) => (
+    <div className="absolute top-6 right-16 flex items-center gap-1 z-10" onClick={e => e.stopPropagation()}>
+      <button
+        onClick={() => handleReassignDay(savedSpotId, currentDay - 1)}
+        disabled={currentDay <= 1}
+        className="p-1.5 rounded-lg bg-zinc-100 text-zinc-500 hover:bg-orange-500 hover:text-white transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+        title="Move to previous day"
       >
-        {[1,2,3,4,5,6,7,8,9,10].map(d => (
-          <option key={d} value={d}>Day {d}</option>
-        ))}
-      </select>
+        <ArrowUp size={14} />
+      </button>
+      <span className="text-[10px] font-bold text-zinc-400 min-w-[36px] text-center">Day {currentDay}</span>
+      <button
+        onClick={() => handleReassignDay(savedSpotId, currentDay + 1)}
+        disabled={currentDay >= maxDay}
+        className="p-1.5 rounded-lg bg-zinc-100 text-zinc-500 hover:bg-orange-500 hover:text-white transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+        title="Move to next day"
+      >
+        <ArrowDown size={14} />
+      </button>
     </div>
   );
 
@@ -376,7 +386,7 @@ function WorkspaceView({ folder, onClose }: { folder: any, onClose: () => void }
                                 <h4 className="font-bold text-[#0A192F] text-lg">{transport.title}</h4>
                                 <p className="text-zinc-600 leading-relaxed italic">"{transport.description}"</p>
                               </div>
-                              <DayReassignSelect savedSpotId={transportSp.id} currentDay={dayNum} />
+                              <DayMoveButtons savedSpotId={transportSp.id} currentDay={dayNum} />
                               <button
                                 onClick={(e) => { e.stopPropagation(); handleRemoveSpot(transportSp.id); }}
                                 className="absolute top-6 right-6 text-zinc-300 hover:text-rose-500 transition-colors"
@@ -395,7 +405,7 @@ function WorkspaceView({ folder, onClose }: { folder: any, onClose: () => void }
                             onToggle={() => setExpandedPillar(expandedPillar === `${dayNum}-stay` ? null : `${dayNum}-stay`)}
                           >
                             <div className="bg-white rounded-2xl p-6 border border-zinc-100 space-y-6 relative">
-                              <DayReassignSelect savedSpotId={staySp.id} currentDay={dayNum} />
+                              <DayMoveButtons savedSpotId={staySp.id} currentDay={dayNum} />
                               <button
                                 onClick={(e) => { e.stopPropagation(); handleRemoveSpot(staySp.id); }}
                                 className="absolute top-6 right-6 text-zinc-300 hover:text-rose-500 transition-colors"
@@ -425,7 +435,7 @@ function WorkspaceView({ folder, onClose }: { folder: any, onClose: () => void }
                             onToggle={() => setExpandedPillar(expandedPillar === `${dayNum}-dining` ? null : `${dayNum}-dining`)}
                           >
                             <div className="bg-white rounded-2xl p-6 border border-zinc-100 space-y-6 relative">
-                              <DayReassignSelect savedSpotId={diningSp.id} currentDay={dayNum} />
+                              <DayMoveButtons savedSpotId={diningSp.id} currentDay={dayNum} />
                               <button
                                 onClick={(e) => { e.stopPropagation(); handleRemoveSpot(diningSp.id); }}
                                 className="absolute top-6 right-6 text-zinc-300 hover:text-rose-500 transition-colors"
@@ -460,7 +470,7 @@ function WorkspaceView({ folder, onClose }: { folder: any, onClose: () => void }
                                 return (
                                   <div key={activitySp.id} className="bg-white rounded-2xl overflow-hidden border border-zinc-100 flex flex-col relative group">
                                     <div className="absolute top-4 right-14 z-20 transition-opacity bg-white/90 backdrop-blur-sm rounded-lg p-1 shadow-sm">
-                                      <DayReassignSelect savedSpotId={activitySp.id} currentDay={dayNum} />
+                                      <DayMoveButtons savedSpotId={activitySp.id} currentDay={dayNum} />
                                     </div>
                                     <button
                                       onClick={(e) => { e.stopPropagation(); handleRemoveSpot(activitySp.id); }}
