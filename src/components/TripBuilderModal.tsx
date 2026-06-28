@@ -250,6 +250,35 @@ export default function TripBuilderModal({ isOpen, onClose }: TripBuilderModalPr
   const totalBudget = days.reduce((sum, day) => sum + getDayCost(day), 0);
   const allRouteItems = days.flatMap(d => d.routeSummary);
 
+  // ---- Real coordinate route map logic ----
+  const itemsWithCoords = allRouteItems.filter(item => item.coordinates);
+  const hasEnoughCoords = itemsWithCoords.length >= 2;
+
+  const svgWidth = 400;
+  const svgHeight = 300;
+  const svgPad = 30;
+
+  const projectCoords = (lat: number, lng: number) => {
+    const lats = itemsWithCoords.map(item => item.coordinates!.lat);
+    const lngs = itemsWithCoords.map(item => item.coordinates!.lng);
+    const minLat = Math.min(...lats);
+    const maxLat = Math.max(...lats);
+    const minLng = Math.min(...lngs);
+    const maxLng = Math.max(...lngs);
+    const latSpan = (maxLat - minLat) || 0.001;
+    const lngSpan = (maxLng - minLng) || 0.001;
+    const x = svgPad + ((lng - minLng) / lngSpan) * (svgWidth - 2 * svgPad);
+    const y = svgHeight - svgPad - ((lat - minLat) / latSpan) * (svgHeight - 2 * svgPad);
+    return { x, y };
+  };
+
+  const pathD = hasEnoughCoords
+    ? itemsWithCoords.map((item, i) => {
+        const { x, y } = projectCoords(item.coordinates!.lat, item.coordinates!.lng);
+        return `${i === 0 ? 'M' : 'L'} ${x} ${y}`;
+      }).join(' ')
+    : '';
+
   return createPortal(
     <AnimatePresence>
       {isOpen && (
@@ -788,33 +817,59 @@ export default function TripBuilderModal({ isOpen, onClose }: TripBuilderModalPr
                   </div>
                 </div>
 
-                {/* Route Visualization (Mock) */}
+                {/* Route Visualization */}
                 <div className="flex-[0.8] flex flex-col items-center justify-start relative mb-4">
                   <div className="w-full h-[250px] relative">
-                    <svg className="absolute inset-0 w-full h-full" viewBox="0 0 400 300">
-                      <motion.path
-                        d="M 100 50 Q 200 100 150 200 T 250 300"
-                        fill="none"
-                        stroke="#F97316"
-                        strokeWidth="3"
-                        strokeDasharray="6 6"
-                        initial={{ pathLength: 0 }}
-                        animate={{ pathLength: 1 }}
-                        transition={{ duration: 3, repeat: Infinity }}
-                      />
-                      {allRouteItems.map((_, i) => (
-                        <circle
-                          key={i}
-                          cx={100 + (i * 15)}
-                          cy={50 + (i * 40)}
-                          r="4"
-                          fill={i === 0 ? "#F97316" : "#CBD5E1"}
-                          className="shadow-lg"
-                        />
-                      ))}
+                    <svg className="absolute inset-0 w-full h-full" viewBox={`0 0 ${svgWidth} ${svgHeight}`}>
+                      {hasEnoughCoords ? (
+                        <>
+                          <motion.path
+                            d={pathD}
+                            fill="none"
+                            stroke="#F97316"
+                            strokeWidth="3"
+                            strokeDasharray="6 6"
+                            initial={{ pathLength: 0 }}
+                            animate={{ pathLength: 1 }}
+                            transition={{ duration: 3, repeat: Infinity }}
+                          />
+                          {itemsWithCoords.map((item, i) => {
+                            const { x, y } = projectCoords(item.coordinates!.lat, item.coordinates!.lng);
+                            return (
+                              <g key={item.id}>
+                                <circle cx={x} cy={y} r="5" fill={i === 0 ? '#F97316' : '#CBD5E1'} stroke="#fff" strokeWidth="2" />
+                                <text x={x + 8} y={y + 3} fontSize="8" fill="#0A192F" fontWeight="bold">{item.title.length > 15 ? item.title.substring(0, 15) + '...' : item.title}</text>
+                              </g>
+                            );
+                          })}
+                        </>
+                      ) : (
+                        <>
+                          <motion.path
+                            d="M 100 50 Q 200 100 150 200 T 250 300"
+                            fill="none"
+                            stroke="#F97316"
+                            strokeWidth="3"
+                            strokeDasharray="6 6"
+                            initial={{ pathLength: 0 }}
+                            animate={{ pathLength: 1 }}
+                            transition={{ duration: 3, repeat: Infinity }}
+                          />
+                          {allRouteItems.map((_, i) => (
+                            <circle
+                              key={i}
+                              cx={100 + (i * 15)}
+                              cy={50 + (i * 40)}
+                              r="4"
+                              fill={i === 0 ? '#F97316' : '#CBD5E1'}
+                              className="shadow-lg"
+                            />
+                          ))}
+                        </>
+                      )}
                     </svg>
 
-                    {allRouteItems.slice(0, 3).map((item, i) => (
+                    {!hasEnoughCoords && allRouteItems.slice(0, 3).map((item, i) => (
                       <div
                         key={item.id}
                         style={{ top: `${40 + (i * 40)}px`, left: `${80 + (i * 10)}px` }}
