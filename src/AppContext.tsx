@@ -45,6 +45,7 @@ interface AppContextType {
   globalToast: string | null;
   setGlobalToast: (msg: string | null) => void;
   followedUsers: string[];
+  requestedUsers: string[];
   userInterestTags: string[];
   addUserInterest: (tag: string) => void;
   customTripSpots: import('./types').PostImage[];
@@ -64,6 +65,7 @@ interface AppContextType {
   activeProfile: any;
   updateActiveProfile: (newData: any) => void;
   currentUserProfile: any;
+  approveFollowRequest: (requesterId: string) => Promise<void>;
 }
 
 export interface FlightOption {
@@ -160,7 +162,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
         await Promise.all([
           fetchUserFollows(session.user.id),
-          fetchUserLikesCache(session.user.id)
+          fetchUserLikesCache(session.user.id),
+          fetchUserFollowRequests(session.user.id)
         ]);
       } else {
         setActiveProfile(null);
@@ -194,6 +197,45 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         if (d.profiles?.username) activeIdentities.push(d.profiles.username);
       });
       setFollowedUsers(activeIdentities);
+    }
+  };
+
+  const fetchUserFollowRequests = async (userId: string) => {
+    // Fetch pending follow requests sent BY the current user
+    const { data, error } = await supabase
+      .from('follow_requests')
+      .select('target_id')
+      .eq('requester_id', userId)
+      .eq('status', 'pending');
+    
+    if (!error && data) {
+      setRequestedUsers(data.map((d: any) => d.target_id));
+    }
+  };
+
+  const approveFollowRequest = async (requesterId: string) => {
+    if (!user) return;
+    try {
+      // Update the follow request status to approved
+      const { error: updateError } = await supabase
+        .from('follow_requests')
+        .update({ status: 'approved' })
+        .eq('requester_id', requesterId)
+        .eq('target_id', user.id);
+      
+      if (updateError) throw updateError;
+
+      // Insert into follows table
+      const { error: followError } = await supabase
+        .from('follows')
+        .insert({ follower_id: requesterId, following_id: user.id });
+      
+      if (followError && followError.code !== '23505') throw followError; // Ignore duplicate
+
+      showToast('Follow request approved');
+    } catch (err: any) {
+      console.error('Error approving follow request:', err);
+      showToast('Failed to approve follow request');
     }
   };
 
@@ -239,7 +281,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const channel = SocialService.subscribeToGlobalMessages((payload) => {
       if (payload.new.sender_id !== user.id) {
         setHasUnreadMessages(true);
-        showToast('📬 New Travel Message Received!');
+        showToast('New Travel Message Received!');
       }
     });
     return () => { supabase.removeChannel(channel); };
@@ -486,6 +528,21 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       return;
     }
     
+    // Check if target profile is actually private from DB
+    let targetIsPrivate = isPrivate;
+    try {
+      const { data: targetProfile } = await supabase
+        .from('profiles')
+        .select('is_private')
+        .eq('id', targetId)
+        .single();
+      if (targetProfile && targetProfile.is_private !== undefined) {
+        targetIsPrivate = targetProfile.is_private;
+      }
+    } catch {
+      // Fallback to passed value
+    }
+    
     if (followedUsers.includes(targetId)) {
       // Optimistic Unfollow
       setFollowedUsers(prev => prev.filter(u => u !== targetId));
@@ -496,15 +553,34 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         setFollowedUsers(prev => [...prev, targetId]);
         showToast("Error unfollowing");
       }
-    } else {
-      // Optimistic Follow
-      setFollowedUsers(prev => [...prev, targetId]);
-      showToast(`You are now following them!`);
-      // Bind connection in Database
-      const { error } = await supabase.from('follows').insert({ follower_id: user.id, following_id: targetId });
+    } else if (requestedUsers.includes(targetId)) {
+      // Cancel pending request
+      setRequestedUsers(prev => prev.filter(u => u !== targetId));
+      showToast(`Follow request cancelled.`);
+      const { error } = await supabase.from('follow_requests').delete().eq('requester_id', user.id).eq('target_id', targetId);
       if (error) {
-        setFollowedUsers(prev => prev.filter(u => u !== targetId));
-        showToast("Error executing follow relation.");
+        setRequestedUsers(prev => [...prev, targetId]);
+        showToast("Error cancelling request");
+      }
+    } else {
+      // Target is private and not already following/requested → send follow request
+      if (targetIsPrivate) {
+        setRequestedUsers(prev => [...prev, targetId]);
+        showToast(`Follow request sent`);
+        const { error } = await supabase.from('follow_requests').insert({ requester_id: user.id, target_id: targetId, status: 'pending' });
+        if (error) {
+          setRequestedUsers(prev => prev.filter(u => u !== targetId));
+          showToast("Error sending follow request.");
+        }
+      } else {
+        // Public account → direct follow
+        setFollowedUsers(prev => [...prev, targetId]);
+        showToast(`You are now following them!`);
+        const { error } = await supabase.from('follows').insert({ follower_id: user.id, following_id: targetId });
+        if (error) {
+          setFollowedUsers(prev => prev.filter(u => u !== targetId));
+          showToast("Error executing follow relation.");
+        }
       }
     }
   };
@@ -614,7 +690,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       userLocation, requestLocation,
       remixFolders, addToRemixFolder, removeFromRemixFolder,
       addCustomTrip, activeProfile, updateActiveProfile,
-      currentUserProfile: activeProfile
+      currentUserProfile: activeProfile,
+      approveFollowRequest
     }}>
       {children}
     </AppContext.Provider>
