@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { User as UserIcon, Mail, Calendar, MapPin, Camera, Edit2, Bookmark, ExternalLink, Bed, Utensils, Info, Plus, Shield, ShieldCheck, MessageSquare, Loader2 } from 'lucide-react';
+import { User as UserIcon, Mail, Calendar, MapPin, Camera, Edit2, Bookmark, ExternalLink, Bed, Utensils, Info, Plus, Shield, ShieldCheck, MessageSquare, Loader2, Instagram, Twitter, Globe } from 'lucide-react';
 import { useApp } from '../AppContext';
 import ChatOverlay from '../components/ChatOverlay';
 import { supabase } from '../supabaseClient';
@@ -130,6 +130,9 @@ export default function Profile() {
       { label: 'Followers', value: followersCount.toString() }
     ]
   };
+
+  const socialLinks = dbProfile?.social_links || {};
+  const hasSocialLinks = socialLinks.instagram || socialLinks.twitter || socialLinks.website;
 
   if (isLoading) {
     return <div className="min-h-[50vh] flex items-center justify-center"><Loader2 className="animate-spin text-orange-500" size={32} /></div>;
@@ -421,13 +424,48 @@ export default function Profile() {
 
             <section className="bg-white p-6 rounded-2xl border border-zinc-100 shadow-sm">
               <h3 className="text-lg font-bold text-[#0A192F] mb-4">Social Links</h3>
-              <div className="space-y-3">
-                {['Instagram', 'Twitter', 'Personal Website'].map((link) => (
-                  <button key={link} className="w-full text-left px-4 py-2 rounded-xl bg-zinc-50 text-zinc-600 hover:bg-orange-500/10 hover:text-orange-500 transition-colors text-sm font-medium border border-zinc-100">
-                    {link}
-                  </button>
-                ))}
-              </div>
+              {hasSocialLinks ? (
+                <div className="space-y-3">
+                  {socialLinks.instagram && (
+                    <a
+                      href={socialLinks.instagram}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-3 w-full text-left px-4 py-2.5 rounded-xl bg-zinc-50 text-zinc-600 hover:bg-orange-500/10 hover:text-orange-500 transition-colors text-sm font-medium border border-zinc-100"
+                    >
+                      <Instagram size={16} />
+                      <span className="truncate">Instagram</span>
+                      <ExternalLink size={12} className="ml-auto text-zinc-400" />
+                    </a>
+                  )}
+                  {socialLinks.twitter && (
+                    <a
+                      href={socialLinks.twitter}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-3 w-full text-left px-4 py-2.5 rounded-xl bg-zinc-50 text-zinc-600 hover:bg-orange-500/10 hover:text-orange-500 transition-colors text-sm font-medium border border-zinc-100"
+                    >
+                      <Twitter size={16} />
+                      <span className="truncate">Twitter / X</span>
+                      <ExternalLink size={12} className="ml-auto text-zinc-400" />
+                    </a>
+                  )}
+                  {socialLinks.website && (
+                    <a
+                      href={socialLinks.website}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-3 w-full text-left px-4 py-2.5 rounded-xl bg-zinc-50 text-zinc-600 hover:bg-orange-500/10 hover:text-orange-500 transition-colors text-sm font-medium border border-zinc-100"
+                    >
+                      <Globe size={16} />
+                      <span className="truncate">Website</span>
+                      <ExternalLink size={12} className="ml-auto text-zinc-400" />
+                    </a>
+                  )}
+                </div>
+              ) : (
+                <p className="text-sm text-zinc-400 text-center py-4">No social links added yet.</p>
+              )}
             </section>
           </div>
         </div>
