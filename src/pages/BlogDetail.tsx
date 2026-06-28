@@ -1,53 +1,195 @@
-import { useParams, useNavigate } from 'react-router-dom';
+import { useState, useEffect, useCallback } from 'react';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'motion/react';
 import SmartImage from '../components/SmartImage';
-import { ArrowLeft, Calendar, MapPin, Utensils, Map as MapIcon, BookOpen } from 'lucide-react';
+import { ArrowLeft, Calendar, MapPin, Utensils, Map as MapIcon, BookOpen, Loader2, Save, Pencil, X } from 'lucide-react';
+import { supabase } from '../supabaseClient';
+import { useAuth } from '../context/AuthContext';
 
-const blogContent = {
-  '1': {
-    title: 'The Roman Holiday: A Journey Through Time',
-    year: '2025',
-    location: 'Italy',
-    image: 'https://images.unsplash.com/photo-1552832230-c0197dd311b5?auto=format&fit=crop&w=1200&q=80',
-    narrative: [
-      { type: 'text', content: 'Rome wasn\'t built in a day, and it certainly can\'t be seen in one. Our journey began under the warm Italian sun, where every cobblestone seemed to whisper stories of emperors and gladiators. Walking through the Roman Forum, I felt a profound sense of scale—not just of the buildings, but of history itself.' },
-      { type: 'image', content: 'https://images.unsplash.com/photo-1523906834658-6e24ef2386f9?auto=format&fit=crop&w=1200&q=80', caption: 'The canals of Venice at sunrise.' },
-      { type: 'text', content: 'The food, of course, was a revelation. We found a tiny trattoria tucked away in Trastevere where the carbonara was so creamy it felt like a sin. We spent hours there, sipping house wine and watching the world go by. It wasn\'t just about the sights; it was about the rhythm of life—the "dolce far niente" or the sweetness of doing nothing.' },
-      { type: 'image', content: 'https://images.unsplash.com/photo-1516483638261-f4dbaf036963?auto=format&fit=crop&w=1200&q=80', caption: 'The stunning Amalfi Coast.' },
-      { type: 'text', content: 'As we tossed our coins into the Trevi Fountain, I knew this wouldn\'t be my last time here. Rome has a way of getting under your skin, making you feel both incredibly small and part of something eternal.' }
-    ],
-    spotsCited: [
-      { name: 'The Colosseum', type: 'Location' },
-      { name: 'Trattoria Da Enzo al 29', type: 'Restaurant' },
-      { name: 'Trevi Fountain', type: 'Location' },
-      { name: 'Pantheon', type: 'Location' },
-      { name: 'Gelateria del Teatro', type: 'Restaurant' }
-    ]
-  },
-  '2': {
-    title: 'Nashville: The Heart of Country Music',
-    year: '2024',
-    location: 'Nashville, USA',
-    image: 'https://images.unsplash.com/photo-1541844053589-3462d48979e2?auto=format&fit=crop&w=1200&q=80',
-    narrative: [
-      { type: 'text', content: 'Nashville is a city that sings. From the moment we stepped onto Broadway, the sound of live music pulled us in every direction. It\'s a place where dreams are chased and stories are told through three chords and the truth.' },
-      { type: 'image', content: 'https://images.unsplash.com/photo-1571501679680-de32f1e7aad4?auto=format&fit=crop&w=1200&q=80', caption: 'A packed honky-tonk on a Saturday night.' },
-      { type: 'text', content: 'But beyond the neon lights, Nashville has a soul that\'s deeply rooted in community and comfort. We spent our afternoons exploring the Gulch and eating our weight in hot chicken. It\'s a city that welcomes you with open arms and a cold beer.' }
-    ],
-    spotsCited: [
-      { name: 'Broadway', type: 'Location' },
-      { name: 'Ryman Auditorium', type: 'Location' },
-      { name: 'Hattie B\'s', type: 'Restaurant' },
-      { name: 'The Gulch', type: 'Location' }
-    ]
-  }
-};
+interface Blog {
+  id: string;
+  title: string;
+  content: string;
+  cover_image: string | null;
+  trip_id: string | null;
+  created_at: string;
+  location_name?: string;
+  is_owner?: boolean;
+}
+
+interface Trip {
+  id: string;
+  location_name: string;
+}
 
 export default function BlogDetail() {
   const { tripId } = useParams();
   const navigate = useNavigate();
-  
-  const blog = blogContent[tripId as keyof typeof blogContent] || blogContent['1'];
+  const location = useLocation();
+  const { session } = useAuth();
+
+  const isNew = tripId === 'new';
+  const isEditMode = isNew || location.search.includes('edit=true');
+
+  const [blog, setBlog] = useState<Blog | null>(null);
+  const [isLoading, setIsLoading] = useState(!isNew);
+  const [isSaving, setIsSaving] = useState(false);
+  const [userTrips, setUserTrips] = useState<Trip[]>([]);
+  const [editForm, setEditForm] = useState({
+    title: '',
+    content: '',
+    cover_image: '',
+    trip_id: ''
+  });
+
+  const fetchBlog = useCallback(async () => {
+    if (isNew || !tripId) return;
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('blogs')
+        .select(`
+          *,
+          posts:blogs_trip_id_fkey(location_name)
+        `)
+        .eq('id', tripId)
+        .single();
+
+      if (error) throw error;
+
+      if (data) {
+        const mapped = {
+          id: data.id,
+          title: data.title,
+          content: data.content || '',
+          cover_image: data.cover_image,
+          trip_id: data.trip_id,
+          created_at: data.created_at,
+          location_name: data.posts?.location_name || 'Unknown Location',
+          is_owner: data.user_id === session?.user?.id
+        };
+        setBlog(mapped);
+        setEditForm({
+          title: mapped.title,
+          content: mapped.content,
+          cover_image: mapped.cover_image || '',
+          trip_id: mapped.trip_id || ''
+        });
+      }
+    } catch (err) {
+      console.error('Error fetching blog:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [tripId, isNew, session?.user?.id]);
+
+  const fetchUserTrips = useCallback(async () => {
+    if (!session?.user?.id) return;
+    try {
+      const { data, error } = await supabase
+        .from('posts')
+        .select('id, location_name')
+        .eq('user_id', session.user.id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setUserTrips(data || []);
+    } catch (err) {
+      console.error('Error fetching user trips:', err);
+    }
+  }, [session?.user?.id]);
+
+  useEffect(() => {
+    fetchBlog();
+    fetchUserTrips();
+  }, [fetchBlog, fetchUserTrips]);
+
+  const handleSave = async () => {
+    if (!session?.user?.id || !editForm.title.trim()) return;
+    setIsSaving(true);
+
+    try {
+      const payload = {
+        title: editForm.title.trim(),
+        content: editForm.content,
+        cover_image: editForm.cover_image || null,
+        trip_id: editForm.trip_id || null,
+        user_id: session.user.id
+      };
+
+      if (isNew) {
+        const { data, error } = await supabase
+          .from('blogs')
+          .insert(payload)
+          .select()
+          .single();
+
+        if (error) throw error;
+        if (data) {
+          navigate(`/blog/${data.id}`);
+        }
+      } else if (tripId) {
+        const { error } = await supabase
+          .from('blogs')
+          .update(payload)
+          .eq('id', tripId);
+
+        if (error) throw error;
+        await fetchBlog();
+        navigate(`/blog/${tripId}`);
+      }
+    } catch (err) {
+      console.error('Error saving blog:', err);
+      alert('Failed to save blog. Please try again.');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const formatDate = (iso: string) => {
+    return new Date(iso).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+  };
+
+  const getNarrative = (content: string) => {
+    const paragraphs = content.split('\n\n').filter(p => p.trim());
+    return paragraphs.map((p, i) => {
+      if (p.startsWith('http') && (p.endsWith('.jpg') || p.endsWith('.jpeg') || p.endsWith('.png') || p.includes('unsplash') || p.includes('images.'))) {
+        return { type: 'image' as const, content: p, caption: '' };
+      }
+      return { type: 'text' as const, content: p };
+    });
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="animate-spin text-orange-500" size={32} />
+      </div>
+    );
+  }
+
+  if (!isNew && !blog) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center text-zinc-500">
+        <BookOpen size={48} className="mb-4 text-zinc-300" />
+        <p className="text-lg font-bold">Blog not found</p>
+        <button onClick={() => navigate('/blogs')} className="mt-4 text-orange-500 font-bold hover:underline">
+          Back to Blogs
+        </button>
+      </div>
+    );
+  }
+
+  const displayBlog = blog || {
+    id: 'new',
+    title: '',
+    content: '',
+    cover_image: null,
+    trip_id: null,
+    created_at: new Date().toISOString(),
+    location_name: 'New Blog',
+    is_owner: true
+  };
 
   return (
     <motion.div 
@@ -56,11 +198,11 @@ export default function BlogDetail() {
       className="bg-white min-h-screen pb-20 text-zinc-900"
     >
       {/* Header Section */}
-      <header className="relative h-[70vh] w-full overflow-hidden">
+      <header className="relative h-[50vh] w-full overflow-hidden">
         <SmartImage 
-          src={blog.image} 
-          alt={blog.title}
-          locationName={blog.location}
+          src={editForm.cover_image || displayBlog.cover_image || 'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?auto=format&fit=crop&w=1200&q=80'} 
+          alt={displayBlog.title || 'New Blog'}
+          locationName={displayBlog.location_name || ''}
           className="w-full h-full object-cover opacity-80"
         />
         <div className="absolute inset-0 bg-black/20" />
@@ -73,98 +215,163 @@ export default function BlogDetail() {
           >
             <div className="flex items-center justify-center gap-3 text-orange-500 font-bold uppercase tracking-[0.3em] text-sm">
               <BookOpen size={20} />
-              <span>Travel Story</span>
+              <span>{isNew ? 'New Travel Story' : 'Travel Story'}</span>
             </div>
-            <h1 className="text-5xl md:text-7xl font-display font-bold text-white leading-tight drop-shadow-lg">
-              {blog.title}
+            <h1 className="text-4xl md:text-6xl font-display font-bold text-white leading-tight drop-shadow-lg">
+              {isNew ? 'Write Your Story' : displayBlog.title}
             </h1>
-            <div className="flex items-center justify-center gap-6 text-white font-medium drop-shadow-md">
-              <span className="flex items-center gap-2">
-                <MapPin size={18} className="text-orange-500" />
-                {blog.location}
-              </span>
-              <span className="flex items-center gap-2">
-                <Calendar size={18} className="text-orange-500" />
-                {blog.year}
-              </span>
-            </div>
+            {!isNew && (
+              <div className="flex items-center justify-center gap-6 text-white font-medium drop-shadow-md">
+                <span className="flex items-center gap-2">
+                  <MapPin size={18} className="text-orange-500" />
+                  {displayBlog.location_name}
+                </span>
+                <span className="flex items-center gap-2">
+                  <Calendar size={18} className="text-orange-500" />
+                  {formatDate(displayBlog.created_at)}
+                </span>
+              </div>
+            )}
           </motion.div>
         </div>
         
         <button 
-          onClick={() => navigate(-1)}
+          onClick={() => navigate(isNew ? '/blogs' : -1)}
           className="absolute top-8 left-8 p-3 rounded-full bg-white/20 backdrop-blur-md text-white hover:bg-white/40 transition-all border border-white/40"
         >
           <ArrowLeft size={24} />
         </button>
+
+        {!isNew && displayBlog.is_owner && !isEditMode && (
+          <button
+            onClick={() => navigate(`/blog/${tripId}?edit=true`)}
+            className="absolute top-8 right-8 p-3 rounded-full bg-orange-500 text-white hover:bg-orange-600 transition-all shadow-lg flex items-center gap-2 px-4"
+          >
+            <Pencil size={16} />
+            Edit
+          </button>
+        )}
       </header>
 
-      {/* Narrative Section */}
-      <article className="max-w-3xl mx-auto px-6 py-20 space-y-12">
-        <div className="flex justify-center mb-12">
-          <button 
-            onClick={() => navigate(`/trip/${tripId}`)}
-            className="flex items-center gap-2 px-8 py-4 rounded-full bg-orange-500 text-white font-bold hover:bg-orange-400 transition-all shadow-2xl group border-2 border-transparent"
-          >
-            <MapIcon size={20} className="group-hover:rotate-12 transition-transform" />
-            <span>Back to Itinerary</span>
-          </button>
-        </div>
+      <article className="max-w-3xl mx-auto px-6 py-12 space-y-8">
+        {isEditMode ? (
+          /* Edit Mode */
+          <div className="space-y-6">
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Title</label>
+              <input
+                type="text"
+                value={editForm.title}
+                onChange={(e) => setEditForm(prev => ({ ...prev, title: e.target.value }))}
+                placeholder="Give your story a captivating title..."
+                className="w-full bg-zinc-50 border border-zinc-200 rounded-xl p-4 text-xl font-bold text-[#0A192F] focus:ring-2 focus:ring-orange-500/50 outline-none"
+              />
+            </div>
 
-        {blog.narrative.map((section, index) => (
-          <div key={index} className="space-y-8">
-            {section.type === 'text' ? (
-              <p className="font-serif text-xl leading-relaxed text-zinc-600 first-letter:text-5xl first-letter:font-bold first-letter:mr-3 first-letter:float-left first-letter:text-orange-500">
-                {section.content}
-              </p>
-            ) : (
-              <figure className="space-y-4 py-8">
-                <div className="rounded-2xl overflow-hidden shadow-2xl border border-zinc-100">
-                  <SmartImage 
-                    src={section.content} 
-                    alt={section.caption || 'Blog image'}
-                    locationName={blog.location}
-                    className="w-full h-auto opacity-90"
-                  />
-                </div>
-                {section.caption && (
-                  <figcaption className="text-center italic text-zinc-400 font-serif">
-                    {section.caption}
-                  </figcaption>
-                )}
-              </figure>
-            )}
-          </div>
-        ))}
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Cover Image URL</label>
+              <input
+                type="text"
+                value={editForm.cover_image}
+                onChange={(e) => setEditForm(prev => ({ ...prev, cover_image: e.target.value }))}
+                placeholder="https://images.unsplash.com/..."
+                className="w-full bg-zinc-50 border border-zinc-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-orange-500/50 outline-none"
+              />
+            </div>
 
-        {/* Spots Cited Section */}
-        <section className="pt-20 border-t border-zinc-100">
-          <h2 className="text-3xl font-display font-bold text-[#0A192F] mb-8 flex items-center gap-3">
-            <MapPin size={28} className="text-orange-500" />
-            Spots Cited
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {blog.spotsCited.map((spot, index) => (
-              <div 
-                key={index}
-                className="flex items-center gap-4 p-4 rounded-2xl bg-zinc-50 border border-zinc-100 group hover:border-orange-500 transition-colors"
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Linked Trip</label>
+              <select
+                value={editForm.trip_id}
+                onChange={(e) => setEditForm(prev => ({ ...prev, trip_id: e.target.value }))}
+                className="w-full bg-zinc-50 border border-zinc-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-orange-500/50 outline-none"
               >
-                <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center text-orange-500 shadow-sm border border-zinc-100">
-                  {spot.type === 'Restaurant' ? <Utensils size={20} /> : <MapPin size={20} />}
-                </div>
-                <div>
-                  <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">{spot.type}</p>
-                  <p className="font-bold text-[#0A192F]">{spot.name}</p>
-                </div>
+                <option value="">None (standalone blog)</option>
+                {userTrips.map(trip => (
+                  <option key={trip.id} value={trip.id}>{trip.location_name}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Content</label>
+              <textarea
+                value={editForm.content}
+                onChange={(e) => setEditForm(prev => ({ ...prev, content: e.target.value }))}
+                placeholder="Tell your story... Use double line breaks to separate paragraphs. Paste image URLs on their own line to embed them."
+                rows={20}
+                className="w-full bg-zinc-50 border border-zinc-200 rounded-xl p-4 text-sm leading-relaxed focus:ring-2 focus:ring-orange-500/50 outline-none resize-y"
+              />
+              <p className="text-[10px] text-zinc-400">
+                Tip: Separate paragraphs with a blank line. Paste image URLs on their own line to embed them automatically.
+              </p>
+            </div>
+
+            <div className="flex items-center justify-between pt-4">
+              <button
+                onClick={() => isNew ? navigate('/blogs') : navigate(`/blog/${tripId}`)}
+                className="flex items-center gap-2 px-6 py-3 rounded-xl bg-zinc-100 text-zinc-600 font-bold hover:bg-zinc-200 transition-colors"
+              >
+                <X size={18} />
+                Cancel
+              </button>
+              <button
+                onClick={handleSave}
+                disabled={isSaving || !editForm.title.trim()}
+                className="flex items-center gap-2 px-8 py-3 rounded-xl bg-orange-500 text-white font-bold hover:bg-orange-600 transition-colors shadow-lg shadow-orange-500/20 disabled:opacity-50"
+              >
+                {isSaving ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
+                {isSaving ? 'Saving...' : (isNew ? 'Publish Blog' : 'Save Changes')}
+              </button>
+            </div>
+          </div>
+        ) : (
+          /* View Mode */
+          <>
+            <div className="flex justify-center mb-12">
+              {displayBlog.trip_id && (
+                <button 
+                  onClick={() => navigate(`/trip/${displayBlog.trip_id}`)}
+                  className="flex items-center gap-2 px-8 py-4 rounded-full bg-orange-500 text-white font-bold hover:bg-orange-400 transition-all shadow-2xl group border-2 border-transparent"
+                >
+                  <MapIcon size={20} className="group-hover:rotate-12 transition-transform" />
+                  <span>View Linked Itinerary</span>
+                </button>
+              )}
+            </div>
+
+            {getNarrative(displayBlog.content).map((section, index) => (
+              <div key={index} className="space-y-8">
+                {section.type === 'text' ? (
+                  <p className="font-serif text-xl leading-relaxed text-zinc-600 first-letter:text-5xl first-letter:font-bold first-letter:mr-3 first-letter:float-left first-letter:text-orange-500">
+                    {section.content}
+                  </p>
+                ) : (
+                  <figure className="space-y-4 py-8">
+                    <div className="rounded-2xl overflow-hidden shadow-2xl border border-zinc-100">
+                      <SmartImage 
+                        src={section.content} 
+                        alt="Blog image"
+                        locationName={displayBlog.location_name || ''}
+                        className="w-full h-auto opacity-90"
+                      />
+                    </div>
+                    {section.caption && (
+                      <figcaption className="text-center italic text-zinc-400 font-serif">
+                        {section.caption}
+                      </figcaption>
+                    )}
+                  </figure>
+                )}
               </div>
             ))}
-          </div>
-        </section>
 
-        <div className="pt-20 text-center">
-          <div className="w-24 h-1 bg-orange-500 mx-auto mb-8 rounded-full" />
-          <p className="font-serif italic text-zinc-400">Fin.</p>
-        </div>
+            <div className="pt-20 text-center">
+              <div className="w-24 h-1 bg-orange-500 mx-auto mb-8 rounded-full" />
+              <p className="font-serif italic text-zinc-400">Fin.</p>
+            </div>
+          </>
+        )}
       </article>
     </motion.div>
   );
