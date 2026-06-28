@@ -38,6 +38,7 @@ export default function App() {
           <Route path="/trip/:id" element={<TripDetail />} />
           <Route path="/remix" element={<RemixStudio />} />
           <Route path="/blog/:tripId" element={<BlogDetail />} />
+          <Route path="/blogs/new" element={<ProtectedRoute><BlogDetail /></ProtectedRoute>} />
           <Route path="/blogs" element={<BlogList />} />
           <Route path="/search" element={<Search />} />
           <Route path="/services" element={<TravelServices />} />
