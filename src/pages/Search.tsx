@@ -2,15 +2,15 @@ import React, { useState } from 'react';
 import { Search as SearchIcon, MapPin, Star, Heart, MessageCircle, Share2, Calendar, Clock, Users, Plus, Check, LayoutGrid, ChevronDown, Plane, Car, Bed, Utensils, Camera, CheckCircle2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useApp } from '../AppContext';
-import FilterBar from '../components/FilterBar';
-import MediaCarousel from '../components/MediaCarousel';
 import SmartImage from '../components/SmartImage';
 import { Post } from '../types';
-import { DayHighlightCarousel, PillarSection } from './TripDetail';
+import { DayHighlightCarousel, PillarSection } from '../components/remix/TimelineComponents';
 import { supabase } from '../supabaseClient';
-import { SaveSpotModal } from '../components/remix/SaveSpotModal';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+
+const FilterBar = React.lazy(() => import('../components/FilterBar'));
+const SaveSpotModal = React.lazy(() => import('../components/remix/SaveSpotModal').then(module => ({ default: module.SaveSpotModal })));
 
 export default function Search() {
   const { publicPosts, searchQuery, setSearchQuery, filters, sortBy, customTripSpots, toggleCustomSpot, currentUserProfile } = useApp();
@@ -219,7 +219,9 @@ export default function Search() {
 
       {searchTab === 'itineraries' && (
         <div className="bg-white rounded-3xl p-4 shadow-sm border border-zinc-100 max-w-3xl mx-auto">
-          <FilterBar />
+          <React.Suspense fallback={<div className="h-12 w-full bg-zinc-50 animate-pulse rounded-2xl" />}>
+            <FilterBar />
+          </React.Suspense>
         </div>
       )}
 
@@ -530,7 +532,9 @@ export default function Search() {
                   })()}
                 </div>
               </div>
-              <SaveSpotModal isOpen={!!spotToSave} spotId={spotToSave} onClose={() => setSpotToSave(null)} />
+              <React.Suspense fallback={null}>
+                <SaveSpotModal isOpen={!!spotToSave} spotId={spotToSave} onClose={() => setSpotToSave(null)} />
+              </React.Suspense>
             </motion.div>
           )}
           {!selectedPost && (
