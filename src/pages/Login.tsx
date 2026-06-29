@@ -8,11 +8,22 @@ import { useAuth } from '../context/AuthContext';
 
 export default function Login() {
   const [isSignupOpen, setIsSignupOpen] = useState(false);
+  const [oauthError, setOauthError] = useState<string | null>(null);
   const navigate = useNavigate();
   const location = useLocation();
   const { session } = useAuth();
   
   const from = location.state?.from?.pathname || '/home';
+
+  useEffect(() => {
+    const hash = window.location.hash || '';
+    const search = window.location.search || '';
+    const params = new URLSearchParams(hash.replace('#', '?') || search);
+    const errorMsg = params.get('error_description') || params.get('error');
+    if (errorMsg) {
+      setOauthError(decodeURIComponent(errorMsg).replace(/\+/g, ' '));
+    }
+  }, []);
 
   useEffect(() => {
     if (session) {
@@ -72,6 +83,11 @@ export default function Login() {
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.3 }}
           >
+            {oauthError && (
+              <div className="bg-red-50 text-red-600 p-4 rounded-3xl mb-4 text-sm font-medium border border-red-100 shadow-sm relative z-20">
+                {oauthError}
+              </div>
+            )}
             <LoginForm onOpenSignup={() => setIsSignupOpen(true)} />
           </motion.div>
         </div>

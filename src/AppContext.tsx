@@ -16,7 +16,7 @@ export interface MyTrip {
 }
 
 interface AppContextType {
-  user: User | null;
+  user: any | null;
   isAuthenticated: boolean;
   login: (email: string, pass: string) => Promise<void>;
   register: (name: string, email: string, pass: string) => Promise<void>;
@@ -47,6 +47,7 @@ interface AppContextType {
   setGlobalToast: (msg: string | null) => void;
   followedUsers: string[];
   requestedUsers: string[];
+  toggleFollow: (targetId: string, isPrivate: boolean) => Promise<void>;
   userInterestTags: string[];
   addUserInterest: (tag: string) => void;
   customTripSpots: import('./types').PostImage[];
@@ -641,7 +642,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       remixFolders, addToRemixFolder, removeFromRemixFolder,
       addCustomTrip, activeProfile, updateActiveProfile,
       currentUserProfile: activeProfile,
-      approveFollowRequest
+      approveFollowRequest,
+      isAuthInitializing: authLoading
     }}>
       {children}
     </AppContext.Provider>

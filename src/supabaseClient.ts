@@ -8,3 +8,19 @@ if (!supabaseUrl || !supabaseAnonKey) {
 }
 
 export const supabase = createClient(supabaseUrl || '', supabaseAnonKey || '');
+
+import { logger } from './lib/logger';
+
+export async function safeDbCall<T>(promise: Promise<{ data: T | null; error: any }>): Promise<T | null> {
+  try {
+    const { data, error } = await promise;
+    if (error) {
+      logger.error('Database call returned error:', error);
+      throw new Error(error.message || 'Database request failed.');
+    }
+    return data;
+  } catch (err) {
+    logger.error('Execution / connection exception during database call:', err);
+    throw err;
+  }
+}
