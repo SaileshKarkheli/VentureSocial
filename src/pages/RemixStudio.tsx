@@ -74,6 +74,22 @@ export default function RemixStudio() {
         <div className="space-y-6">
           {isLoading ? (
             <div className="text-center py-20 text-zinc-400 font-bold uppercase tracking-widest">Loading studio...</div>
+          ) : !session ? (
+            <div className="bg-white rounded-[2rem] p-16 text-center border border-zinc-200 shadow-sm flex flex-col items-center">
+              <div className="w-20 h-20 bg-orange-500/10 text-orange-500 rounded-full flex items-center justify-center mb-6">
+                <FolderOpen size={40} />
+              </div>
+              <h3 className="text-2xl font-bold text-[#0A192F] mb-4">Start Remixing Itineraries</h3>
+              <p className="text-zinc-500 max-w-md mx-auto mb-8">
+                Create a free account to unlock your personal Remix Workspace. Cherry-pick trip spots, sort them into custom folders, and plan your perfect journey.
+              </p>
+              <button 
+                onClick={() => navigate('/login')}
+                className="bg-orange-500 text-white font-bold px-8 py-4 rounded-xl hover:bg-orange-400 transition-all shadow-xl shadow-orange-500/20"
+              >
+                Join VentureSocial Now
+              </button>
+            </div>
           ) : folders.length === 0 ? (
             <div className="bg-white rounded-[2rem] p-16 text-center border border-zinc-200 shadow-sm flex flex-col items-center">
               <div className="w-20 h-20 bg-orange-500/10 text-orange-500 rounded-full flex items-center justify-center mb-6">
