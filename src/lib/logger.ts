@@ -12,5 +12,9 @@ export const logger = {
   error: (msg: string, error?: any) => {
     console.error(`[ERROR] ${msg}`, error || '');
     pushToQueue('error', msg, error);
+  },
+  critical: (msg: string, error?: any) => {
+    console.error(`[CRITICAL] ${msg}`, error || '');
+    pushToQueue('critical', msg, error);
   }
 };
