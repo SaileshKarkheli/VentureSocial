@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { User as UserIcon, Mail, Calendar, MapPin, Camera, Edit2, Bookmark, ExternalLink, Bed, Utensils, Info, Plus, Shield, ShieldCheck, MessageSquare, Loader2 } from 'lucide-react';
+import { User as UserIcon, Mail, Calendar, MapPin, Camera, Edit2, Bookmark, ExternalLink, Bed, Utensils, Info, Plus, Shield, ShieldCheck, MessageSquare, Loader2, Instagram, Twitter, Globe } from 'lucide-react';
 import { useApp } from '../AppContext';
 import ChatOverlay from '../components/ChatOverlay';
 import { supabase } from '../supabaseClient';
@@ -8,7 +8,7 @@ import { EditProfileModal } from '../components/profile/EditProfileModal';
 import ImageViewerModal from '../components/ImageViewerModal';
 
 export default function Profile() {
-  const { savedItems, followedUsers, user, currentUserProfile, updateActiveProfile } = useApp();
+  const { savedItems, followedUsers, user, currentUserProfile, updateActiveProfile, requestedUsers, approveFollowRequest } = useApp();
   const [isPrivateAccount, setIsPrivateAccount] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -18,6 +18,7 @@ export default function Profile() {
   const [dbProfile, setDbProfile] = useState<any>(null);
   const [tripCount, setTripCount] = useState(0);
   const [followersCount, setFollowersCount] = useState(0);
+  const [pendingRequests, setPendingRequests] = useState<any[]>([]);
 
   useEffect(() => {
     if (!user) {
@@ -53,6 +54,7 @@ export default function Profile() {
           
         if (data) {
           setDbProfile(data);
+          setIsPrivateAccount(data.is_private || false);
         }
 
         // Fetch Dynamic Stats
@@ -61,6 +63,15 @@ export default function Profile() {
         
         setTripCount(trips || 0);
         setFollowersCount(followers || 0);
+
+        // Fetch pending follow requests for this user
+        const { data: requestsData } = await supabase
+          .from('follow_requests')
+          .select('*, requester:profiles!follow_requests_requester_id_fkey(id, username, full_name, avatar_url)')
+          .eq('target_id', user.id)
+          .eq('status', 'pending')
+          .order('created_at', { ascending: false });
+        setPendingRequests(requestsData || []);
       } catch (err) {
         console.error("Error fetching profile data:", err);
       } finally {
@@ -71,6 +82,22 @@ export default function Profile() {
     fetchProfile();
   }, [user]);
 
+  // Persist privacy toggle to Supabase
+  const handlePrivacyToggle = async () => {
+    if (!user) return;
+    const newValue = !isPrivateAccount;
+    setIsPrivateAccount(newValue);
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ is_private: newValue })
+        .eq('id', user.id);
+      if (error) throw error;
+    } catch (err) {
+      console.error('Failed to update privacy setting:', err);
+      setIsPrivateAccount(!newValue); // Revert on error
+    }
+  };
 
 
   const userData = {
@@ -88,6 +115,9 @@ export default function Profile() {
       { label: 'Followers', value: followersCount.toString() }
     ]
   };
+
+  const socialLinks = dbProfile?.social_links || {};
+  const hasSocialLinks = socialLinks.instagram || socialLinks.twitter || socialLinks.website;
 
   if (isLoading) {
     return <div className="min-h-[50vh] flex items-center justify-center"><Loader2 className="animate-spin text-orange-500" size={32} /></div>;
@@ -185,6 +215,57 @@ export default function Profile() {
                     <p className="text-sm text-[#0A192F] font-medium">{userData.education}</p>
                   </div>
                 )}
+              </section>
+            )}
+
+            {/* Pending Follow Requests Section */}
+            {pendingRequests.length > 0 && (
+              <section className="bg-white p-6 rounded-2xl border border-zinc-100 shadow-sm space-y-4">
+                <h3 className="text-lg font-bold text-[#0A192F] flex items-center gap-2">
+                  <Shield size={20} className="text-orange-500" />
+                  Follow Requests
+                  <span className="text-xs font-bold text-white bg-orange-500 px-2 py-0.5 rounded-full">{pendingRequests.length}</span>
+                </h3>
+                <div className="space-y-3">
+                  {pendingRequests.map((req: any) => (
+                    <div key={req.id} className="flex items-center justify-between p-4 rounded-xl bg-zinc-50 border border-zinc-100">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full overflow-hidden bg-zinc-200">
+                          {req.requester?.avatar_url ? (
+                            <img src={req.requester.avatar_url} alt="" className="w-full h-full object-cover" />
+                          ) : (
+                            <UserIcon size={20} className="text-zinc-400 m-2" />
+                          )}
+                        </div>
+                        <div>
+                          <p className="font-bold text-[#0A192F] text-sm">{req.requester?.full_name || req.requester?.username || 'Unknown'}</p>
+                          <p className="text-xs text-zinc-400">@{req.requester?.username}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={async () => {
+                            await approveFollowRequest(req.requester_id);
+                            setPendingRequests(prev => prev.filter(r => r.id !== req.id));
+                            setFollowersCount(prev => prev + 1);
+                          }}
+                          className="bg-orange-500 text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-orange-600 transition-colors"
+                        >
+                          Approve
+                        </button>
+                        <button
+                          onClick={async () => {
+                            await supabase.from('follow_requests').delete().eq('id', req.id);
+                            setPendingRequests(prev => prev.filter(r => r.id !== req.id));
+                          }}
+                          className="bg-zinc-200 text-zinc-600 px-4 py-2 rounded-xl text-xs font-bold hover:bg-zinc-300 transition-colors"
+                        >
+                          Decline
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </section>
             )}
 
@@ -309,7 +390,7 @@ export default function Profile() {
                   </p>
                 </div>
                 <button
-                  onClick={() => setIsPrivateAccount(!isPrivateAccount)}
+                  onClick={handlePrivacyToggle}
                   className={`w-12 h-6 rounded-full transition-colors relative ${isPrivateAccount ? 'bg-zinc-800' : 'bg-orange-500'}`}
                 >
                   <motion.div
@@ -322,13 +403,48 @@ export default function Profile() {
 
             <section className="bg-white p-6 rounded-2xl border border-zinc-100 shadow-sm">
               <h3 className="text-lg font-bold text-[#0A192F] mb-4">Social Links</h3>
-              <div className="space-y-3">
-                {['Instagram', 'Twitter', 'Personal Website'].map((link) => (
-                  <button key={link} className="w-full text-left px-4 py-2 rounded-xl bg-zinc-50 text-zinc-600 hover:bg-orange-500/10 hover:text-orange-500 transition-colors text-sm font-medium border border-zinc-100">
-                    {link}
-                  </button>
-                ))}
-              </div>
+              {hasSocialLinks ? (
+                <div className="space-y-3">
+                  {socialLinks.instagram && (
+                    <a
+                      href={socialLinks.instagram}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-3 w-full text-left px-4 py-2.5 rounded-xl bg-zinc-50 text-zinc-600 hover:bg-orange-500/10 hover:text-orange-500 transition-colors text-sm font-medium border border-zinc-100"
+                    >
+                      <Instagram size={16} />
+                      <span className="truncate">Instagram</span>
+                      <ExternalLink size={12} className="ml-auto text-zinc-400" />
+                    </a>
+                  )}
+                  {socialLinks.twitter && (
+                    <a
+                      href={socialLinks.twitter}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-3 w-full text-left px-4 py-2.5 rounded-xl bg-zinc-50 text-zinc-600 hover:bg-orange-500/10 hover:text-orange-500 transition-colors text-sm font-medium border border-zinc-100"
+                    >
+                      <Twitter size={16} />
+                      <span className="truncate">Twitter / X</span>
+                      <ExternalLink size={12} className="ml-auto text-zinc-400" />
+                    </a>
+                  )}
+                  {socialLinks.website && (
+                    <a
+                      href={socialLinks.website}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-3 w-full text-left px-4 py-2.5 rounded-xl bg-zinc-50 text-zinc-600 hover:bg-orange-500/10 hover:text-orange-500 transition-colors text-sm font-medium border border-zinc-100"
+                    >
+                      <Globe size={16} />
+                      <span className="truncate">Website</span>
+                      <ExternalLink size={12} className="ml-auto text-zinc-400" />
+                    </a>
+                  )}
+                </div>
+              ) : (
+                <p className="text-sm text-zinc-400 text-center py-4">No social links added yet.</p>
+              )}
             </section>
           </div>
         </div>

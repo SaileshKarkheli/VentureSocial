@@ -18,6 +18,9 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onCl
   const [location, setLocation] = useState('');
   const [education, setEducation] = useState('');
   const [dob, setDob] = useState('');
+  const [instagram, setInstagram] = useState('');
+  const [twitter, setTwitter] = useState('');
+  const [website, setWebsite] = useState('');
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -29,6 +32,10 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onCl
       setLocation(activeProfile?.location || '');
       setEducation(activeProfile?.education || '');
       setDob(activeProfile?.dob || userProfile?.dob || '');
+      const social = activeProfile?.social_links || userProfile?.social_links || {};
+      setInstagram(social.instagram || '');
+      setTwitter(social.twitter || '');
+      setWebsite(social.website || '');
       setAvatarFile(null);
       setCoverFile(null);
     }
@@ -58,7 +65,8 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onCl
           bio: bio,
           location: location,
           education: education,
-          dob: dob
+          dob: dob,
+          social_links: { instagram, twitter, website }
         };
         if (avatarFile && finalAvatarUrl && finalAvatarUrl.trim() !== '') {
           updatePayload.avatar_url = finalAvatarUrl;
@@ -107,7 +115,8 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onCl
         bio: bio,
         location: location,
         education: education,
-        dob: dob
+        dob: dob,
+        social_links: { instagram, twitter, website }
       };
 
       if (avatarFile && finalAvatarUrl && finalAvatarUrl.trim() !== '') {
@@ -267,6 +276,41 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onCl
                 className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all placeholder:text-zinc-400 resize-none custom-scrollbar"
                 placeholder="Tell the world about your travels..."
               />
+            </div>
+
+            {/* Social Links */}
+            <div className="space-y-4 border-t border-zinc-100 pt-4">
+              <h3 className="text-sm font-bold text-[#0A192F]">Social Links</h3>
+              <div>
+                <label className="block text-xs font-bold text-zinc-500 mb-1">Instagram</label>
+                <input
+                  type="url"
+                  value={instagram}
+                  onChange={(e) => setInstagram(e.target.value)}
+                  className="w-full px-4 py-2 bg-zinc-50 border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all placeholder:text-zinc-400 text-sm"
+                  placeholder="https://instagram.com/yourhandle"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-zinc-500 mb-1">Twitter / X</label>
+                <input
+                  type="url"
+                  value={twitter}
+                  onChange={(e) => setTwitter(e.target.value)}
+                  className="w-full px-4 py-2 bg-zinc-50 border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all placeholder:text-zinc-400 text-sm"
+                  placeholder="https://x.com/yourhandle"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-zinc-500 mb-1">Personal Website</label>
+                <input
+                  type="url"
+                  value={website}
+                  onChange={(e) => setWebsite(e.target.value)}
+                  className="w-full px-4 py-2 bg-zinc-50 border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all placeholder:text-zinc-400 text-sm"
+                  placeholder="https://yourwebsite.com"
+                />
+              </div>
             </div>
 
             {/* Save Button */}

@@ -372,7 +372,7 @@ export default function Home() {
                 <div>
                   <h4 className="font-bold text-[#0A192F] text-sm md:text-base">Local Discovery</h4>
                   {userLocation ? (
-                    <p className="text-blue-600 text-xs md:text-sm font-medium">📍 Sorting by real-time geographical proximity</p>
+                    <p className="text-blue-600 text-xs md:text-sm font-medium">Sorting by real-time geographical proximity</p>
                   ) : (
                     <p className="text-zinc-500 text-xs md:text-sm">Turn on live location for precise local recommendations.</p>
                   )}
