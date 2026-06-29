@@ -11,9 +11,16 @@ export const supabase = createClient(supabaseUrl || '', supabaseAnonKey || '');
 
 import { logger } from './lib/logger';
 
-export async function safeDbCall<T>(promise: Promise<{ data: T | null; error: any }>): Promise<T | null> {
+export async function safeDbCall<T>(
+  promise: Promise<{ data: T | null; error: any }>,
+  timeoutMs = 15000
+): Promise<T | null> {
+  const timeoutPromise = new Promise<{ data: null; error: any }>((_, reject) =>
+    setTimeout(() => reject(new Error('Database request timed out.')), timeoutMs)
+  );
+
   try {
-    const { data, error } = await promise;
+    const { data, error } = await Promise.race([promise, timeoutPromise]);
     if (error) {
       logger.error('Database call returned error:', error);
       throw new Error(error.message || 'Database request failed.');

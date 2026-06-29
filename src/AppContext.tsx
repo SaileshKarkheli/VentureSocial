@@ -418,6 +418,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   // Follow System State
   const [followedUsers, setFollowedUsers] = useState<string[]>([]);
   const [requestedUsers, setRequestedUsers] = useState<string[]>([]);
+  const [followPendingSet, setFollowPendingSet] = useState<Set<string>>(new Set());
 
   // Personalization & Remix State
   const [userInterestTags, setUserInterestTags] = useState<string[]>([]);
@@ -474,61 +475,75 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       showToast("Must be logged in to follow");
       return;
     }
-    
-    // Check if target profile is actually private from DB
-    let targetIsPrivate = isPrivate;
+    if (followPendingSet.has(targetId)) return;
+    setFollowPendingSet(prev => {
+      const next = new Set(prev);
+      next.add(targetId);
+      return next;
+    });
+
     try {
-      const { data: targetProfile } = await supabase
-        .from('profiles')
-        .select('is_private')
-        .eq('id', targetId)
-        .single();
-      if (targetProfile && targetProfile.is_private !== undefined) {
-        targetIsPrivate = targetProfile.is_private;
+      // Check if target profile is actually private from DB
+      let targetIsPrivate = isPrivate;
+      try {
+        const { data: targetProfile } = await supabase
+          .from('profiles')
+          .select('is_private')
+          .eq('id', targetId)
+          .single();
+        if (targetProfile && targetProfile.is_private !== undefined) {
+          targetIsPrivate = targetProfile.is_private;
+        }
+      } catch {
+        // Fallback to passed value
       }
-    } catch {
-      // Fallback to passed value
-    }
-    
-    if (followedUsers.includes(targetId)) {
-      // Optimistic Unfollow
-      setFollowedUsers(prev => prev.filter(u => u !== targetId));
-      showToast(`Unfollowed account.`);
-      // Unfollow in Database
-      const { error } = await supabase.from('follows').delete().eq('follower_id', user.id).eq('following_id', targetId);
-      if (error) {
-        setFollowedUsers(prev => [...prev, targetId]);
-        showToast("Error unfollowing");
-      }
-    } else if (requestedUsers.includes(targetId)) {
-      // Cancel pending request
-      setRequestedUsers(prev => prev.filter(u => u !== targetId));
-      showToast(`Follow request cancelled.`);
-      const { error } = await supabase.from('follow_requests').delete().eq('requester_id', user.id).eq('target_id', targetId);
-      if (error) {
-        setRequestedUsers(prev => [...prev, targetId]);
-        showToast("Error cancelling request");
-      }
-    } else {
-      // Target is private and not already following/requested → send follow request
-      if (targetIsPrivate) {
-        setRequestedUsers(prev => [...prev, targetId]);
-        showToast(`Follow request sent`);
-        const { error } = await supabase.from('follow_requests').insert({ requester_id: user.id, target_id: targetId, status: 'pending' });
+      
+      if (followedUsers.includes(targetId)) {
+        // Optimistic Unfollow
+        setFollowedUsers(prev => prev.filter(u => u !== targetId));
+        showToast(`Unfollowed account.`);
+        // Unfollow in Database
+        const { error } = await supabase.from('follows').delete().eq('follower_id', user.id).eq('following_id', targetId);
         if (error) {
-          setRequestedUsers(prev => prev.filter(u => u !== targetId));
-          showToast("Error sending follow request.");
+          setFollowedUsers(prev => [...prev, targetId]);
+          showToast("Error unfollowing");
+        }
+      } else if (requestedUsers.includes(targetId)) {
+        // Cancel pending request
+        setRequestedUsers(prev => prev.filter(u => u !== targetId));
+        showToast(`Follow request cancelled.`);
+        const { error } = await supabase.from('follow_requests').delete().eq('requester_id', user.id).eq('target_id', targetId);
+        if (error) {
+          setRequestedUsers(prev => [...prev, targetId]);
+          showToast("Error cancelling request");
         }
       } else {
-        // Public account → direct follow
-        setFollowedUsers(prev => [...prev, targetId]);
-        showToast(`You are now following them!`);
-        const { error } = await supabase.from('follows').insert({ follower_id: user.id, following_id: targetId });
-        if (error) {
-          setFollowedUsers(prev => prev.filter(u => u !== targetId));
-          showToast("Error executing follow relation.");
+        // Target is private and not already following/requested → send follow request
+        if (targetIsPrivate) {
+          setRequestedUsers(prev => [...prev, targetId]);
+          showToast(`Follow request sent`);
+          const { error } = await supabase.from('follow_requests').insert({ requester_id: user.id, target_id: targetId, status: 'pending' });
+          if (error) {
+            setRequestedUsers(prev => prev.filter(u => u !== targetId));
+            showToast("Error sending follow request.");
+          }
+        } else {
+          // Public account → direct follow
+          setFollowedUsers(prev => [...prev, targetId]);
+          showToast(`You are now following them!`);
+          const { error } = await supabase.from('follows').insert({ follower_id: user.id, following_id: targetId });
+          if (error) {
+            setFollowedUsers(prev => prev.filter(u => u !== targetId));
+            showToast("Error executing follow relation.");
+          }
         }
       }
+    } finally {
+      setFollowPendingSet(prev => {
+        const next = new Set(prev);
+        next.delete(targetId);
+        return next;
+      });
     }
   };
 
