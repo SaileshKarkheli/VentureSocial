@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import {
@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import SmartImage from './SmartImage';
 import SearchBox from './SearchBox';
+import { loadGoogleMapsScript } from '../utils/googleMapsLoader';
 import { useApp } from '../AppContext';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../supabaseClient';
@@ -41,6 +42,7 @@ interface RouteItem {
   link: string;
   type: 'hotel' | 'transport' | 'activity' | 'dining';
   coordinates?: { lat: number; lng: number };
+  description?: string;
 }
 
 interface TripState {
@@ -98,6 +100,18 @@ export default function TripBuilderModal({ isOpen, onClose }: TripBuilderModalPr
   const [days, setDays] = useState<DayState[]>([createEmptyDay(0)]);
   const [currentDayIndex, setCurrentDayIndex] = useState(0);
 
+  // Load Google Maps Places script dynamically on mount using VITE_GOOGLE_MAPS_API_KEY
+  useEffect(() => {
+    if (isOpen) {
+      const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+      if (apiKey) {
+        loadGoogleMapsScript(apiKey).catch((err) =>
+          console.error("Error loading Google Maps in TripBuilderModal:", err)
+        );
+      }
+    }
+  }, [isOpen]);
+
   const activeDay = days[currentDayIndex];
 
   const updateActiveDay = (updater: (prev: DayState) => DayState) => {
@@ -132,13 +146,14 @@ export default function TripBuilderModal({ isOpen, onClose }: TripBuilderModalPr
     }));
   };
 
-  const addRouteItem = (title: string, link: string, type: RouteItem['type'], coordinates?: { lat: number, lng: number }, photoUrl?: string) => {
+  const addRouteItem = (title: string, link: string, type: RouteItem['type'], coordinates?: { lat: number, lng: number }, photoUrl?: string, description?: string) => {
     const newItem: RouteItem = {
       id: Math.random().toString(36).substr(2, 9),
       title,
       link,
       type,
-      coordinates
+      coordinates,
+      description
     };
 
     updateActiveDay(prev => {
@@ -209,7 +224,7 @@ export default function TripBuilderModal({ isOpen, onClose }: TripBuilderModalPr
               activity: 'Activity'
             };
             const cost = day.categoryCosts?.[item.type];
-            let description = `Details for ${item.title}.`;
+            let description = item.description || `Details for ${item.title}.`;
             if (cost !== undefined && cost > 0) {
               description += ` Cost: $${cost}.`;
             }
@@ -250,7 +265,7 @@ export default function TripBuilderModal({ isOpen, onClose }: TripBuilderModalPr
             activity: 'Activity'
           };
           const cost = day.categoryCosts?.[item.type];
-          let description = `Details for ${item.title}.`;
+          let description = item.description || `Details for ${item.title}.`;
           if (cost !== undefined && cost > 0) {
             description += ` Cost: $${cost}.`;
           }
@@ -343,6 +358,11 @@ export default function TripBuilderModal({ isOpen, onClose }: TripBuilderModalPr
     <AnimatePresence>
       {isOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-8">
+          <style>{`
+            .pac-container {
+              z-index: 999999 !important;
+            }
+          `}</style>
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
