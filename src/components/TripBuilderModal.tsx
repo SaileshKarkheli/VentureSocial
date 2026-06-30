@@ -102,7 +102,6 @@ export default function TripBuilderModal({ isOpen, onClose }: TripBuilderModalPr
 
   // Load Google Maps Places script dynamically on mount using VITE_GOOGLE_MAPS_API_KEY
   useEffect(() => {
-    console.log('Maps Key:', import.meta.env.VITE_GOOGLE_MAPS_API_KEY);
     if (isOpen) {
       const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
       if (apiKey) {

@@ -38,7 +38,6 @@ export default function SearchBox({ placeholder, context, onSelect, className = 
           autocompleteRef.current = new win.google.maps.places.Autocomplete(inputRef.current, {
             fields: ['name', 'geometry', 'photos', 'url', 'place_id', 'formatted_address'],
           });
-          console.log('Autocomplete attached to:', inputRef.current);
 
           autocompleteRef.current.addListener('place_changed', () => {
             const place = autocompleteRef.current.getPlace();
