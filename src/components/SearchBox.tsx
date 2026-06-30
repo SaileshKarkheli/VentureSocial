@@ -16,9 +16,11 @@ interface SearchBoxProps {
   context?: string; // Used strictly for UI labeling if needed
   onSelect: (result: SearchResult) => void;
   className?: string;
+  types?: string[];
+  inputClassName?: string;
 }
 
-export default function SearchBox({ placeholder, context, onSelect, className = "" }: SearchBoxProps) {
+export default function SearchBox({ placeholder, context, onSelect, className = "", types, inputClassName = "" }: SearchBoxProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const autocompleteRef = useRef<any>(null);
   const [isReady, setIsReady] = useState(false);
@@ -37,6 +39,7 @@ export default function SearchBox({ placeholder, context, onSelect, className = 
         if (inputRef.current && win.google && win.google.maps && win.google.maps.places) {
           autocompleteRef.current = new win.google.maps.places.Autocomplete(inputRef.current, {
             fields: ['name', 'geometry', 'photos', 'url', 'place_id', 'formatted_address'],
+            types: types,
           });
 
           autocompleteRef.current.addListener('place_changed', () => {
@@ -79,7 +82,7 @@ export default function SearchBox({ placeholder, context, onSelect, className = 
         type="text"
         placeholder={isReady ? placeholder : "Loading Maps SDK..."}
         disabled={!isReady}
-        className="w-full pl-12 pr-10 py-4 rounded-2xl bg-zinc-100 border border-zinc-300 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all outline-none text-zinc-800 placeholder:text-zinc-400 disabled:opacity-50"
+        className={`w-full pl-12 pr-10 py-4 rounded-2xl bg-zinc-100 border border-zinc-300 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all outline-none text-zinc-800 placeholder:text-zinc-400 disabled:opacity-50 ${inputClassName}`}
       />
       {!isReady && (
         <Loader2 className="absolute right-4 top-1/2 -translate-y-1/2 text-orange-500 animate-spin" size={18} />

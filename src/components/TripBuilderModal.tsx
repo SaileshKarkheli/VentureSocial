@@ -99,13 +99,29 @@ export default function TripBuilderModal({ isOpen, onClose }: TripBuilderModalPr
   const [isBudgetPublic, setIsBudgetPublic] = useState(false);
   const [days, setDays] = useState<DayState[]>([createEmptyDay(0)]);
   const [currentDayIndex, setCurrentDayIndex] = useState(0);
+  const [manualTransport, setManualTransport] = useState('');
+
+  const destinationInputRef = useRef<HTMLInputElement>(null);
 
   // Load Google Maps Places script dynamically on mount using VITE_GOOGLE_MAPS_API_KEY
   useEffect(() => {
     if (isOpen) {
       const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
       if (apiKey) {
-        loadGoogleMapsScript(apiKey).catch((err) =>
+        loadGoogleMapsScript(apiKey).then(() => {
+          const win = window as any;
+          if (destinationInputRef.current && win.google && win.google.maps && win.google.maps.places) {
+            const destAutocomplete = new win.google.maps.places.Autocomplete(destinationInputRef.current, {
+              types: ['geocode', 'establishment'],
+              fields: ['name', 'formatted_address']
+            });
+            destAutocomplete.addListener('place_changed', () => {
+              const place = destAutocomplete.getPlace();
+              const placeName = place.name || place.formatted_address || '';
+              setDestination(placeName);
+            });
+          }
+        }).catch((err) =>
           console.error("Error loading Google Maps in TripBuilderModal:", err)
         );
       }
@@ -394,11 +410,12 @@ export default function TripBuilderModal({ isOpen, onClose }: TripBuilderModalPr
                   <div className="flex items-center gap-2 text-zinc-400">
                     <MapPin size={16} />
                     <input
+                      ref={destinationInputRef}
                       type="text"
                       placeholder="Enter Destination (e.g. Venice, Italy)"
                       value={destination}
                       onChange={(e) => setDestination(e.target.value)}
-                      className="bg-transparent border-none focus:ring-0 p-0 text-sm font-medium text-[#0A192F] placeholder:text-zinc-300 w-64 md:w-96"
+                      className="bg-transparent border-none focus:ring-0 p-0 text-sm font-medium text-[#0A192F] placeholder:text-zinc-300 w-64 md:w-96 places-autocomplete-input"
                     />
                   </div>
 
@@ -534,11 +551,32 @@ export default function TripBuilderModal({ isOpen, onClose }: TripBuilderModalPr
                           </button>
                         ))}
                       </div>
-                      <SearchBox
-                        placeholder={`Search ${activeDay.transportMode} Details...`}
-                        context={`${activeDay.transportMode.toLowerCase()} in ${destination}`}
-                        onSelect={(res) => addRouteItem(res.title, res.link, 'transport', res.coordinates, res.photoUrl)}
-                      />
+                      <div className="relative w-full">
+                        <input
+                          type="text"
+                          placeholder={`Enter ${activeDay.transportMode} Details...`}
+                          value={manualTransport}
+                          onChange={(e) => setManualTransport(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' && manualTransport.trim()) {
+                              addRouteItem(manualTransport.trim(), '', 'transport');
+                              setManualTransport('');
+                            }
+                          }}
+                          className="w-full pl-6 pr-20 py-4 rounded-2xl bg-zinc-100 border border-zinc-300 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all outline-none text-zinc-800 placeholder:text-zinc-400"
+                        />
+                        <button
+                          onClick={() => {
+                            if (manualTransport.trim()) {
+                              addRouteItem(manualTransport.trim(), '', 'transport');
+                              setManualTransport('');
+                            }
+                          }}
+                          className="absolute right-2 top-1/2 -translate-y-1/2 px-4 py-2 bg-[#0A192F] text-white text-xs font-bold rounded-xl hover:bg-black transition-all"
+                        >
+                          Add
+                        </button>
+                      </div>
                     </>
                   )}
                 </section>
@@ -621,7 +659,9 @@ export default function TripBuilderModal({ isOpen, onClose }: TripBuilderModalPr
                       <SearchBox
                         placeholder={`Search ${stayCategory}s, Resorts, or Boutique Stays...`}
                         context={`${stayCategory.toLowerCase()} in ${destination}`}
-                        onSelect={(res) => addRouteItem(res.title, res.link, 'hotel', res.coordinates, res.photoUrl)}
+                        types={['lodging']}
+                        inputClassName="places-autocomplete-input"
+                        onSelect={(res) => addRouteItem(res.title, res.link, 'hotel', res.coordinates, res.photoUrl, res.snippet)}
                       />
                       <div className="flex flex-wrap gap-2">
                         {['Luxury', 'Boutique', 'Budget', 'Beachfront', 'Mountain'].map((tag) => (
@@ -775,7 +815,9 @@ export default function TripBuilderModal({ isOpen, onClose }: TripBuilderModalPr
                       <SearchBox
                         placeholder="Search Tours, Landmarks, or Experiences..."
                         context={`activity tour in ${destination}`}
-                        onSelect={(res) => addRouteItem(res.title, res.link, 'activity', res.coordinates, res.photoUrl)}
+                        types={['tourist_attraction', 'establishment']}
+                        inputClassName="places-autocomplete-input"
+                        onSelect={(res) => addRouteItem(res.title, res.link, 'activity', res.coordinates, res.photoUrl, res.snippet)}
                       />
                       <div className="flex flex-wrap gap-2">
                         {['Museums', 'Hiking', 'Nightlife', 'Shopping', 'Workshops'].map((tag) => (
