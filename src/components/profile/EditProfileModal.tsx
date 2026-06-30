@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Upload, Loader2 } from 'lucide-react';
+import { X, Upload, Loader2, AlertCircle } from 'lucide-react';
 import { supabase } from '../../supabaseClient';
 import { useAuth } from '../../context/AuthContext';
 import { useApp } from '../../AppContext';
@@ -24,9 +24,11 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onCl
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (isOpen) {
+      setError(null);
       setFullName(activeProfile?.full_name || userProfile?.full_name || '');
       setBio(activeProfile?.bio || userProfile?.bio || '');
       setLocation(activeProfile?.location || '');
@@ -83,11 +85,21 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onCl
       if (avatarFile) {
         const fileExt = avatarFile.name.split('.').pop();
         const fileName = `${session.user.id}-${Math.random()}.${fileExt}`;
-        const filePath = `${fileName}`;
+        const filePath = `${session.user.id}/${fileName}`;
 
-        const { error: uploadError } = await supabase.storage
+        let { error: uploadError } = await supabase.storage
           .from('avatars')
           .upload(filePath, avatarFile, { upsert: true });
+
+        if (uploadError && (uploadError.message === 'Bucket not found' || uploadError.status === 404)) {
+          const { error: createError } = await supabase.storage.createBucket('avatars', { public: true });
+          if (!createError || createError.message?.includes('already exists')) {
+            const retry = await supabase.storage
+              .from('avatars')
+              .upload(filePath, avatarFile, { upsert: true });
+            uploadError = retry.error;
+          }
+        }
 
         if (uploadError) throw uploadError;
 
@@ -98,11 +110,21 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onCl
       if (coverFile) {
         const fileExt = coverFile.name.split('.').pop();
         const fileName = `${session.user.id}-${Math.random()}.${fileExt}`;
-        const filePath = `${fileName}`;
+        const filePath = `${session.user.id}/${fileName}`;
 
-        const { error: uploadError } = await supabase.storage
+        let { error: uploadError } = await supabase.storage
           .from('covers')
           .upload(filePath, coverFile, { upsert: true });
+
+        if (uploadError && (uploadError.message === 'Bucket not found' || uploadError.status === 404)) {
+          const { error: createError } = await supabase.storage.createBucket('covers', { public: true });
+          if (!createError || createError.message?.includes('already exists')) {
+            const retry = await supabase.storage
+              .from('covers')
+              .upload(filePath, coverFile, { upsert: true });
+            uploadError = retry.error;
+          }
+        }
 
         if (uploadError) throw uploadError;
 
@@ -136,9 +158,9 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onCl
       updateActiveProfile(updatePayload);
       await refreshProfile();
       onClose();
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error saving profile:', err);
-      alert('Error updating profile. Please try again.');
+      setError(err.message || 'Error updating profile. Please try again.');
     } finally {
       setIsUploading(false);
     }
@@ -312,6 +334,13 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onCl
                 />
               </div>
             </div>
+
+            {error && (
+              <div className="p-4 bg-red-50 border border-red-200 text-red-600 rounded-2xl text-sm font-semibold flex items-center gap-2">
+                <AlertCircle size={16} />
+                <span>{error}</span>
+              </div>
+            )}
 
             {/* Save Button */}
             <button
