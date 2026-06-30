@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { SavedItem, TimelineEvent, Post, User } from './types';
 import { supabase } from './supabaseClient';
+import { useAuth } from './context/AuthContext';
 import { SocialService } from './lib/socialService';
 import { mockPublicPosts, mockTravelServices, mockFlights, mockRentalCars, mockMyTrips } from './utils/mockData';
 
@@ -15,7 +16,7 @@ export interface MyTrip {
 }
 
 interface AppContextType {
-  user: User | null;
+  user: any | null;
   isAuthenticated: boolean;
   login: (email: string, pass: string) => Promise<void>;
   register: (name: string, email: string, pass: string) => Promise<void>;
@@ -67,6 +68,7 @@ interface AppContextType {
   updateActiveProfile: (newData: any) => void;
   currentUserProfile: any;
   hasConnectionTimeout: boolean;
+  approveFollowRequest: (requesterId: string) => Promise<void>;
 }
 
 export interface FlightOption {
@@ -108,158 +110,29 @@ interface FilterState {
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [activeProfile, setActiveProfile] = useState<any>(null);
-  const [isAuthInitializing, setIsAuthInitializing] = useState(true);
+  const { user: authUser, userProfile, loading: authLoading, updateUserProfile } = useAuth();
+  const [isTimeoutOverridden, setIsTimeoutOverridden] = useState(false);
   const [hasConnectionTimeout, setHasConnectionTimeout] = useState(false);
+
+  const user = authUser;
+  const activeProfile = userProfile;
+  const isAuthInitializing = authLoading && !isTimeoutOverridden;
   const isAuthenticated = !!user;
 
-  // Strict 5-second connection timeout fallback
+
+
+  // Trigger cache fetches when authenticated user state loads/changes
   useEffect(() => {
-    if (!isAuthInitializing && !isLoadingFeed && !isLoadingTrips) {
-      return;
+    if (user?.id) {
+      fetchUserFollows(user.id);
+      fetchUserLikesCache(user.id);
+      fetchUserFollowRequests(user.id);
+    } else {
+      setFollowedUsers([]);
+      setUserLikedPosts([]);
+      setRequestedUsers([]);
     }
-
-    const timer = setTimeout(() => {
-      console.warn("Database connection took longer than 5 seconds. Triggering timeout override.");
-      setHasConnectionTimeout(true);
-      setIsAuthInitializing(false);
-      setIsLoadingFeed(false);
-      setIsLoadingTrips(false);
-      setIsLoadingServices(false);
-    }, 5000);
-
-    return () => clearTimeout(timer);
-  }, [isAuthInitializing, isLoadingFeed, isLoadingTrips]);
-
-  // Supabase Auth Integration
-  useEffect(() => {
-    const isMockEnabled = import.meta.env.VITE_ENABLE_MOCK_MODE === 'true';
-    const mockSessionStr = isMockEnabled ? localStorage.getItem('venturesocial_mock_session') : null;
-    if (mockSessionStr) {
-      const mockData = JSON.parse(mockSessionStr);
-      setUser({
-        id: mockData.user.id,
-        name: mockData.user.name || 'User',
-        email: mockData.user.email || '',
-        avatar: mockData.user.avatar || '',
-        bio: ''
-      });
-      setActiveProfile({
-        id: mockData.user.id,
-        full_name: mockData.user.name || 'Alex Explorer',
-        username: mockData.user.email ? mockData.user.email.split('@')[0] : 'alex_explorer'
-      });
-      setIsAuthInitializing(false);
-      return;
-    }
-
-    const initializeSession = async (session: any) => {
-      try {
-        setUser(session?.user ? { id: session.user.id, name: session.user.user_metadata?.name || 'User', email: session.user.email || '', avatar: '', bio: '' } : null);
-        if (session?.user) {
-          let profData = null;
-          try {
-            const { data, error: profErr } = await supabase.from('profiles').select('*').eq('id', session.user.id).single();
-            if (profErr) {
-              if (profErr.code === 'PGRST116') {
-                // PGRST116 indicates NO ROW FOUND. Bootstrapping legacy users who registered before Trigger injection.
-                const safeName = session.user.user_metadata?.name || session.user.email?.split('@')[0] || 'Explorer';
-                const randomSuffix = Math.floor(Math.random() * 1000);
-                
-                const newProfile = {
-                  id: session.user.id,
-                  full_name: safeName,
-                  username: `${safeName.toLowerCase().replace(/[^a-z0-9]/g, '')}${randomSuffix}`,
-                  avatar_url: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&h=150',
-                };
-                
-                const { data: fallbackSync, error: insertErr } = await supabase.from('profiles').insert(newProfile).select('*').single();
-                if (insertErr) {
-                  console.error('Error inserting fallback profile:', insertErr.message);
-                  profData = newProfile;
-                } else {
-                  profData = fallbackSync;
-                }
-              } else {
-                throw profErr;
-              }
-            } else {
-              profData = data;
-            }
-          } catch (profileError) {
-            console.error('Failed to get/bootstrap profile, using local fallback:', profileError);
-            const safeName = session.user.user_metadata?.name || session.user.email?.split('@')[0] || 'Explorer';
-            profData = {
-              id: session.user.id,
-              full_name: safeName,
-              username: safeName.toLowerCase().replace(/[^a-z0-9]/g, '') || 'explorer',
-              avatar_url: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&h=150',
-            };
-          }
-
-          if (profData) {
-            if (!profData.avatar_url) {
-              const fallbackAvatar = 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&h=150';
-              try {
-                const { data: updatedProf, error: updateErr } = await supabase
-                  .from('profiles')
-                  .update({ avatar_url: fallbackAvatar })
-                  .eq('id', session.user.id)
-                  .select('*')
-                  .single();
-                if (updateErr) {
-                  console.error('Error updating fallback avatar:', updateErr.message);
-                  setActiveProfile({ ...profData, avatar_url: fallbackAvatar });
-                } else {
-                  setActiveProfile(updatedProf || { ...profData, avatar_url: fallbackAvatar });
-                }
-              } catch (updateErr) {
-                console.error('Failed to update fallback avatar:', updateErr);
-                setActiveProfile({ ...profData, avatar_url: fallbackAvatar });
-              }
-            } else {
-              setActiveProfile(profData);
-            }
-          }
-
-          try {
-            await Promise.all([
-              fetchUserFollows(session.user.id).catch(err => console.error("fetchUserFollows failed", err)),
-              fetchUserLikesCache(session.user.id).catch(err => console.error("fetchUserLikesCache failed", err))
-            ]);
-          } catch (err) {
-            console.error("Promise.all follows/likes hydration failed", err);
-          }
-        } else {
-          setActiveProfile(null);
-        }
-      } catch (err) {
-        console.error("initializeSession unexpected error:", err);
-        if (session?.user) {
-          const safeName = session.user.user_metadata?.name || session.user.email?.split('@')[0] || 'Explorer';
-          setActiveProfile({
-            id: session.user.id,
-            full_name: safeName,
-            username: safeName.toLowerCase().replace(/[^a-z0-9]/g, '') || 'explorer',
-            avatar_url: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&h=150',
-          });
-        }
-      } finally {
-        setIsAuthInitializing(false);
-      }
-    };
-
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      initializeSession(session);
-    });
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      initializeSession(session);
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
+  }, [user?.id]);
 
   const fetchUserFollows = async (userId: string) => {
     // Relational join to extract the explicit username attached to the following_id, mapped safely via Supabase foreign keys
@@ -276,6 +149,45 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         if (d.profiles?.username) activeIdentities.push(d.profiles.username);
       });
       setFollowedUsers(activeIdentities);
+    }
+  };
+
+  const fetchUserFollowRequests = async (userId: string) => {
+    // Fetch pending follow requests sent BY the current user
+    const { data, error } = await supabase
+      .from('follow_requests')
+      .select('target_id')
+      .eq('requester_id', userId)
+      .eq('status', 'pending');
+    
+    if (!error && data) {
+      setRequestedUsers(data.map((d: any) => d.target_id));
+    }
+  };
+
+  const approveFollowRequest = async (requesterId: string) => {
+    if (!user) return;
+    try {
+      // Update the follow request status to approved
+      const { error: updateError } = await supabase
+        .from('follow_requests')
+        .update({ status: 'approved' })
+        .eq('requester_id', requesterId)
+        .eq('target_id', user.id);
+      
+      if (updateError) throw updateError;
+
+      // Insert into follows table
+      const { error: followError } = await supabase
+        .from('follows')
+        .insert({ follower_id: requesterId, following_id: user.id });
+      
+      if (followError && followError.code !== '23505') throw followError; // Ignore duplicate
+
+      showToast('Follow request approved');
+    } catch (err: any) {
+      console.error('Error approving follow request:', err);
+      showToast('Failed to approve follow request');
     }
   };
 
@@ -321,7 +233,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const channel = SocialService.subscribeToGlobalMessages((payload) => {
       if (payload.new.sender_id !== user.id) {
         setHasUnreadMessages(true);
-        showToast('📬 New Travel Message Received!');
+        showToast('New Travel Message Received!');
       }
     });
     return () => { supabase.removeChannel(channel); };
@@ -358,6 +270,24 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [flights, setFlights] = useState<FlightOption[]>([]);
   const [rentalCars, setRentalCars] = useState<RentalCarOption[]>([]);
   const [isLoadingServices, setIsLoadingServices] = useState(true);
+
+  // Strict 5-second connection timeout fallback
+  useEffect(() => {
+    if (!isAuthInitializing && !isLoadingFeed && !isLoadingTrips) {
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      console.warn("Database connection took longer than 5 seconds. Triggering timeout override.");
+      setHasConnectionTimeout(true);
+      setIsTimeoutOverridden(true);
+      setIsLoadingFeed(false);
+      setIsLoadingTrips(false);
+      setIsLoadingServices(false);
+    }, 5000);
+
+    return () => clearTimeout(timer);
+  }, [isAuthInitializing, isLoadingFeed, isLoadingTrips]);
 
   // Fetch logic directly connected to Supabase
   useEffect(() => {
@@ -470,7 +400,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const logout = async () => {
     await supabase.auth.signOut();
-    setUser(null);
   };
 
   const [savedItems, setSavedItems] = useState<SavedItem[]>([]);
@@ -517,6 +446,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   // Follow System State
   const [followedUsers, setFollowedUsers] = useState<string[]>([]);
   const [requestedUsers, setRequestedUsers] = useState<string[]>([]);
+  const [followPendingSet, setFollowPendingSet] = useState<Set<string>>(new Set());
 
   // Personalization & Remix State
   const [userInterestTags, setUserInterestTags] = useState<string[]>([]);
@@ -573,27 +503,75 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       showToast("Must be logged in to follow");
       return;
     }
-    
-    if (followedUsers.includes(targetId)) {
-      // Optimistic Unfollow
-      setFollowedUsers(prev => prev.filter(u => u !== targetId));
-      showToast(`Unfollowed account.`);
-      // Unfollow in Database
-      const { error } = await supabase.from('follows').delete().eq('follower_id', user.id).eq('following_id', targetId);
-      if (error) {
-        showToast("Error unfollowing");
+    if (followPendingSet.has(targetId)) return;
+    setFollowPendingSet(prev => {
+      const next = new Set(prev);
+      next.add(targetId);
+      return next;
+    });
+
+    try {
+      // Check if target profile is actually private from DB
+      let targetIsPrivate = isPrivate;
+      try {
+        const { data: targetProfile } = await supabase
+          .from('profiles')
+          .select('is_private')
+          .eq('id', targetId)
+          .single();
+        if (targetProfile && targetProfile.is_private !== undefined) {
+          targetIsPrivate = targetProfile.is_private;
+        }
+      } catch {
+        // Fallback to passed value
       }
-      await fetchUserFollows(user.id);
-    } else {
-      // Optimistic Follow
-      setFollowedUsers(prev => [...prev, targetId]);
-      showToast(`You are now following them!`);
-      // Bind connection in Database
-      const { error } = await supabase.from('follows').insert({ follower_id: user.id, following_id: targetId });
-      if (error) {
-        showToast("Error executing follow relation.");
+      
+      if (followedUsers.includes(targetId)) {
+        // Optimistic Unfollow
+        setFollowedUsers(prev => prev.filter(u => u !== targetId));
+        showToast(`Unfollowed account.`);
+        // Unfollow in Database
+        const { error } = await supabase.from('follows').delete().eq('follower_id', user.id).eq('following_id', targetId);
+        if (error) {
+          setFollowedUsers(prev => [...prev, targetId]);
+          showToast("Error unfollowing");
+        }
+      } else if (requestedUsers.includes(targetId)) {
+        // Cancel pending request
+        setRequestedUsers(prev => prev.filter(u => u !== targetId));
+        showToast(`Follow request cancelled.`);
+        const { error } = await supabase.from('follow_requests').delete().eq('requester_id', user.id).eq('target_id', targetId);
+        if (error) {
+          setRequestedUsers(prev => [...prev, targetId]);
+          showToast("Error cancelling request");
+        }
+      } else {
+        // Target is private and not already following/requested → send follow request
+        if (targetIsPrivate) {
+          setRequestedUsers(prev => [...prev, targetId]);
+          showToast(`Follow request sent`);
+          const { error } = await supabase.from('follow_requests').insert({ requester_id: user.id, target_id: targetId, status: 'pending' });
+          if (error) {
+            setRequestedUsers(prev => prev.filter(u => u !== targetId));
+            showToast("Error sending follow request.");
+          }
+        } else {
+          // Public account → direct follow
+          setFollowedUsers(prev => [...prev, targetId]);
+          showToast(`You are now following them!`);
+          const { error } = await supabase.from('follows').insert({ follower_id: user.id, following_id: targetId });
+          if (error) {
+            setFollowedUsers(prev => prev.filter(u => u !== targetId));
+            showToast("Error executing follow relation.");
+          }
+        }
       }
-      await fetchUserFollows(user.id);
+    } finally {
+      setFollowPendingSet(prev => {
+        const next = new Set(prev);
+        next.delete(targetId);
+        return next;
+      });
     }
   };
 
@@ -661,14 +639,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     showToast('Removed from Remix Studio.');
   };
 
-  const updateActiveProfile = (newData: any) => {
-    setActiveProfile((prev: any) => ({ ...prev, ...newData }));
+  // Zero-Refresh Matrix Overwrite reactively triggered on canonical profile changes
+  useEffect(() => {
+    if (!activeProfile || !user) return;
     
-    // Zero-Refresh Matrix Overwrite
-    const nextName = newData.full_name || newData.username || 'Anonymous Explorer';
-    const nextAvatar = newData.avatar_url;
+    const nextName = activeProfile.full_name || activeProfile.username || 'Anonymous Explorer';
+    const nextAvatar = activeProfile.avatar_url;
     
-    const patchIdentity = (p: Post) => p.userId === user?.id 
+    const patchIdentity = (p: Post) => p.userId === user.id 
       ? { ...p, user: nextName, avatar: nextAvatar || p.avatar } 
       : p;
 
@@ -682,6 +660,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       });
       return patched;
     });
+  }, [activeProfile, user?.id]);
+
+  const updateActiveProfile = (newData: any) => {
+    updateUserProfile(newData);
   };
 
   return (
@@ -703,7 +685,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       remixFolders, addToRemixFolder, removeFromRemixFolder,
       addCustomTrip, activeProfile, updateActiveProfile,
       currentUserProfile: activeProfile,
-      hasConnectionTimeout
+      hasConnectionTimeout,
+      approveFollowRequest,
+      isAuthInitializing
     }}>
       {children}
     </AppContext.Provider>

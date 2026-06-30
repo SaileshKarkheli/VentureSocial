@@ -18,7 +18,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({ profile, isOwner, 
     const checkFollowStatus = async () => {
       if (!session?.user?.id || !profile?.id || isOwner) return;
       const { data } = await supabase
-        .from('connections')
+        .from('follows')
         .select('follower_id')
         .eq('follower_id', session.user.id)
         .eq('following_id', profile.id)
@@ -36,14 +36,14 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({ profile, isOwner, 
     try {
       if (isFollowing) {
         await supabase
-          .from('connections')
+          .from('follows')
           .delete()
           .eq('follower_id', session.user.id)
           .eq('following_id', profile.id);
         setIsFollowing(false);
       } else {
         await supabase
-          .from('connections')
+          .from('follows')
           .insert({ follower_id: session.user.id, following_id: profile.id });
         
         await supabase
@@ -63,8 +63,8 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({ profile, isOwner, 
     <div className="bg-white rounded-3xl border border-zinc-100 shadow-sm overflow-hidden mb-6">
       {/* Cover Photo */}
       <div className="h-48 md:h-64 bg-zinc-200 relative w-full">
-        {profile?.cover_url ? (
-          <img src={profile.cover_url} alt="Cover" className="w-full h-full object-cover" />
+        {profile?.cover_photo_url ? (
+          <img src={profile.cover_photo_url} alt="Cover" className="w-full h-full object-cover" />
         ) : (
           <div className="w-full h-full bg-gradient-to-r from-orange-500/20 to-[#0A192F]/20" />
         )}

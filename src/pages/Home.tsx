@@ -48,6 +48,13 @@ export default function Home() {
   }, [searchQuery, showDropdown]);
 
   useEffect(() => {
+    const isMockMode = import.meta.env.VITE_ENABLE_MOCK_MODE === 'true' && !!localStorage.getItem('venturesocial_mock_session');
+    if (isMockMode) {
+      setDbPosts(publicPosts);
+      setIsDbLoading(false);
+      return;
+    }
+
     const fetchHomeFeed = async () => {
       setIsDbLoading(true);
       try {
@@ -214,7 +221,7 @@ export default function Home() {
     };
 
     fetchHomeFeed();
-  }, [feedMode, followedUsers]);
+  }, [feedMode, followedUsers, publicPosts]);
 
   const topTrips = dbPosts
     .filter(p => p.location.toLowerCase().includes(searchQuery.toLowerCase()) || p.caption.toLowerCase().includes(searchQuery.toLowerCase()))
@@ -480,7 +487,7 @@ export default function Home() {
                 <div>
                   <h4 className="font-bold text-[#0A192F] text-sm md:text-base">Local Discovery</h4>
                   {userLocation ? (
-                    <p className="text-blue-600 text-xs md:text-sm font-medium">📍 Sorting by real-time geographical proximity</p>
+                    <p className="text-blue-600 text-xs md:text-sm font-medium">Sorting by real-time geographical proximity</p>
                   ) : (
                     <p className="text-zinc-500 text-xs md:text-sm">Turn on live location for precise local recommendations.</p>
                   )}

@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useParams } from 'react-router-dom';
 import MainLayout from './layouts/MainLayout';
 import ProtectedRoute from './components/ProtectedRoute';
 import Login from './pages/Login';
@@ -7,7 +7,6 @@ import UpdatePassword from './pages/UpdatePassword';
 import Home from './pages/Home';
 import Profile from './pages/Profile';
 import UserProfile from './pages/UserProfile';
-import DynamicProfile from './pages/profile/[username]';
 import MyTrips from './pages/MyTrips';
 import TripDetail from './pages/TripDetail';
 import RemixStudio from './pages/RemixStudio';
@@ -19,6 +18,11 @@ import Messages from './pages/Messages';
 import Onboarding from './pages/Onboarding';
 import Dashboard from './pages/Dashboard';
 import Settings from './pages/Settings';
+
+const ProfileRedirect = () => {
+  const { username } = useParams<{ username: string }>();
+  return <Navigate to={`/user/${username}`} replace />;
+};
 
 export default function App() {
   return (
@@ -33,12 +37,13 @@ export default function App() {
         <Route element={<MainLayout />}>
           <Route path="/home" element={<Home />} />
           <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-          <Route path="/profile/:username" element={<DynamicProfile />} />
+          <Route path="/profile/:username" element={<ProfileRedirect />} />
           <Route path="/user/:username" element={<UserProfile />} />
           <Route path="/my-trips" element={<ProtectedRoute><MyTrips /></ProtectedRoute>} />
           <Route path="/trip/:id" element={<TripDetail />} />
           <Route path="/remix" element={<RemixStudio />} />
           <Route path="/blog/:tripId" element={<BlogDetail />} />
+          <Route path="/blogs/new" element={<ProtectedRoute><BlogDetail /></ProtectedRoute>} />
           <Route path="/blogs" element={<BlogList />} />
           <Route path="/search" element={<Search />} />
           <Route path="/services" element={<TravelServices />} />

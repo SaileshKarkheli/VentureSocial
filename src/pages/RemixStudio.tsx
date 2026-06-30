@@ -1,14 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Wand2, FolderOpen, MapPin, X, ArrowRight, ShoppingBag, Clock, Navigation, Bed, Utensils, Camera, Plane, Trash2, AlertCircle, Store, Car, ChevronDown, CheckCircle2 } from 'lucide-react';
+import { Wand2, FolderOpen, MapPin, X, ArrowRight, ShoppingBag, Clock, Navigation, Bed, Utensils, Camera, Plane, Trash2, AlertCircle, Store, Car, ChevronDown, CheckCircle2, ArrowUp, ArrowDown, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import SmartImage from '../components/SmartImage';
 import { remixService } from '../services/remixService';
-import { useAuth } from '../context/AuthContext';
 import { supabase } from '../supabaseClient';
-import { DayHighlightCarousel, PillarSection } from './TripDetail';
-
-
+import { useAuth } from '../context/AuthContext';
 
 export default function RemixStudio() {
   const { session } = useAuth();
@@ -77,6 +74,22 @@ export default function RemixStudio() {
         <div className="space-y-6">
           {isLoading ? (
             <div className="text-center py-20 text-zinc-400 font-bold uppercase tracking-widest">Loading studio...</div>
+          ) : !session ? (
+            <div className="bg-white rounded-[2rem] p-16 text-center border border-zinc-200 shadow-sm flex flex-col items-center">
+              <div className="w-20 h-20 bg-orange-500/10 text-orange-500 rounded-full flex items-center justify-center mb-6">
+                <FolderOpen size={40} />
+              </div>
+              <h3 className="text-2xl font-bold text-[#0A192F] mb-4">Start Remixing Itineraries</h3>
+              <p className="text-zinc-500 max-w-md mx-auto mb-8">
+                Create a free account to unlock your personal Remix Workspace. Cherry-pick trip spots, sort them into custom folders, and plan your perfect journey.
+              </p>
+              <button 
+                onClick={() => navigate('/login')}
+                className="bg-orange-500 text-white font-bold px-8 py-4 rounded-xl hover:bg-orange-400 transition-all shadow-xl shadow-orange-500/20"
+              >
+                Join VentureSocial Now
+              </button>
+            </div>
           ) : folders.length === 0 ? (
             <div className="bg-white rounded-[2rem] p-16 text-center border border-zinc-200 shadow-sm flex flex-col items-center">
               <div className="w-20 h-20 bg-orange-500/10 text-orange-500 rounded-full flex items-center justify-center mb-6">
@@ -224,6 +237,7 @@ function WorkspaceView({ folder, onClose }: { folder: any, onClose: () => void }
 
   // Ensure Days are sorted
   const sortedDays = Object.keys(spotsByDay).map(Number).sort((a, b) => a - b);
+  const maxDay = sortedDays.length > 0 ? Math.max(...sortedDays) : 1;
   // Auto expand first available day if expandedDay is null
   useEffect(() => {
     if (sortedDays.length > 0 && expandedDay === null) {
@@ -231,18 +245,25 @@ function WorkspaceView({ folder, onClose }: { folder: any, onClose: () => void }
     }
   }, [sortedDays, expandedDay]);
 
-  const DayReassignSelect = ({ savedSpotId, currentDay }: { savedSpotId: string, currentDay: number }) => (
-    <div className="absolute top-6 right-16 flex items-center gap-2 z-10" onClick={e => e.stopPropagation()}>
-      <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Move to Day</span>
-      <select 
-        value={currentDay}
-        onChange={(e) => { e.stopPropagation(); handleReassignDay(savedSpotId, parseInt(e.target.value)); }}
-        className="bg-zinc-50 border border-zinc-200 text-[#0A192F] font-bold rounded-lg px-2 py-1 text-sm focus:outline-none focus:border-orange-500 shadow-sm cursor-pointer"
+  const DayMoveButtons = ({ savedSpotId, currentDay }: { savedSpotId: string, currentDay: number }) => (
+    <div className="absolute top-6 right-16 flex items-center gap-1 z-10" onClick={e => e.stopPropagation()}>
+      <button
+        onClick={() => handleReassignDay(savedSpotId, currentDay - 1)}
+        disabled={currentDay <= 1}
+        className="p-1.5 rounded-lg bg-zinc-100 text-zinc-500 hover:bg-orange-500 hover:text-white transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+        title="Move to previous day"
       >
-        {[1,2,3,4,5,6,7,8,9,10].map(d => (
-          <option key={d} value={d}>Day {d}</option>
-        ))}
-      </select>
+        <ArrowUp size={14} />
+      </button>
+      <span className="text-[10px] font-bold text-zinc-400 min-w-[36px] text-center">Day {currentDay}</span>
+      <button
+        onClick={() => handleReassignDay(savedSpotId, currentDay + 1)}
+        disabled={currentDay >= maxDay}
+        className="p-1.5 rounded-lg bg-zinc-100 text-zinc-500 hover:bg-orange-500 hover:text-white transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+        title="Move to next day"
+      >
+        <ArrowDown size={14} />
+      </button>
     </div>
   );
 
@@ -381,7 +402,7 @@ function WorkspaceView({ folder, onClose }: { folder: any, onClose: () => void }
                                 <h4 className="font-bold text-[#0A192F] text-lg">{transport.title}</h4>
                                 <p className="text-zinc-600 leading-relaxed italic">"{transport.description}"</p>
                               </div>
-                              <DayReassignSelect savedSpotId={transportSp.id} currentDay={dayNum} />
+                              <DayMoveButtons savedSpotId={transportSp.id} currentDay={dayNum} />
                               <button
                                 onClick={(e) => { e.stopPropagation(); handleRemoveSpot(transportSp.id); }}
                                 className="absolute top-6 right-6 text-zinc-300 hover:text-rose-500 transition-colors"
@@ -400,7 +421,7 @@ function WorkspaceView({ folder, onClose }: { folder: any, onClose: () => void }
                             onToggle={() => setExpandedPillar(expandedPillar === `${dayNum}-stay` ? null : `${dayNum}-stay`)}
                           >
                             <div className="bg-white rounded-2xl p-6 border border-zinc-100 space-y-6 relative">
-                              <DayReassignSelect savedSpotId={staySp.id} currentDay={dayNum} />
+                              <DayMoveButtons savedSpotId={staySp.id} currentDay={dayNum} />
                               <button
                                 onClick={(e) => { e.stopPropagation(); handleRemoveSpot(staySp.id); }}
                                 className="absolute top-6 right-6 text-zinc-300 hover:text-rose-500 transition-colors"
@@ -430,7 +451,7 @@ function WorkspaceView({ folder, onClose }: { folder: any, onClose: () => void }
                             onToggle={() => setExpandedPillar(expandedPillar === `${dayNum}-dining` ? null : `${dayNum}-dining`)}
                           >
                             <div className="bg-white rounded-2xl p-6 border border-zinc-100 space-y-6 relative">
-                              <DayReassignSelect savedSpotId={diningSp.id} currentDay={dayNum} />
+                              <DayMoveButtons savedSpotId={diningSp.id} currentDay={dayNum} />
                               <button
                                 onClick={(e) => { e.stopPropagation(); handleRemoveSpot(diningSp.id); }}
                                 className="absolute top-6 right-6 text-zinc-300 hover:text-rose-500 transition-colors"
@@ -465,7 +486,7 @@ function WorkspaceView({ folder, onClose }: { folder: any, onClose: () => void }
                                 return (
                                   <div key={activitySp.id} className="bg-white rounded-2xl overflow-hidden border border-zinc-100 flex flex-col relative group">
                                     <div className="absolute top-4 right-14 z-20 transition-opacity bg-white/90 backdrop-blur-sm rounded-lg p-1 shadow-sm">
-                                      <DayReassignSelect savedSpotId={activitySp.id} currentDay={dayNum} />
+                                      <DayMoveButtons savedSpotId={activitySp.id} currentDay={dayNum} />
                                     </div>
                                     <button
                                       onClick={(e) => { e.stopPropagation(); handleRemoveSpot(activitySp.id); }}
@@ -496,5 +517,95 @@ function WorkspaceView({ folder, onClose }: { folder: any, onClose: () => void }
         )}
       </div>
     </motion.div>
+  );
+}
+
+function PillarSection({ title, icon: Icon, isExpanded, onToggle, children }: {
+  title: string;
+  icon: any;
+  isExpanded: boolean;
+  onToggle: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="rounded-2xl border border-zinc-200 bg-white overflow-hidden">
+      <button
+        onClick={onToggle}
+        className="w-full flex items-center justify-between p-5 hover:bg-zinc-50 transition-colors"
+      >
+        <div className="flex items-center gap-3">
+          <Icon size={18} className="text-orange-500" />
+          <span className="font-bold text-sm text-[#0A192F]">{title}</span>
+        </div>
+        <motion.div
+          animate={{ rotate: isExpanded ? 180 : 0 }}
+          transition={{ duration: 0.2 }}
+        >
+          <ChevronDown size={18} className="text-zinc-400" />
+        </motion.div>
+      </button>
+      <AnimatePresence>
+        {isExpanded && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            <div className="p-5 pt-0">
+              {children}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+function DayHighlightCarousel({ day }: { day: any }) {
+  const [activeIdx, setActiveIdx] = useState(0);
+  const slides = [
+    { type: 'stay', label: 'Stay', image: day.stay.image, name: day.stay.name },
+    { type: 'dining', label: 'Dining', image: day.dining.image, name: day.dining.name },
+    ...(day.activities || []).map((a: any, i: number) => ({ type: 'activity', label: `Activity ${i + 1}`, image: a.image, name: a.name }))
+  ];
+
+  return (
+    <div className="relative rounded-2xl overflow-hidden shadow-lg bg-zinc-100 aspect-[16/9]">
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={activeIdx}
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: -20 }}
+          transition={{ duration: 0.3 }}
+          className="absolute inset-0"
+        >
+          <img src={slides[activeIdx].image} alt={slides[activeIdx].name} className="w-full h-full object-cover" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+          <div className="absolute bottom-3 left-3 right-3">
+            <span className="text-[9px] font-bold text-orange-400 uppercase tracking-widest">{slides[activeIdx].label}</span>
+            <p className="text-white font-bold text-sm truncate">{slides[activeIdx].name}</p>
+          </div>
+        </motion.div>
+      </AnimatePresence>
+      {slides.length > 1 && (
+        <div className="absolute bottom-2 right-2 flex items-center gap-1">
+          <button
+            onClick={() => setActiveIdx(prev => prev === 0 ? slides.length - 1 : prev - 1)}
+            className="p-1 rounded-full bg-white/20 backdrop-blur-sm text-white hover:bg-white/40 transition-colors"
+          >
+            <ChevronRight size={12} className="rotate-180" />
+          </button>
+          <span className="text-[9px] font-bold text-white">{activeIdx + 1}/{slides.length}</span>
+          <button
+            onClick={() => setActiveIdx(prev => prev === slides.length - 1 ? 0 : prev + 1)}
+            className="p-1 rounded-full bg-white/20 backdrop-blur-sm text-white hover:bg-white/40 transition-colors"
+          >
+            <ChevronRight size={12} />
+          </button>
+        </div>
+      )}
+    </div>
   );
 }

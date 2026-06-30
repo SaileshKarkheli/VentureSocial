@@ -11,13 +11,18 @@ interface EditProfileModalProps {
 }
 
 export const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onClose }) => {
-  const { session, userProfile, refreshProfile } = useAuth();
+  const { session, userProfile, refreshProfile, updateUserProfile } = useAuth();
   const { activeProfile, updateActiveProfile } = useApp();
   const [fullName, setFullName] = useState('');
   const [bio, setBio] = useState('');
   const [location, setLocation] = useState('');
   const [education, setEducation] = useState('');
+  const [dob, setDob] = useState('');
+  const [instagram, setInstagram] = useState('');
+  const [twitter, setTwitter] = useState('');
+  const [website, setWebsite] = useState('');
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [coverFile, setCoverFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
 
   useEffect(() => {
@@ -26,7 +31,13 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onCl
       setBio(activeProfile?.bio || userProfile?.bio || '');
       setLocation(activeProfile?.location || '');
       setEducation(activeProfile?.education || '');
+      setDob(activeProfile?.dob || userProfile?.dob || '');
+      const social = activeProfile?.social_links || userProfile?.social_links || {};
+      setInstagram(social.instagram || '');
+      setTwitter(social.twitter || '');
+      setWebsite(social.website || '');
       setAvatarFile(null);
+      setCoverFile(null);
     }
   }, [isOpen, activeProfile, userProfile]);
 
@@ -36,8 +47,38 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onCl
     if (!session?.user?.id) return;
     setIsUploading(true);
 
+    const isMockMode = import.meta.env.VITE_ENABLE_MOCK_MODE === 'true' && !!localStorage.getItem('venturesocial_mock_session');
+
     try {
       let finalAvatarUrl = activeProfile?.avatar_url || userProfile?.avatar_url;
+      let finalCoverUrl = activeProfile?.cover_photo_url || userProfile?.cover_photo_url;
+
+      if (isMockMode) {
+        if (avatarFile) {
+          finalAvatarUrl = URL.createObjectURL(avatarFile);
+        }
+        if (coverFile) {
+          finalCoverUrl = URL.createObjectURL(coverFile);
+        }
+        const updatePayload: any = {
+          full_name: fullName,
+          bio: bio,
+          location: location,
+          education: education,
+          dob: dob,
+          social_links: { instagram, twitter, website }
+        };
+        if (avatarFile && finalAvatarUrl && finalAvatarUrl.trim() !== '') {
+          updatePayload.avatar_url = finalAvatarUrl;
+        }
+        if (coverFile && finalCoverUrl && finalCoverUrl.trim() !== '') {
+          updatePayload.cover_photo_url = finalCoverUrl;
+        }
+        updateActiveProfile(updatePayload);
+        updateUserProfile(updatePayload);
+        onClose();
+        return;
+      }
 
       if (avatarFile) {
         const fileExt = avatarFile.name.split('.').pop();
@@ -54,15 +95,35 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onCl
         finalAvatarUrl = data.publicUrl;
       }
 
+      if (coverFile) {
+        const fileExt = coverFile.name.split('.').pop();
+        const fileName = `${session.user.id}-${Math.random()}.${fileExt}`;
+        const filePath = `${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('covers')
+          .upload(filePath, coverFile, { upsert: true });
+
+        if (uploadError) throw uploadError;
+
+        const { data } = supabase.storage.from('covers').getPublicUrl(filePath);
+        finalCoverUrl = data.publicUrl;
+      }
+
       const updatePayload: any = {
         full_name: fullName,
         bio: bio,
         location: location,
-        education: education
+        education: education,
+        dob: dob,
+        social_links: { instagram, twitter, website }
       };
 
       if (avatarFile && finalAvatarUrl && finalAvatarUrl.trim() !== '') {
         updatePayload.avatar_url = finalAvatarUrl;
+      }
+      if (coverFile && finalCoverUrl && finalCoverUrl.trim() !== '') {
+        updatePayload.cover_photo_url = finalCoverUrl;
       }
 
       const { error: updateError } = await supabase
@@ -107,28 +168,54 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onCl
           </div>
 
           <div className="space-y-6">
-            {/* Avatar Upload */}
-            <div>
-              <label className="block text-sm font-bold text-zinc-700 mb-2">Avatar</label>
-              <div className="flex items-center gap-4">
-                <div className="w-16 h-16 rounded-3xl bg-zinc-100 overflow-hidden shrink-0 border border-zinc-200 shadow-sm">
-                  {avatarFile ? (
-                    <img src={URL.createObjectURL(avatarFile)} alt="Preview" className="w-full h-full object-cover" />
-                  ) : activeProfile?.avatar_url ? (
-                    <img src={activeProfile.avatar_url} alt="Current" className="w-full h-full object-cover" />
-                  ) : userProfile?.avatar_url ? (
-                    <img src={userProfile.avatar_url} alt="Current" className="w-full h-full object-cover" />
-                  ) : null}
+            {/* Avatar & Cover Upload */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-bold text-zinc-700 mb-2">Avatar</label>
+                <div className="flex items-center gap-4">
+                  <div className="w-16 h-16 rounded-3xl bg-zinc-100 overflow-hidden shrink-0 border border-zinc-200 shadow-sm">
+                    {avatarFile ? (
+                      <img src={URL.createObjectURL(avatarFile)} alt="Preview" className="w-full h-full object-cover" />
+                    ) : activeProfile?.avatar_url ? (
+                      <img src={activeProfile.avatar_url} alt="Current" className="w-full h-full object-cover" />
+                    ) : userProfile?.avatar_url ? (
+                      <img src={userProfile.avatar_url} alt="Current" className="w-full h-full object-cover" />
+                    ) : null}
+                  </div>
+                  <label className="cursor-pointer flex items-center gap-2 px-4 py-2 rounded-2xl bg-zinc-50 border border-zinc-200 hover:bg-zinc-100 hover:border-zinc-300 transition-all text-sm font-bold text-zinc-700">
+                    <Upload size={16} />
+                    Choose File
+                    <input type="file" accept="image/*" className="hidden" onChange={(e) => {
+                      if (e.target.files && e.target.files[0]) {
+                        setAvatarFile(e.target.files[0]);
+                      }
+                    }} />
+                  </label>
                 </div>
-                <label className="cursor-pointer flex items-center gap-2 px-4 py-2 rounded-2xl bg-zinc-50 border border-zinc-200 hover:bg-zinc-100 hover:border-zinc-300 transition-all text-sm font-bold text-zinc-700">
-                  <Upload size={16} />
-                  Choose File
-                  <input type="file" accept="image/*" className="hidden" onChange={(e) => {
-                    if (e.target.files && e.target.files[0]) {
-                      setAvatarFile(e.target.files[0]);
-                    }
-                  }} />
-                </label>
+              </div>
+
+              <div>
+                <label className="block text-sm font-bold text-zinc-700 mb-2">Cover Photo</label>
+                <div className="flex items-center gap-4">
+                  <div className="w-16 h-16 rounded-3xl bg-zinc-100 overflow-hidden shrink-0 border border-zinc-200 shadow-sm">
+                    {coverFile ? (
+                      <img src={URL.createObjectURL(coverFile)} alt="Preview" className="w-full h-full object-cover" />
+                    ) : activeProfile?.cover_photo_url ? (
+                      <img src={activeProfile.cover_photo_url} alt="Current" className="w-full h-full object-cover" />
+                    ) : userProfile?.cover_photo_url ? (
+                      <img src={userProfile.cover_photo_url} alt="Current" className="w-full h-full object-cover" />
+                    ) : null}
+                  </div>
+                  <label className="cursor-pointer flex items-center gap-2 px-4 py-2 rounded-2xl bg-zinc-50 border border-zinc-200 hover:bg-zinc-100 hover:border-zinc-300 transition-all text-sm font-bold text-zinc-700">
+                    <Upload size={16} />
+                    Choose File
+                    <input type="file" accept="image/*" className="hidden" onChange={(e) => {
+                      if (e.target.files && e.target.files[0]) {
+                        setCoverFile(e.target.files[0]);
+                      }
+                    }} />
+                  </label>
+                </div>
               </div>
             </div>
 
@@ -141,6 +228,17 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onCl
                 onChange={(e) => setFullName(e.target.value)}
                 className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all placeholder:text-zinc-400"
                 placeholder="Your Name"
+              />
+            </div>
+
+            {/* Date of Birth */}
+            <div>
+              <label className="block text-sm font-bold text-zinc-700 mb-2">Date of Birth</label>
+              <input
+                type="date"
+                value={dob}
+                onChange={(e) => setDob(e.target.value)}
+                className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all text-zinc-700"
               />
             </div>
 
@@ -178,6 +276,41 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onCl
                 className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all placeholder:text-zinc-400 resize-none custom-scrollbar"
                 placeholder="Tell the world about your travels..."
               />
+            </div>
+
+            {/* Social Links */}
+            <div className="space-y-4 border-t border-zinc-100 pt-4">
+              <h3 className="text-sm font-bold text-[#0A192F]">Social Links</h3>
+              <div>
+                <label className="block text-xs font-bold text-zinc-500 mb-1">Instagram</label>
+                <input
+                  type="url"
+                  value={instagram}
+                  onChange={(e) => setInstagram(e.target.value)}
+                  className="w-full px-4 py-2 bg-zinc-50 border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all placeholder:text-zinc-400 text-sm"
+                  placeholder="https://instagram.com/yourhandle"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-zinc-500 mb-1">Twitter / X</label>
+                <input
+                  type="url"
+                  value={twitter}
+                  onChange={(e) => setTwitter(e.target.value)}
+                  className="w-full px-4 py-2 bg-zinc-50 border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all placeholder:text-zinc-400 text-sm"
+                  placeholder="https://x.com/yourhandle"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-zinc-500 mb-1">Personal Website</label>
+                <input
+                  type="url"
+                  value={website}
+                  onChange={(e) => setWebsite(e.target.value)}
+                  className="w-full px-4 py-2 bg-zinc-50 border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all placeholder:text-zinc-400 text-sm"
+                  placeholder="https://yourwebsite.com"
+                />
+              </div>
             </div>
 
             {/* Save Button */}

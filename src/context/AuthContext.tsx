@@ -16,6 +16,7 @@ interface AuthContextType {
   userProfile: UserProfile | null;
   loading: boolean;
   refreshProfile: () => Promise<void>;
+  updateUserProfile: (newData: any) => void;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -24,6 +25,7 @@ const AuthContext = createContext<AuthContextType>({
   userProfile: null,
   loading: true,
   refreshProfile: async () => {},
+  updateUserProfile: () => {},
 });
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
@@ -39,7 +41,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       try {
         const { data, error } = await supabase
           .from('profiles')
-          .select('id, full_name, avatar_url, username')
+          .select('*')
           .eq('id', userId)
           .single();
 
@@ -56,29 +58,36 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     const initializeAuth = async () => {
       try {
-        const mockSessionStr = localStorage.getItem('venturesocial_mock_session');
-        if (mockSessionStr) {
-          const mockData = JSON.parse(mockSessionStr);
-          if (mounted) {
-            setSession({
-              access_token: mockData.access_token,
-              token_type: 'bearer',
-              expires_in: 3600,
-              user: mockData.user,
-            } as any);
-            setUser(mockData.user);
-            setUserProfile({
-              id: mockData.user.id,
-              full_name: mockData.user.name || 'Alex Explorer',
-              avatar_url: mockData.user.avatar || '',
-              username: mockData.user.email ? mockData.user.email.split('@')[0] : 'alex_explorer'
-            });
-            setLoading(false);
-            return;
+        // ─── DEVELOPMENT ONLY: Mock session bypass ────────────────────────────
+        // Dead code in production (VITE_ENABLE_MOCK_MODE is not 'true').
+        const isMockEnabled = import.meta.env.VITE_ENABLE_MOCK_MODE === 'true';
+        if (isMockEnabled) {
+          const mockSessionStr = localStorage.getItem('venturesocial_mock_session');
+          if (mockSessionStr) {
+            const mockData = JSON.parse(mockSessionStr);
+            if (mounted) {
+              setSession({
+                access_token: mockData.access_token,
+                token_type: 'bearer',
+                expires_in: 3600,
+                user: mockData.user,
+              } as any);
+              setUser(mockData.user);
+              setUserProfile({
+                id: mockData.user.id,
+                full_name: mockData.user.name || 'Alex Explorer',
+                avatar_url: mockData.user.avatar || '',
+                username: mockData.user.email ? mockData.user.email.split('@')[0] : 'alex_explorer'
+              });
+              setLoading(false);
+              return; // Do NOT proceed to Supabase auth in mock mode
+            }
           }
         }
+        // ─── END DEVELOPMENT ONLY ─────────────────────────────────────────────
 
-        const { data: { session: initialSession }, error } = await supabase.auth.getSession();
+        // Production auth: Supabase is always the sole source of truth.
+        const { data: { session: initialSession } } = await supabase.auth.getSession();
         
         if (!mounted) return;
         
@@ -112,6 +121,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, currentSession) => {
       if (!mounted) return;
+
+      // In mock mode, onAuthStateChange fires with null session (no real Supabase login).
+      // Ignore state changes when mock mode is active — mock state is set once in initializeAuth.
+      const isMockEnabled = import.meta.env.VITE_ENABLE_MOCK_MODE === 'true';
+      if (isMockEnabled && localStorage.getItem('venturesocial_mock_session')) return;
       
       const updateStates = async () => {
         try {
@@ -187,9 +201,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const refreshProfile = async () => {
     if (user?.id) {
       try {
+        // cover_photo_url is the canonical DB column (cover_url does not exist in schema)
         const { data, error } = await supabase
           .from('profiles')
-          .select('id, full_name, avatar_url, username, bio, cover_url')
+          .select('*')
           .eq('id', user.id)
           .single();
 
@@ -202,8 +217,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
+  const updateUserProfile = (newData: any) => {
+    setUserProfile(prev => prev ? { ...prev, ...newData } : null);
+  };
+
   return (
-    <AuthContext.Provider value={{ session, user, userProfile, loading, refreshProfile }}>
+    <AuthContext.Provider value={{ session, user, userProfile, loading, refreshProfile, updateUserProfile }}>
       {children}
     </AuthContext.Provider>
   );

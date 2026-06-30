@@ -76,7 +76,7 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ isOp
     }
 
     const actorIdOrUsername = notif.actor.username || notif.actor.id;
-    navigate(`/profile/${actorIdOrUsername}`);
+    navigate(`/user/${actorIdOrUsername}`);
     onClose();
   };
 

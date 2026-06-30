@@ -192,27 +192,87 @@ export default function TripBuilderModal({ isOpen, onClose }: TripBuilderModalPr
       const { data, error } = await supabase.from('posts').insert({
         user_id: session.user.id,
         location_name: destination,
-        content: `My Custom Trip to ${destination}`,
+        caption: `My Custom Trip to ${destination}`,
+        category: 'Activity', // Required NOT NULL column in posts schema
         base_price: totalBudget
       }).select().single();
 
       if (error) throw error;
 
       if (data) {
-        // Here we could insert all the trip_spots for the days...
-        // For now, we will just create the main trip shell so it appears in My Trips.
+        const spotsToInsert = days.flatMap((day, idx) => {
+          return day.routeSummary.map(item => {
+            const categoryMap: Record<string, 'Transport' | 'Stay' | 'Dining' | 'Activity'> = {
+              transport: 'Transport',
+              hotel: 'Stay',
+              dining: 'Dining',
+              activity: 'Activity'
+            };
+            const cost = day.categoryCosts?.[item.type];
+            let description = `Details for ${item.title}.`;
+            if (cost !== undefined && cost > 0) {
+              description += ` Cost: $${cost}.`;
+            }
+            return {
+              post_id: data.id,
+              day_number: idx + 1,
+              title: item.title,
+              description,
+              category: categoryMap[item.type],
+              image_url: day.categoryImages?.[item.type] || null,
+              link_url: item.link,
+              location_coords: item.coordinates ? `(${item.coordinates.lng},${item.coordinates.lat})` : null
+            };
+          });
+        });
+
+        if (spotsToInsert.length > 0) {
+          const { error: spotsError } = await supabase.from('trip_spots').insert(spotsToInsert);
+          if (spotsError) {
+            console.error("Failed to insert trip spots:", spotsError);
+            alert(`Failed to save trip spots: ${spotsError.message}`);
+            return;
+          }
+        }
         window.location.reload(); // Refresh to show new trip
       }
-    } catch (err) {
+    } catch (err: any) {
       console.warn("Supabase insert failed in TripBuilder, saving to localStorage:", err);
       const customTripsStr = localStorage.getItem('venturesocial_custom_trips');
       const customTrips = customTripsStr ? JSON.parse(customTripsStr) : [];
+
+      const spots = days.flatMap((day, idx) => {
+        return day.routeSummary.map(item => {
+          const categoryMap: Record<string, 'Transport' | 'Stay' | 'Dining' | 'Activity'> = {
+            transport: 'Transport',
+            hotel: 'Stay',
+            dining: 'Dining',
+            activity: 'Activity'
+          };
+          const cost = day.categoryCosts?.[item.type];
+          let description = `Details for ${item.title}.`;
+          if (cost !== undefined && cost > 0) {
+            description += ` Cost: $${cost}.`;
+          }
+          return {
+            id: item.id,
+            day_number: idx + 1,
+            title: item.title,
+            description,
+            category: categoryMap[item.type],
+            image_url: day.categoryImages?.[item.type] || null,
+            link_url: item.link
+          };
+        });
+      });
+
       const newTrip = {
         id: `custom-${Date.now()}`,
         year: new Date().getFullYear().toString(),
         country: destination,
         image: coverPhoto,
-        base_price: totalBudget
+        base_price: totalBudget,
+        spots
       };
       customTrips.push(newTrip);
       localStorage.setItem('venturesocial_custom_trips', JSON.stringify(customTrips));
@@ -249,6 +309,35 @@ export default function TripBuilderModal({ isOpen, onClose }: TripBuilderModalPr
 
   const totalBudget = days.reduce((sum, day) => sum + getDayCost(day), 0);
   const allRouteItems = days.flatMap(d => d.routeSummary);
+
+  // ---- Real coordinate route map logic ----
+  const itemsWithCoords = allRouteItems.filter(item => item.coordinates);
+  const hasEnoughCoords = itemsWithCoords.length >= 2;
+
+  const svgWidth = 400;
+  const svgHeight = 300;
+  const svgPad = 30;
+
+  const projectCoords = (lat: number, lng: number) => {
+    const lats = itemsWithCoords.map(item => item.coordinates!.lat);
+    const lngs = itemsWithCoords.map(item => item.coordinates!.lng);
+    const minLat = Math.min(...lats);
+    const maxLat = Math.max(...lats);
+    const minLng = Math.min(...lngs);
+    const maxLng = Math.max(...lngs);
+    const latSpan = (maxLat - minLat) || 0.001;
+    const lngSpan = (maxLng - minLng) || 0.001;
+    const x = svgPad + ((lng - minLng) / lngSpan) * (svgWidth - 2 * svgPad);
+    const y = svgHeight - svgPad - ((lat - minLat) / latSpan) * (svgHeight - 2 * svgPad);
+    return { x, y };
+  };
+
+  const pathD = hasEnoughCoords
+    ? itemsWithCoords.map((item, i) => {
+        const { x, y } = projectCoords(item.coordinates!.lat, item.coordinates!.lng);
+        return `${i === 0 ? 'M' : 'L'} ${x} ${y}`;
+      }).join(' ')
+    : '';
 
   return createPortal(
     <AnimatePresence>
@@ -788,33 +877,59 @@ export default function TripBuilderModal({ isOpen, onClose }: TripBuilderModalPr
                   </div>
                 </div>
 
-                {/* Route Visualization (Mock) */}
+                {/* Route Visualization */}
                 <div className="flex-[0.8] flex flex-col items-center justify-start relative mb-4">
                   <div className="w-full h-[250px] relative">
-                    <svg className="absolute inset-0 w-full h-full" viewBox="0 0 400 300">
-                      <motion.path
-                        d="M 100 50 Q 200 100 150 200 T 250 300"
-                        fill="none"
-                        stroke="#F97316"
-                        strokeWidth="3"
-                        strokeDasharray="6 6"
-                        initial={{ pathLength: 0 }}
-                        animate={{ pathLength: 1 }}
-                        transition={{ duration: 3, repeat: Infinity }}
-                      />
-                      {allRouteItems.map((_, i) => (
-                        <circle
-                          key={i}
-                          cx={100 + (i * 15)}
-                          cy={50 + (i * 40)}
-                          r="4"
-                          fill={i === 0 ? "#F97316" : "#CBD5E1"}
-                          className="shadow-lg"
-                        />
-                      ))}
+                    <svg className="absolute inset-0 w-full h-full" viewBox={`0 0 ${svgWidth} ${svgHeight}`}>
+                      {hasEnoughCoords ? (
+                        <>
+                          <motion.path
+                            d={pathD}
+                            fill="none"
+                            stroke="#F97316"
+                            strokeWidth="3"
+                            strokeDasharray="6 6"
+                            initial={{ pathLength: 0 }}
+                            animate={{ pathLength: 1 }}
+                            transition={{ duration: 3, repeat: Infinity }}
+                          />
+                          {itemsWithCoords.map((item, i) => {
+                            const { x, y } = projectCoords(item.coordinates!.lat, item.coordinates!.lng);
+                            return (
+                              <g key={item.id}>
+                                <circle cx={x} cy={y} r="5" fill={i === 0 ? '#F97316' : '#CBD5E1'} stroke="#fff" strokeWidth="2" />
+                                <text x={x + 8} y={y + 3} fontSize="8" fill="#0A192F" fontWeight="bold">{item.title.length > 15 ? item.title.substring(0, 15) + '...' : item.title}</text>
+                              </g>
+                            );
+                          })}
+                        </>
+                      ) : (
+                        <>
+                          <motion.path
+                            d="M 100 50 Q 200 100 150 200 T 250 300"
+                            fill="none"
+                            stroke="#F97316"
+                            strokeWidth="3"
+                            strokeDasharray="6 6"
+                            initial={{ pathLength: 0 }}
+                            animate={{ pathLength: 1 }}
+                            transition={{ duration: 3, repeat: Infinity }}
+                          />
+                          {allRouteItems.map((_, i) => (
+                            <circle
+                              key={i}
+                              cx={100 + (i * 15)}
+                              cy={50 + (i * 40)}
+                              r="4"
+                              fill={i === 0 ? '#F97316' : '#CBD5E1'}
+                              className="shadow-lg"
+                            />
+                          ))}
+                        </>
+                      )}
                     </svg>
 
-                    {allRouteItems.slice(0, 3).map((item, i) => (
+                    {!hasEnoughCoords && allRouteItems.slice(0, 3).map((item, i) => (
                       <div
                         key={item.id}
                         style={{ top: `${40 + (i * 40)}px`, left: `${80 + (i * 10)}px` }}
