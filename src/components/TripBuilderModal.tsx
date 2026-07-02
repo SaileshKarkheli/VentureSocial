@@ -80,6 +80,7 @@ export default function TripBuilderModal({ isOpen, onClose }: TripBuilderModalPr
     images: string[];
     categoryImages?: Record<string, string>;
     categoryCosts?: Record<string, number>;
+    stayCategory?: 'Hotel' | 'Villa' | 'Airbnb';
   }
 
   const createEmptyDay = (index: number): DayState => ({
@@ -90,7 +91,8 @@ export default function TripBuilderModal({ isOpen, onClose }: TripBuilderModalPr
     routeSummary: [],
     images: [],
     categoryImages: {},
-    categoryCosts: {}
+    categoryCosts: {},
+    stayCategory: 'Hotel'
   });
 
   const { session } = useAuth();
@@ -102,6 +104,34 @@ export default function TripBuilderModal({ isOpen, onClose }: TripBuilderModalPr
   const [manualTransport, setManualTransport] = useState('');
 
   const destinationInputRef = useRef<HTMLInputElement>(null);
+
+  const changeDayIndex = (idx: number) => {
+    setCurrentDayIndex(idx);
+    setShowManualEntry(null);
+    setManualItem({ title: '', link: '' });
+    setManualTransport('');
+  };
+
+  const handleDeleteDay = (idxToDelete: number) => {
+    if (idxToDelete === 0) return; // Cannot delete Day 1
+    
+    setDays(prev => {
+      const filtered = prev.filter((_, i) => i !== idxToDelete);
+      // Renumber day titles and IDs
+      return filtered.map((day, i) => ({
+        ...day,
+        title: `Day ${i + 1}`,
+        id: `day-${i + 1}`
+      }));
+    });
+
+    // Handle active day index change
+    if (currentDayIndex >= idxToDelete) {
+      changeDayIndex(Math.max(0, currentDayIndex - 1));
+    } else {
+      changeDayIndex(currentDayIndex);
+    }
+  };
 
   // Load Google Maps Places script dynamically on mount using VITE_GOOGLE_MAPS_API_KEY
   useEffect(() => {
@@ -321,7 +351,7 @@ export default function TripBuilderModal({ isOpen, onClose }: TripBuilderModalPr
     }
   };
 
-  const [stayCategory, setStayCategory] = useState<'Hotel' | 'Villa' | 'Airbnb'>('Hotel');
+
   const [showManualEntry, setShowManualEntry] = useState<RouteItem['type'] | null>(null);
   const [manualItem, setManualItem] = useState({ title: '', link: '' });
 
@@ -422,18 +452,46 @@ export default function TripBuilderModal({ isOpen, onClose }: TripBuilderModalPr
                   {/* Day Timeline */}
                   <div className="flex gap-3 overflow-x-auto pb-2 pt-2 custom-scrollbar items-center">
                     {days.map((day, idx) => (
-                      <button
+                      <div
                         key={day.id}
-                        onClick={() => setCurrentDayIndex(idx)}
-                        className={`px-5 py-2.5 rounded-xl font-bold text-sm transition-all whitespace-nowrap shadow-sm border ${idx === currentDayIndex ? 'bg-orange-500 text-white border-orange-500' : 'bg-white text-zinc-400 border-zinc-200 hover:border-orange-500 hover:text-orange-500'}`}
+                        className="relative flex items-center shrink-0"
                       >
-                        {day.title}
-                      </button>
+                        <button
+                          onClick={() => changeDayIndex(idx)}
+                          className={`px-5 py-2.5 rounded-xl font-bold text-sm transition-all whitespace-nowrap shadow-sm border ${
+                            idx > 0 ? 'pr-9' : ''
+                          } ${
+                            idx === currentDayIndex
+                              ? 'bg-orange-500 text-white border-orange-500'
+                              : 'bg-white text-zinc-400 border-zinc-200 hover:border-orange-500 hover:text-orange-500'
+                          }`}
+                        >
+                          {day.title}
+                        </button>
+                        {idx > 0 && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteDay(idx);
+                            }}
+                            className={`absolute right-2.5 p-0.5 rounded-md text-[10px] font-extrabold transition-all hover:scale-110 flex items-center justify-center ${
+                              idx === currentDayIndex
+                                ? 'text-white/80 hover:text-white hover:bg-white/10'
+                                : 'text-zinc-400 hover:text-rose-500 hover:bg-rose-50'
+                            }`}
+                            style={{ width: '16px', height: '16px' }}
+                            title="Delete Day"
+                          >
+                            ×
+                          </button>
+                        )}
+                      </div>
                     ))}
                     <button
                       onClick={() => {
-                        setDays(prev => [...prev, createEmptyDay(prev.length)]);
-                        setCurrentDayIndex(days.length);
+                        const newDaysLength = days.length;
+                        setDays(prev => [...prev, createEmptyDay(newDaysLength)]);
+                        changeDayIndex(newDaysLength);
                       }}
                       className="px-5 py-2.5 rounded-xl font-bold text-sm bg-orange-500/10 text-orange-500 hover:bg-orange-500/20 transition-all whitespace-nowrap flex items-center gap-2 border border-orange-500/10"
                     >
@@ -646,8 +704,8 @@ export default function TripBuilderModal({ isOpen, onClose }: TripBuilderModalPr
                         {['Hotel', 'Villa', 'Airbnb'].map((cat) => (
                           <button
                             key={cat}
-                            onClick={() => setStayCategory(cat as any)}
-                            className={`px-4 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider border transition-all ${stayCategory === cat
+                            onClick={() => updateActiveDay(prev => ({ ...prev, stayCategory: cat as any }))}
+                            className={`px-4 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider border transition-all ${(activeDay.stayCategory || 'Hotel') === cat
                                 ? 'bg-orange-500 border-orange-500 text-white shadow-lg shadow-orange-500/20'
                                 : 'bg-zinc-50 border-zinc-100 text-zinc-400 hover:border-orange-500/30'
                               }`}
@@ -657,8 +715,8 @@ export default function TripBuilderModal({ isOpen, onClose }: TripBuilderModalPr
                         ))}
                       </div>
                       <SearchBox
-                        placeholder={`Search ${stayCategory}s, Resorts, or Boutique Stays...`}
-                        context={`${stayCategory.toLowerCase()} in ${destination}`}
+                        placeholder={`Search ${(activeDay.stayCategory || 'Hotel')}s, Resorts, or Boutique Stays...`}
+                        context={`${(activeDay.stayCategory || 'Hotel').toLowerCase()} in ${destination}`}
                         types={['lodging']}
                         inputClassName="places-autocomplete-input"
                         onSelect={(res) => addRouteItem(res.title, res.link, 'hotel', res.coordinates, res.photoUrl, res.snippet)}
@@ -881,8 +939,8 @@ export default function TripBuilderModal({ isOpen, onClose }: TripBuilderModalPr
               <div className="pt-10 flex flex-col sm:flex-row items-center justify-between border-t border-zinc-100 gap-4">
                 <div className="flex flex-col sm:flex-row sm:items-center gap-6">
                   <div className="flex flex-col items-start pr-6 sm:border-r sm:border-zinc-200">
-                    <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Estimated Total</span>
-                    <span className="text-3xl font-display font-bold text-[#0A192F] font-mono">${totalBudget.toFixed(2)}</span>
+                    <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">{activeDay.title} Total: <span className="font-mono text-xs font-bold text-[#0A192F]">${getDayCost(activeDay).toFixed(2)}</span></span>
+                    <span className="text-[10px] font-bold text-orange-500 uppercase tracking-widest mt-1">Grand Total: <span className="font-mono text-lg font-extrabold text-orange-600">${totalBudget.toFixed(2)}</span></span>
                   </div>
                   {totalBudget > 0 && (
                     <label className="flex items-center gap-3 cursor-pointer group">
@@ -902,10 +960,11 @@ export default function TripBuilderModal({ isOpen, onClose }: TripBuilderModalPr
                 <div className="flex items-center gap-3">
                   <button
                     onClick={() => {
+                      const nextIndex = currentDayIndex + 1;
                       if (currentDayIndex === days.length - 1) {
                         setDays(prev => [...prev, createEmptyDay(prev.length)]);
                       }
-                      setCurrentDayIndex(prev => prev + 1);
+                      changeDayIndex(nextIndex);
                     }}
                     className="bg-zinc-100 text-[#0A192F] font-bold px-6 py-4 rounded-xl hover:bg-zinc-200 transition-all flex items-center gap-2 group whitespace-nowrap"
                   >
