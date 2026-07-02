@@ -20,7 +20,8 @@ import {
   MapPin,
   Image as ImageIcon,
   Upload,
-  ImagePlus
+  ImagePlus,
+  AlertCircle
 } from 'lucide-react';
 import SmartImage from './SmartImage';
 import SearchBox from './SearchBox';
@@ -102,6 +103,7 @@ export default function TripBuilderModal({ isOpen, onClose }: TripBuilderModalPr
   const [days, setDays] = useState<DayState[]>([createEmptyDay(0)]);
   const [currentDayIndex, setCurrentDayIndex] = useState(0);
   const [manualTransport, setManualTransport] = useState('');
+  const [error, setError] = useState<string | null>(null);
 
   const destinationInputRef = useRef<HTMLInputElement>(null);
 
@@ -202,13 +204,10 @@ export default function TripBuilderModal({ isOpen, onClose }: TripBuilderModalPr
       description
     };
 
-    updateActiveDay(prev => {
-      const updates: any = { routeSummary: [...prev.routeSummary, newItem] };
-      if (photoUrl && (!prev.categoryImages || !prev.categoryImages[type])) {
-        updates.categoryImages = { ...(prev.categoryImages || {}), [type]: photoUrl };
-      }
-      return { ...prev, ...updates };
-    });
+    updateActiveDay(prev => ({
+      ...prev,
+      routeSummary: [...prev.routeSummary, newItem]
+    }));
   };
 
   const removeRouteItem = (dayIndex: number, itemId: string) => {
@@ -237,7 +236,20 @@ export default function TripBuilderModal({ isOpen, onClose }: TripBuilderModalPr
   };
 
   const handleFinishTrip = async () => {
-    if (!destination || !session?.user?.id) return;
+    setError(null);
+    console.log("handleFinishTrip called. User session ID:", session?.user?.id);
+    
+    if (!session?.user?.id) {
+      setError("User is not authenticated. Please log in.");
+      console.error("Save failed: User is not authenticated.");
+      return;
+    }
+    
+    if (!destination) {
+      setError("Please enter a destination at the top before finishing.");
+      console.error("Save failed: Destination is empty.");
+      return;
+    }
 
     // Find the first high-res photo loaded in any day's category to use as Cover Photo
     let coverPhoto = 'https://images.unsplash.com/photo-1541844053589-3462d48979e2?auto=format&fit=crop&w=800&q=80';
@@ -250,17 +262,26 @@ export default function TripBuilderModal({ isOpen, onClose }: TripBuilderModalPr
     }
 
     try {
-      const { data, error } = await supabase.from('posts').insert({
+      const postInsertData = {
         user_id: session.user.id,
         location_name: destination,
         caption: `My Custom Trip to ${destination}`,
         category: 'Activity', // Required NOT NULL column in posts schema
         base_price: totalBudget
-      }).select().single();
+      };
+      
+      console.log("Inserting post into Supabase:", postInsertData);
+      
+      const { data, error } = await supabase.from('posts').insert(postInsertData).select().single();
 
-      if (error) throw error;
+      if (error) {
+        console.error("Posts Insert Error Object:", error);
+        throw new Error(`Failed to insert trip post: ${error.message} (Code: ${error.code})`);
+      }
 
       if (data) {
+        console.log("Post inserted successfully. Data:", data);
+        
         const spotsToInsert = days.flatMap((day, idx) => {
           return day.routeSummary.map(item => {
             const categoryMap: Record<string, 'Transport' | 'Stay' | 'Dining' | 'Activity'> = {
@@ -288,59 +309,19 @@ export default function TripBuilderModal({ isOpen, onClose }: TripBuilderModalPr
         });
 
         if (spotsToInsert.length > 0) {
+          console.log("Inserting trip spots into Supabase:", spotsToInsert);
           const { error: spotsError } = await supabase.from('trip_spots').insert(spotsToInsert);
           if (spotsError) {
-            console.error("Failed to insert trip spots:", spotsError);
-            alert(`Failed to save trip spots: ${spotsError.message}`);
-            return;
+            console.error("Trip Spots Insert Error Object:", spotsError);
+            throw new Error(`Failed to save trip spots: ${spotsError.message} (Code: ${spotsError.code})`);
           }
         }
         window.location.reload(); // Refresh to show new trip
       }
     } catch (err: any) {
-      console.warn("Supabase insert failed in TripBuilder, saving to localStorage:", err);
-      const customTripsStr = localStorage.getItem('venturesocial_custom_trips');
-      const customTrips = customTripsStr ? JSON.parse(customTripsStr) : [];
-
-      const spots = days.flatMap((day, idx) => {
-        return day.routeSummary.map(item => {
-          const categoryMap: Record<string, 'Transport' | 'Stay' | 'Dining' | 'Activity'> = {
-            transport: 'Transport',
-            hotel: 'Stay',
-            dining: 'Dining',
-            activity: 'Activity'
-          };
-          const cost = day.categoryCosts?.[item.type];
-          let description = item.description || `Details for ${item.title}.`;
-          if (cost !== undefined && cost > 0) {
-            description += ` Cost: $${cost}.`;
-          }
-          return {
-            id: item.id,
-            day_number: idx + 1,
-            title: item.title,
-            description,
-            category: categoryMap[item.type],
-            image_url: day.categoryImages?.[item.type] || null,
-            link_url: item.link
-          };
-        });
-      });
-
-      const newTrip = {
-        id: `custom-${Date.now()}`,
-        year: new Date().getFullYear().toString(),
-        country: destination,
-        image: coverPhoto,
-        base_price: totalBudget,
-        spots
-      };
-      customTrips.push(newTrip);
-      localStorage.setItem('venturesocial_custom_trips', JSON.stringify(customTrips));
-      window.location.reload(); // Refresh to show new trip
+      console.error("handleFinishTrip caught error:", err);
+      setError(err.message || "An unexpected error occurred while saving the trip.");
     }
-
-    onClose();
   };
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -935,6 +916,13 @@ export default function TripBuilderModal({ isOpen, onClose }: TripBuilderModalPr
                   </div>
                 </section>
               </div>
+
+              {error && (
+                <div className="p-4 mb-4 bg-rose-50 border border-rose-200 text-rose-600 rounded-2xl text-sm font-semibold flex items-center gap-2">
+                  <AlertCircle size={16} />
+                  <span>{error}</span>
+                </div>
+              )}
 
               <div className="pt-10 flex flex-col sm:flex-row items-center justify-between border-t border-zinc-100 gap-4">
                 <div className="flex flex-col sm:flex-row sm:items-center gap-6">
