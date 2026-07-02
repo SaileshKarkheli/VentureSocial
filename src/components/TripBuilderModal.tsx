@@ -261,7 +261,90 @@ export default function TripBuilderModal({ isOpen, onClose }: TripBuilderModalPr
       }
     }
 
+    const isMockMode = import.meta.env.VITE_ENABLE_MOCK_MODE === 'true' && !!localStorage.getItem('venturesocial_mock_session');
+    
+    if (isMockMode) {
+      console.log("Mock mode detected. Saving trip directly to localStorage...");
+      try {
+        const customTripsStr = localStorage.getItem('venturesocial_custom_trips');
+        const customTrips = customTripsStr ? JSON.parse(customTripsStr) : [];
+
+        const spots = days.flatMap((day, idx) => {
+          return day.routeSummary.map(item => {
+            const categoryMap: Record<string, 'Transport' | 'Stay' | 'Dining' | 'Activity'> = {
+              transport: 'Transport',
+              hotel: 'Stay',
+              dining: 'Dining',
+              activity: 'Activity'
+            };
+            const cost = day.categoryCosts?.[item.type];
+            let description = item.description || `Details for ${item.title}.`;
+            if (cost !== undefined && cost > 0) {
+              description += ` Cost: $${cost}.`;
+            }
+            return {
+              id: item.id,
+              day_number: idx + 1,
+              title: item.title,
+              description,
+              category: categoryMap[item.type],
+              image_url: day.categoryImages?.[item.type] || null,
+              link_url: item.link
+            };
+          });
+        });
+
+        const newTrip = {
+          id: `custom-${Date.now()}`,
+          year: new Date().getFullYear().toString(),
+          country: destination,
+          image: coverPhoto,
+          base_price: totalBudget,
+          spots
+        };
+        customTrips.push(newTrip);
+        localStorage.setItem('venturesocial_custom_trips', JSON.stringify(customTrips));
+        window.location.reload(); // Refresh to show new trip
+      } catch (err: any) {
+        console.error("Local storage save failed:", err);
+        setError("Failed to save trip locally: " + err.message);
+      }
+      return;
+    }
+
     try {
+      // Ensure user profile exists in profiles table before inserting posts (satisfies posts_profile_fkey)
+      try {
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('id', session.user.id)
+          .single();
+          
+        if (profileError || !profile) {
+          console.log("Profile not found in DB. Proactively creating a profile record...");
+          const safeName = session.user.user_metadata?.name || session.user.email?.split('@')[0] || 'Explorer';
+          const uniqueUsername = `${safeName.toLowerCase().replace(/[^a-z0-9]/g, '')}_${Math.random().toString(36).substr(2, 5)}`;
+          
+          const { error: insertProfileError } = await supabase
+            .from('profiles')
+            .insert({
+              id: session.user.id,
+              full_name: safeName,
+              username: uniqueUsername,
+              avatar_url: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&h=150'
+            });
+            
+          if (insertProfileError) {
+            console.warn("Proactive profile insertion failed (might already exist or permission restricted):", insertProfileError);
+          } else {
+            console.log("Proactive profile insertion succeeded.");
+          }
+        }
+      } catch (profileCheckErr) {
+        console.warn("Exception during proactive profile check/insert:", profileCheckErr);
+      }
+
       const postInsertData = {
         user_id: session.user.id,
         location_name: destination,
