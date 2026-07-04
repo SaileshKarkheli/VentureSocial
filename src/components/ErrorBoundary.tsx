@@ -21,6 +21,7 @@ export default class ErrorBoundary extends React.Component<Props, State> {
   }
 
   public componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    console.error('BOUNDARY CAUGHT:', error, errorInfo);
     logger.error('Uncaught rendering exception captured inside boundary:', { error, errorInfo });
   }
 
