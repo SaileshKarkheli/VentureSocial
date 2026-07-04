@@ -150,7 +150,7 @@ export default function CommandSearch() {
                             style={{ borderRadius: '2px' }}
                           >
                             <div className="w-10 h-10 bg-black shrink-0 relative overflow-hidden" style={{ borderRadius: '2px' }}>
-                               <img src={p.images[0]?.url} alt="Cover" className="w-full h-full object-cover opacity-80" />
+                               <img src={p.images?.[0]?.url} alt="Cover" className="w-full h-full object-cover opacity-80" />
                             </div>
                             <div className="flex flex-col flex-1 min-w-0">
                                <span className="font-bold text-[#0A192F] text-sm leading-tight group-hover:text-orange-500 transition-colors truncate">{p.caption.split('#')[0]}</span>

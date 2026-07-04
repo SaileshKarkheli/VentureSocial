@@ -290,7 +290,7 @@ export default function Search() {
               className="flex-[2] h-full bg-white rounded-3xl border border-zinc-200 shadow-xl overflow-hidden flex flex-col"
             >
               <div className="relative h-64 shrink-0 bg-black">
-                <img src={selectedPost.images[0]?.url} alt="Cover" className="w-full h-full object-cover opacity-70" />
+                <img src={selectedPost.images?.[0]?.url} alt="Cover" className="w-full h-full object-cover opacity-70" />
                 <button 
                   onClick={() => setSelectedPost(null)}
                   className="absolute top-4 left-4 bg-white/20 backdrop-blur-md text-white p-2 rounded-full hover:bg-white/40 lg:hidden"

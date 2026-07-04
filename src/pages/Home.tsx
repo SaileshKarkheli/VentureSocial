@@ -237,9 +237,9 @@ export default function Home() {
        if (aFollowed !== bFollowed) return bFollowed - aFollowed;
 
        // Priority 1: Live Geography Distances (if active)
-       if (userLocation && a.images[0]?.coordinates && b.images[0]?.coordinates) {
-         const distA = getHaversineDistance(userLocation.lat, userLocation.lng, a.images[0].coordinates.lat, a.images[0].coordinates.lng);
-         const distB = getHaversineDistance(userLocation.lat, userLocation.lng, b.images[0].coordinates.lat, b.images[0].coordinates.lng);
+        if (userLocation && a.images?.[0]?.coordinates && b.images?.[0]?.coordinates) {
+          const distA = getHaversineDistance(userLocation.lat, userLocation.lng, a.images[0].coordinates.lat, a.images[0].coordinates.lng);
+          const distB = getHaversineDistance(userLocation.lat, userLocation.lng, b.images[0].coordinates.lat, b.images[0].coordinates.lng);
          
          if (Math.abs(distA - distB) > 250) {
            return distA - distB; 
@@ -344,7 +344,7 @@ export default function Home() {
                                   className="flex items-center gap-3 p-2.5 bg-zinc-50 border border-zinc-100 hover:border-[#0A192F] hover:bg-white cursor-pointer group transition-all rounded-xl"
                                 >
                                   <div className="w-8 h-8 bg-black rounded-lg shrink-0 overflow-hidden">
-                                     <img src={p.images[0]?.url} alt="Cover" className="w-full h-full object-cover opacity-80" />
+                                     <img src={p.images?.[0]?.url} alt="Cover" className="w-full h-full object-cover opacity-80" />
                                   </div>
                                   <div className="flex flex-col flex-1 min-w-0">
                                      <span className="font-bold text-[#0A192F] text-sm leading-tight group-hover:text-orange-500 transition-colors truncate">{p.caption.split('#')[0]}</span>

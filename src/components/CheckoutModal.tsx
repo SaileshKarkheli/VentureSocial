@@ -308,7 +308,7 @@ export default function CheckoutModal({ isOpen, onClose }: CheckoutModalProps) {
                 {/* Trip Card */}
                 <div className="bg-white border-2 border-zinc-100 rounded-[2rem] p-6 flex flex-col md:flex-row gap-6 items-center md:items-start group">
                   <div className="w-full md:w-32 h-32 rounded-2xl overflow-hidden shrink-0 relative bg-zinc-100">
-                    <img src={item.images[0]?.url || item.avatar} alt="Trip" className="w-full h-full object-cover" />
+                    <img src={item.images?.[0]?.url || item.avatar} alt="Trip" className="w-full h-full object-cover" />
                   </div>
                   <div className="flex-1 text-center md:text-left">
                     <div className="flex items-start justify-between">
@@ -356,7 +356,7 @@ export default function CheckoutModal({ isOpen, onClose }: CheckoutModalProps) {
                     <span className="text-xs font-bold text-zinc-400 ml-2 uppercase tracking-widest">(Deselect to Exclude)</span>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                    {item.images.map((img, idx) => {
+                    {(item.images || []).map((img, idx) => {
                       // Using the image description or fallback to "Location X"
                       const locName = img.description || `Location ${idx + 1}`;
                       const incId = `loc-${idx}`;

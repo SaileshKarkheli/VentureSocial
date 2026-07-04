@@ -93,6 +93,19 @@ export default function MediaCarousel({ images, className }: MediaCarouselProps)
     document.body
   );
 
+  if (!images || images.length === 0 || !images[currentIndex]) {
+    return (
+      <div className={className || "relative aspect-[4/5] overflow-hidden bg-zinc-100 group"}>
+        <SmartImage
+          src="https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?auto=format&fit=crop&w=800&q=80"
+          alt="Default Cover"
+          locationName="Explore"
+          className="w-full h-full object-cover"
+        />
+      </div>
+    );
+  }
+
   return (
     <>
       <div 
