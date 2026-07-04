@@ -9,8 +9,6 @@ if (!supabaseUrl || !supabaseAnonKey) {
 
 export const supabase = createClient(supabaseUrl || '', supabaseAnonKey || '');
 
-import { logger } from './lib/logger';
-
 export async function safeDbCall<T>(
   promise: Promise<{ data: T | null; error: any }>,
   timeoutMs = 15000
@@ -22,12 +20,12 @@ export async function safeDbCall<T>(
   try {
     const { data, error } = await Promise.race([promise, timeoutPromise]);
     if (error) {
-      logger.error('Database call returned error:', error);
+      console.error('[Database Error] Database call returned error:', error);
       throw new Error(error.message || 'Database request failed.');
     }
     return data;
   } catch (err) {
-    logger.error('Execution / connection exception during database call:', err);
+    console.error('[Database Exception] Execution / connection exception during database call:', err);
     throw err;
   }
 }
