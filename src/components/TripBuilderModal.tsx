@@ -104,6 +104,7 @@ export default function TripBuilderModal({ isOpen, onClose }: TripBuilderModalPr
   const [currentDayIndex, setCurrentDayIndex] = useState(0);
   const [manualTransport, setManualTransport] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
 
   const destinationInputRef = useRef<HTMLInputElement>(null);
 
@@ -236,6 +237,7 @@ export default function TripBuilderModal({ isOpen, onClose }: TripBuilderModalPr
   };
 
   const handleFinishTrip = async () => {
+    if (isSaving) return;
     setError(null);
     console.log("handleFinishTrip called. User session ID:", session?.user?.id);
     
@@ -265,6 +267,7 @@ export default function TripBuilderModal({ isOpen, onClose }: TripBuilderModalPr
     
     if (isMockMode) {
       console.log("Mock mode detected. Saving trip directly to localStorage...");
+      setIsSaving(true);
       try {
         const customTripsStr = localStorage.getItem('venturesocial_custom_trips');
         const customTrips = customTripsStr ? JSON.parse(customTripsStr) : [];
@@ -308,10 +311,12 @@ export default function TripBuilderModal({ isOpen, onClose }: TripBuilderModalPr
       } catch (err: any) {
         console.error("Local storage save failed:", err);
         setError("Failed to save trip locally: " + err.message);
+        setIsSaving(false);
       }
       return;
     }
 
+    setIsSaving(true);
     try {
       // Ensure user profile exists in profiles table before inserting posts (satisfies posts_profile_fkey)
       try {
@@ -350,7 +355,8 @@ export default function TripBuilderModal({ isOpen, onClose }: TripBuilderModalPr
         location_name: destination,
         caption: `My Custom Trip to ${destination}`,
         category: 'Activity', // Required NOT NULL column in posts schema
-        base_price: totalBudget
+        base_price: totalBudget,
+        is_private: true // Created trips are private/drafts by default, shared via PublishModal later
       };
       
       console.log("Inserting post into Supabase:", postInsertData);
@@ -404,6 +410,7 @@ export default function TripBuilderModal({ isOpen, onClose }: TripBuilderModalPr
     } catch (err: any) {
       console.error("handleFinishTrip caught error:", err);
       setError(err.message || "An unexpected error occurred while saving the trip.");
+      setIsSaving(false);
     }
   };
 
@@ -1045,9 +1052,10 @@ export default function TripBuilderModal({ isOpen, onClose }: TripBuilderModalPr
                   <button
                     id="finish-trip-button"
                     onClick={handleFinishTrip}
-                    className="bg-orange-500 text-white font-bold px-8 py-4 rounded-xl shadow-xl hover:bg-orange-600 transition-all flex items-center gap-2 whitespace-nowrap"
+                    disabled={isSaving}
+                    className={`bg-orange-500 text-white font-bold px-8 py-4 rounded-xl shadow-xl hover:bg-orange-600 transition-all flex items-center gap-2 whitespace-nowrap ${isSaving ? 'opacity-50 cursor-not-allowed' : ''}`}
                   >
-                    Finish Trip
+                    {isSaving ? 'Saving...' : 'Finish Trip'}
                     <Sparkles size={18} />
                   </button>
                 </div>

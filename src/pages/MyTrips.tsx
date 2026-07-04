@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
-import { Plus, ArrowRight, Share2 } from 'lucide-react';
+import { Plus, ArrowRight, Share2, Trash2 } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
 import TripBuilderModal from '../components/TripBuilderModal';
 import PublishModal from '../components/PublishModal';
@@ -25,6 +25,41 @@ export default function MyTrips() {
   
   const [isBuilderOpen, setIsBuilderOpen] = useState(false);
   const [publishTripId, setPublishTripId] = useState<string | null>(null);
+
+  const handleDeleteTrip = async (tripId: string, country: string) => {
+    const confirmed = window.confirm(`Are you sure you want to delete your trip to ${country}? This action cannot be undone.`);
+    if (!confirmed) return;
+
+    try {
+      const isMockMode = import.meta.env.VITE_ENABLE_MOCK_MODE === 'true' && !!localStorage.getItem('venturesocial_mock_session');
+      if (isMockMode) {
+        console.log("Mock mode: deleting trip locally...");
+        const customTripsStr = localStorage.getItem('venturesocial_custom_trips');
+        if (customTripsStr) {
+          const customTrips = JSON.parse(customTripsStr);
+          const filtered = customTrips.filter((t: any) => t.id !== tripId);
+          localStorage.setItem('venturesocial_custom_trips', JSON.stringify(filtered));
+        }
+        setMyTrips(prev => prev.filter(t => t.id !== tripId));
+        return;
+      }
+
+      const { error } = await supabase
+        .from('posts')
+        .delete()
+        .eq('id', tripId);
+
+      if (error) {
+        throw error;
+      }
+
+      setMyTrips(prev => prev.filter(t => t.id !== tripId));
+      console.log("Trip deleted successfully.");
+    } catch (err: any) {
+      console.error("Failed to delete trip:", err);
+      alert(`Failed to delete trip: ${err.message || err}`);
+    }
+  };
 
   useEffect(() => {
     if (!session?.user?.id) {
@@ -107,6 +142,16 @@ export default function MyTrips() {
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent opacity-80 group-hover:opacity-70 transition-opacity" />
                 
+                <button 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDeleteTrip(trip.id, trip.country);
+                  }}
+                  className="absolute top-3 left-3 p-2 bg-white/20 backdrop-blur-md text-white rounded-xl opacity-0 group-hover:opacity-100 transition-all hover:bg-rose-600 hover:text-white z-20"
+                >
+                  <Trash2 size={16} />
+                </button>
+
                 <button 
                   onClick={(e) => {
                     e.stopPropagation();

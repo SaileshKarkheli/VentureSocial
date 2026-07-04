@@ -68,6 +68,7 @@ export default function Home() {
             comments(count),
             remix_stats(count)
           `)
+          .eq('is_private', false)
           .order('created_at', { ascending: false });
 
         if (feedMode === 'Following') {
