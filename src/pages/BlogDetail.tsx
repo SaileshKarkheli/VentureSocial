@@ -31,6 +31,9 @@ export default function BlogDetail() {
   const isNew = tripId === 'new';
   const isEditMode = isNew || location.search.includes('edit=true');
 
+  const queryParams = new URLSearchParams(location.search);
+  const urlTripId = queryParams.get('trip_id') || '';
+
   const [blog, setBlog] = useState<Blog | null>(null);
   const [isLoading, setIsLoading] = useState(!isNew);
   const [isSaving, setIsSaving] = useState(false);
@@ -39,34 +42,64 @@ export default function BlogDetail() {
     title: '',
     content: '',
     cover_image: '',
-    trip_id: ''
+    trip_id: urlTripId
   });
+
+  useEffect(() => {
+    if (isNew && urlTripId) {
+      setEditForm(prev => ({ ...prev, trip_id: urlTripId }));
+    }
+  }, [isNew, urlTripId]);
 
   const fetchBlog = useCallback(async () => {
     if (isNew || !tripId) return;
     setIsLoading(true);
     try {
-      const { data, error } = await supabase
+      let blogData = null;
+      let blogError = null;
+
+      // Try fetching by blog ID (tripId param as blog ID)
+      const { data: byIdData, error: byIdError } = await supabase
         .from('blogs')
         .select(`
           *,
           posts:blogs_trip_id_fkey(location_name)
         `)
         .eq('id', tripId)
-        .single();
+        .maybeSingle();
 
-      if (error) throw error;
+      if (byIdData) {
+        blogData = byIdData;
+      } else {
+        // If not found, try fetching by trip_id
+        const { data: byTripData, error: byTripError } = await supabase
+          .from('blogs')
+          .select(`
+            *,
+            posts:blogs_trip_id_fkey(location_name)
+          `)
+          .eq('trip_id', tripId)
+          .maybeSingle();
+        
+        if (byTripData) {
+          blogData = byTripData;
+        } else {
+          blogError = byIdError || byTripError;
+        }
+      }
 
-      if (data) {
+      if (blogError && !blogData) throw blogError;
+
+      if (blogData) {
         const mapped = {
-          id: data.id,
-          title: data.title,
-          content: data.content || '',
-          cover_image: data.cover_image,
-          trip_id: data.trip_id,
-          created_at: data.created_at,
-          location_name: data.posts?.location_name || 'Unknown Location',
-          is_owner: data.user_id === session?.user?.id
+          id: blogData.id,
+          title: blogData.title,
+          content: blogData.content || '',
+          cover_image: blogData.cover_image,
+          trip_id: blogData.trip_id,
+          created_at: blogData.created_at,
+          location_name: blogData.posts?.location_name || 'Unknown Location',
+          is_owner: blogData.user_id === session?.user?.id
         };
         setBlog(mapped);
         setEditForm({
@@ -290,7 +323,8 @@ export default function BlogDetail() {
               <select
                 value={editForm.trip_id}
                 onChange={(e) => setEditForm(prev => ({ ...prev, trip_id: e.target.value }))}
-                className="w-full bg-zinc-50 border border-zinc-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-orange-500/50 outline-none"
+                disabled={!!urlTripId}
+                className="w-full bg-zinc-50 border border-zinc-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-orange-500/50 outline-none disabled:opacity-75 disabled:cursor-not-allowed"
               >
                 <option value="">None (standalone blog)</option>
                 {userTrips.map(trip => (

@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
-import { Plus, ArrowRight, Share2, Trash2 } from 'lucide-react';
+import { Plus, ArrowRight, Share2, Trash2, PenSquare } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
 import TripBuilderModal from '../components/TripBuilderModal';
 import PublishModal from '../components/PublishModal';
@@ -61,6 +61,8 @@ export default function MyTrips() {
     }
   };
 
+  const [blogsMap, setBlogsMap] = useState<Record<string, string>>({}); // trip_id -> blog_id
+
   useEffect(() => {
     if (!session?.user?.id) {
       setIsLoadingTrips(false);
@@ -72,6 +74,31 @@ export default function MyTrips() {
       try {
         const data = await tripsService.fetchMyTrips(session.user.id);
         setMyTrips(data);
+
+        // Fetch user's blogs to map trip_id -> blog_id
+        const isMockMode = import.meta.env.VITE_ENABLE_MOCK_MODE === 'true';
+        if (isMockMode) {
+          const localBlogsStr = localStorage.getItem('venturesocial_blogs');
+          const localBlogs = localBlogsStr ? JSON.parse(localBlogsStr) : [];
+          const map: Record<string, string> = {};
+          localBlogs.forEach((b: any) => {
+            if (b.trip_id) map[b.trip_id] = b.id;
+          });
+          setBlogsMap(map);
+        } else {
+          const { data: blogsData, error: blogsError } = await supabase
+            .from('blogs')
+            .select('id, trip_id')
+            .eq('user_id', session.user.id);
+          
+          if (!blogsError && blogsData) {
+            const map: Record<string, string> = {};
+            blogsData.forEach((b: any) => {
+              if (b.trip_id) map[b.trip_id] = b.id;
+            });
+            setBlogsMap(map);
+          }
+        }
       } catch (err) {
         console.error("Supabase fetch failed in MyTrips:", err);
       } finally {
@@ -169,15 +196,28 @@ export default function MyTrips() {
                   <h3 className="text-white font-display font-bold text-lg leading-tight">
                     {trip.country}
                   </h3>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      navigate(`/blog/${trip.id}`);
-                    }}
-                    className="mt-2 text-[10px] font-bold text-white/60 hover:text-orange-500 transition-colors uppercase tracking-widest flex items-center justify-center gap-1 mx-auto"
-                  >
-                    Read the Travel Story
-                  </button>
+                  {blogsMap[trip.id] ? (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(`/blog/${trip.id}`);
+                      }}
+                      className="mt-2 text-[10px] font-bold text-white/60 hover:text-orange-500 transition-colors uppercase tracking-widest flex items-center justify-center gap-1 mx-auto"
+                    >
+                      Read the Travel Story
+                    </button>
+                  ) : (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(`/blogs/new?trip_id=${trip.id}`);
+                      }}
+                      className="mt-2 text-[10px] font-bold text-white/60 hover:text-orange-500 transition-colors uppercase tracking-widest flex items-center justify-center gap-1.5 mx-auto"
+                    >
+                      <PenSquare size={12} />
+                      <span>Write a Blog</span>
+                    </button>
+                  )}
                 </div>
               </motion.div>
 
