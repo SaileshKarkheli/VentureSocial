@@ -28,7 +28,7 @@ export default function BlogDetail() {
   const location = useLocation();
   const { session } = useAuth();
 
-  const isNew = tripId === 'new';
+  const isNew = tripId === 'new' || location.pathname === '/blogs/new';
   const isEditMode = isNew || location.search.includes('edit=true');
 
   const queryParams = new URLSearchParams(location.search);
