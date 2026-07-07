@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { Plus, ArrowRight, Share2, Trash2, PenSquare } from 'lucide-react';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import TripBuilderModal from '../components/TripBuilderModal';
 import PublishModal from '../components/PublishModal';
 import { TripGridSkeleton } from '../components/Skeletons';
@@ -62,6 +62,16 @@ export default function MyTrips() {
   };
 
   const [blogsMap, setBlogsMap] = useState<Record<string, string>>({}); // trip_id -> blog_id
+  const [tripDaysMap, setTripDaysMap] = useState<Record<string, number>>({});
+
+  const stats = useMemo(() => {
+    const totalTrips = myTrips.length;
+    const uniqueCountries = new Set(myTrips.map(t => t.country.trim())).size;
+    const totalDays = myTrips.reduce((sum, trip) => {
+      return sum + (tripDaysMap[trip.id] || 1);
+    }, 0);
+    return { totalTrips, uniqueCountries, totalDays };
+  }, [myTrips, tripDaysMap]);
 
   useEffect(() => {
     if (!session?.user?.id) {
@@ -75,8 +85,69 @@ export default function MyTrips() {
         const data = await tripsService.fetchMyTrips(session.user.id);
         setMyTrips(data);
 
-        // Fetch user's blogs to map trip_id -> blog_id
         const isMockMode = import.meta.env.VITE_ENABLE_MOCK_MODE === 'true';
+
+        // Calculate total days map
+        const daysMap: Record<string, number> = {};
+        
+        if (isMockMode) {
+          const customTripsStr = localStorage.getItem('venturesocial_custom_trips');
+          const customTrips = customTripsStr ? JSON.parse(customTripsStr) : [];
+          
+          customTrips.forEach((t: any) => {
+            if (Array.isArray(t.spots) && t.spots.length > 0) {
+              daysMap[t.id] = Math.max(...t.spots.map((s: any) => s.day_number || 1));
+            } else {
+              daysMap[t.id] = 1;
+            }
+          });
+          
+          const mockDaysMap: Record<string, number> = {
+            '1': 3,
+            '2': 3,
+            '3': 3,
+            '4': 2,
+            '5': 2
+          };
+          
+          data.forEach((trip: any) => {
+            if (mockDaysMap[trip.id] !== undefined) {
+              daysMap[trip.id] = mockDaysMap[trip.id];
+            } else if (!daysMap[trip.id]) {
+              daysMap[trip.id] = 1;
+            }
+          });
+          setTripDaysMap(daysMap);
+        } else {
+          const tripIds = data.map((t: any) => t.id);
+          if (tripIds.length > 0) {
+            const { data: spotsData, error: spotsError } = await supabase
+              .from('trip_spots')
+              .select('post_id, day_number')
+              .in('post_id', tripIds);
+            
+            if (!spotsError && spotsData) {
+              tripIds.forEach((id: string) => {
+                daysMap[id] = 1;
+              });
+              spotsData.forEach((spot: any) => {
+                if (spot.day_number > (daysMap[spot.post_id] || 0)) {
+                  daysMap[spot.post_id] = spot.day_number;
+                }
+              });
+              setTripDaysMap(daysMap);
+            } else {
+              tripIds.forEach((id: string) => {
+                daysMap[id] = 1;
+              });
+              setTripDaysMap(daysMap);
+            }
+          } else {
+            setTripDaysMap({});
+          }
+        }
+
+        // Fetch user's blogs to map trip_id -> blog_id
         if (isMockMode) {
           const localBlogsStr = localStorage.getItem('venturesocial_blogs');
           const localBlogs = localBlogsStr ? JSON.parse(localBlogsStr) : [];
@@ -125,6 +196,22 @@ export default function MyTrips() {
           <span>Add Country/City</span>
         </button>
       </header>
+
+      {/* LinkedIn-style Stats Bar */}
+      <div className="flex gap-16 py-4">
+        <div>
+          <div className="text-3xl font-display font-bold text-[#0A192F]">{stats.totalTrips}</div>
+          <div className="text-xs text-zinc-500 font-semibold uppercase tracking-wider mt-1">Total Trips</div>
+        </div>
+        <div>
+          <div className="text-3xl font-display font-bold text-[#0A192F]">{stats.uniqueCountries}</div>
+          <div className="text-xs text-zinc-500 font-semibold uppercase tracking-wider mt-1">Countries Visited</div>
+        </div>
+        <div>
+          <div className="text-3xl font-display font-bold text-[#0A192F]">{stats.totalDays}</div>
+          <div className="text-xs text-zinc-500 font-semibold uppercase tracking-wider mt-1">Total Days Traveled</div>
+        </div>
+      </div>
 
       <TripBuilderModal isOpen={isBuilderOpen} onClose={() => setIsBuilderOpen(false)} />
       
