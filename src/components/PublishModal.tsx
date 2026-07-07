@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Globe2, Sparkles, Send, CheckCircle2 } from 'lucide-react';
+import { X, Globe2, Sparkles, Send, CheckCircle2, Star } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../AppContext';
 import { supabase } from '../supabaseClient';
+import { tripsService } from '../services/tripsService';
 
 interface PublishModalProps {
   isOpen: boolean;
@@ -20,6 +21,8 @@ export default function PublishModal({ isOpen, onClose, preselectedTripId, onPub
   const [caption, setCaption] = useState('');
   const [isPublishing, setIsPublishing] = useState(false);
   const [selectedImages, setSelectedImages] = useState<string[]>([]);
+  const [tripDetail, setTripDetail] = useState<{ post: any, spots: any[] } | null>(null);
+  const [userRating, setUserRating] = useState<number>(5);
 
   const selectedTrip = myTrips.find(t => t.id === selectedTripId);
 
@@ -30,12 +33,39 @@ export default function PublishModal({ isOpen, onClose, preselectedTripId, onPub
     }
   }, [preselectedTripId]);
 
-  // When selected trip changes, select all its available images by default
+  // Load trip detail and set initial images
   useEffect(() => {
-    if (selectedTrip) {
-      setSelectedImages(selectedTrip.availableImages || [selectedTrip.image]);
-    }
-  }, [selectedTrip]);
+    if (!selectedTripId) return;
+    let isMounted = true;
+    
+    const loadTripDetail = async () => {
+      try {
+        const detail = await tripsService.fetchTripDetail(selectedTripId);
+        if (isMounted) {
+          setTripDetail(detail);
+          
+          // Extract unique images from the spots
+          const spotImages = (detail.spots || [])
+            .map((s: any) => s.image_url)
+            .filter(Boolean) as string[];
+          
+          const uniqueImages = Array.from(new Set(spotImages));
+          if (uniqueImages.length > 0) {
+            setSelectedImages(uniqueImages);
+          } else if (selectedTrip) {
+            setSelectedImages(selectedTrip.availableImages || [selectedTrip.image]);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to fetch trip detail in PublishModal:", err);
+      }
+    };
+
+    loadTripDetail();
+    return () => {
+      isMounted = false;
+    };
+  }, [selectedTripId, selectedTrip]);
 
   if (!isOpen) return null;
 
@@ -58,6 +88,26 @@ export default function PublishModal({ isOpen, onClose, preselectedTripId, onPub
         return;
       }
 
+      // Extract Stay category name
+      const staySpot = tripDetail?.spots.find(s => s.category === 'Stay');
+      const hotelType = staySpot ? staySpot.title : 'Not specified';
+
+      // Sum all spot costs from description, fallback to base_price
+      let calculatedPrice = 0;
+      tripDetail?.spots.forEach((s: any) => {
+        if (s.description) {
+          const match = s.description.match(/Cost:\s*\$?(\d+(?:\.\d+)?)/i);
+          if (match) {
+            calculatedPrice += parseFloat(match[1]);
+          }
+        }
+      });
+      const finalPrice = calculatedPrice > 0 ? calculatedPrice : (tripDetail?.post?.base_price || 0);
+
+      // Extract Activity titles
+      const activitySpots = (tripDetail?.spots || []).filter((s: any) => s.category === 'Activity');
+      const finalActivities = activitySpots.length > 0 ? activitySpots.map((s: any) => s.title) : [];
+
       // 1. Insert parent record into public.posts
       const { data: parentPost, error: parentError } = await supabase
         .from('posts')
@@ -65,10 +115,10 @@ export default function PublishModal({ isOpen, onClose, preselectedTripId, onPub
           user_id: user.id,
           location_name: selectedTrip.country,
           caption: caption,
-          rating: 5,
-          hotel_type: 'Resort',
-          price: 1500,
-          activities: ['Exploration'],
+          rating: userRating,
+          hotel_type: hotelType,
+          price: finalPrice,
+          activities: finalActivities,
           category: 'Activity' // Safely matches constraints checking
         })
         .select()
@@ -77,15 +127,18 @@ export default function PublishModal({ isOpen, onClose, preselectedTripId, onPub
       if (parentError) throw parentError;
 
       // 2. Insert detailed itinerary spots mapping via post_id
-      const spotsToInsert = selectedImages.map((imgUrl, idx) => ({
-        post_id: parentPost.id,
-        day_number: idx + 1,
-        title: `Day ${idx + 1} Highlight`,
-        description: `Highlight from ${selectedTrip.country}`,
-        category: 'Activity',
-        image_url: imgUrl,
-        activities: ['Exploration']
-      }));
+      const spotsToInsert = selectedImages.map((imgUrl, idx) => {
+        const originalSpot = tripDetail?.spots.find((s: any) => s.image_url === imgUrl);
+        return {
+          post_id: parentPost.id,
+          day_number: originalSpot?.day_number || idx + 1,
+          title: originalSpot?.title || `Day ${idx + 1} Highlight`,
+          description: originalSpot?.description || `Highlight from ${selectedTrip.country}`,
+          category: originalSpot?.category || 'Activity',
+          image_url: imgUrl,
+          activities: originalSpot?.activities || []
+        };
+      });
 
       const { error: spotsError } = await supabase
         .from('trip_spots')
@@ -113,10 +166,10 @@ export default function PublishModal({ isOpen, onClose, preselectedTripId, onPub
         likes: 0,
         comments: 0,
         remixes: 0,
-        rating: 5,
-        activities: ['Exploration'],
-        hotelType: 'Resort',
-        price: 1500,
+        rating: userRating,
+        activities: finalActivities,
+        hotelType: hotelType,
+        price: finalPrice,
         isPrivate: false
       };
 
@@ -235,6 +288,27 @@ export default function PublishModal({ isOpen, onClose, preselectedTripId, onPub
                 </div>
               </div>
             )}
+
+            {/* Rating Selector */}
+            <div className="space-y-3">
+              <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest ml-1">Trip Rating (Optional)</label>
+              <div className="flex items-center gap-1">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <button
+                    key={star}
+                    type="button"
+                    onClick={() => setUserRating(star)}
+                    className="p-1 hover:scale-110 transition-transform focus:outline-none"
+                  >
+                    <Star
+                      size={24}
+                      className={star <= userRating ? "fill-orange-500 text-orange-500" : "text-zinc-200"}
+                    />
+                  </button>
+                ))}
+                <span className="text-xs text-zinc-500 ml-2">({userRating} out of 5 Stars)</span>
+              </div>
+            </div>
 
             {/* Caption Area */}
             <div className="space-y-3">
