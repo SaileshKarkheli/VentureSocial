@@ -34,7 +34,7 @@ export default function MainLayout() {
       <div className="fixed top-6 right-6 lg:right-12 z-50 flex items-center gap-4">
         <NotificationBell />
         
-        {/* Global Shopping Cart Button */}
+        {/* Global Shopping Cart Button - Temporarily Hidden
         <button
           onClick={() => setIsCheckoutOpen(true)}
           className="relative p-4 rounded-2xl bg-[#0A192F] text-white shadow-2xl hover:bg-black transition-all group"
@@ -46,6 +46,7 @@ export default function MainLayout() {
             </span>
           )}
         </button>
+        */}
       </div>
 
       <Sidebar isCollapsed={isSidebarCollapsed} onToggle={() => setIsSidebarCollapsed(!isSidebarCollapsed)} />
