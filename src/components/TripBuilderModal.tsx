@@ -76,10 +76,11 @@ export default function TripBuilderModal({ isOpen, onClose }: TripBuilderModalPr
     id: string;
     title: string;
     transportMode: TransportMode;
+    transportDetails: string;
     budget: number;
     routeSummary: RouteItem[];
     images: string[];
-    categoryImages?: Record<string, string>;
+    categoryImages?: Record<string, string[]>;
     categoryCosts?: Record<string, number>;
     stayCategory?: 'Hotel' | 'Villa' | 'Airbnb';
   }
@@ -88,6 +89,7 @@ export default function TripBuilderModal({ isOpen, onClose }: TripBuilderModalPr
     id: `day-${index + 1}`,
     title: `Day ${index + 1}`,
     transportMode: 'Rental',
+    transportDetails: '',
     budget: 0,
     routeSummary: [],
     images: [],
@@ -176,16 +178,33 @@ export default function TripBuilderModal({ isOpen, onClose }: TripBuilderModalPr
   const [uploadCategory, setUploadCategory] = useState<string | null>(null);
 
   const handleContextImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file && uploadCategory) {
-      const imgUrl = URL.createObjectURL(file);
-      updateActiveDay(prev => ({
-        ...prev,
-        categoryImages: { ...(prev.categoryImages || {}), [uploadCategory]: imgUrl }
-      }));
+    const files = e.target.files;
+    if (files && files.length > 0 && uploadCategory) {
+      const newUrls = Array.from(files).map(f => URL.createObjectURL(f));
+      updateActiveDay(prev => {
+        const existingUrls = (prev.categoryImages || {})[uploadCategory] || [];
+        return {
+          ...prev,
+          categoryImages: {
+            ...(prev.categoryImages || {}),
+            [uploadCategory]: [...existingUrls, ...newUrls]
+          }
+        };
+      });
     }
     if (contextFileInputRef.current) contextFileInputRef.current.value = '';
     setUploadCategory(null);
+  };
+
+  const removeCategoryImage = (category: string, idx: number) => {
+    updateActiveDay(prev => {
+      const existing = (prev.categoryImages || {})[category] || [];
+      const updated = existing.filter((_, i) => i !== idx);
+      return {
+        ...prev,
+        categoryImages: { ...(prev.categoryImages || {}), [category]: updated }
+      };
+    });
   };
 
   const handleCostChange = (category: string, val: string) => {
@@ -229,6 +248,7 @@ export default function TripBuilderModal({ isOpen, onClose }: TripBuilderModalPr
       id: 'day-1',
       title: randomItinerary.dayTitle,
       transportMode: randomItinerary.transportMode,
+      transportDetails: '',
       budget: randomItinerary.budget,
       routeSummary: [...randomItinerary.routeSummary],
       images: [...randomItinerary.images]
@@ -258,8 +278,9 @@ export default function TripBuilderModal({ isOpen, onClose }: TripBuilderModalPr
     for (const day of days) {
       if (day.images && day.images.length > 0) { coverPhoto = day.images[0]; break; }
       if (day.categoryImages) {
-        const cats = Object.values(day.categoryImages) as string[];
-        if (cats.length > 0) { coverPhoto = cats[0]; break; }
+        const allArrays = Object.values(day.categoryImages) as string[][];
+        const firstImg = allArrays.flat()[0];
+        if (firstImg) { coverPhoto = firstImg; break; }
       }
     }
 
@@ -272,28 +293,49 @@ export default function TripBuilderModal({ isOpen, onClose }: TripBuilderModalPr
         const customTripsStr = localStorage.getItem('venturesocial_custom_trips');
         const customTrips = customTripsStr ? JSON.parse(customTripsStr) : [];
 
-        const spots = days.flatMap((day, idx) => {
-          return day.routeSummary.map(item => {
-            const categoryMap: Record<string, 'Transport' | 'Stay' | 'Dining' | 'Activity'> = {
-              transport: 'Transport',
-              hotel: 'Stay',
-              dining: 'Dining',
-              activity: 'Activity'
-            };
+        const spots: any[] = [];
+        days.forEach((day, idx) => {
+          const dayNum = idx + 1;
+          const categoryMap: Record<string, 'Transport' | 'Stay' | 'Dining' | 'Activity'> = {
+            transport: 'Transport',
+            hotel: 'Stay',
+            dining: 'Dining',
+            activity: 'Activity'
+          };
+
+          // BUG 1 FIX: Auto-synthesize a transport spot if none added via routeSummary
+          const hasTransportItem = day.routeSummary.some(item => item.type === 'transport');
+          if (!hasTransportItem && (day.transportMode || day.transportDetails)) {
+            const cost = day.categoryCosts?.['transport'];
+            const modeLabel = day.transportMode === 'Rental' ? 'Rental Car' : day.transportMode === 'Flights' ? 'Flight' : 'Own Vehicle';
+            let desc = day.transportDetails || `Traveling by ${modeLabel}.`;
+            if (cost !== undefined && cost > 0) desc += ` Cost: $${cost}.`;
+            const imgs = day.categoryImages?.['transport'] || [];
+            spots.push({
+              id: `transport-${dayNum}-auto`,
+              day_number: dayNum,
+              title: modeLabel,
+              description: desc,
+              category: 'Transport',
+              image_url: imgs[0] || null,
+              link_url: null
+            });
+          }
+
+          day.routeSummary.forEach(item => {
             const cost = day.categoryCosts?.[item.type];
             let description = item.description || `Details for ${item.title}.`;
-            if (cost !== undefined && cost > 0) {
-              description += ` Cost: $${cost}.`;
-            }
-            return {
+            if (cost !== undefined && cost > 0) description += ` Cost: $${cost}.`;
+            const imgs = day.categoryImages?.[item.type] || [];
+            spots.push({
               id: item.id,
-              day_number: idx + 1,
+              day_number: dayNum,
               title: item.title,
               description,
               category: categoryMap[item.type],
-              image_url: day.categoryImages?.[item.type] || null,
+              image_url: imgs[0] || null,
               link_url: item.link
-            };
+            });
           });
         });
 
@@ -371,29 +413,51 @@ export default function TripBuilderModal({ isOpen, onClose }: TripBuilderModalPr
       if (data) {
         console.log("Post inserted successfully. Data:", data);
         
-        const spotsToInsert = days.flatMap((day, idx) => {
-          return day.routeSummary.map(item => {
-            const categoryMap: Record<string, 'Transport' | 'Stay' | 'Dining' | 'Activity'> = {
-              transport: 'Transport',
-              hotel: 'Stay',
-              dining: 'Dining',
-              activity: 'Activity'
-            };
+        const spotsToInsert: any[] = [];
+        days.forEach((day, idx) => {
+          const dayNum = idx + 1;
+          const categoryMap: Record<string, 'Transport' | 'Stay' | 'Dining' | 'Activity'> = {
+            transport: 'Transport',
+            hotel: 'Stay',
+            dining: 'Dining',
+            activity: 'Activity'
+          };
+
+          // BUG 1 FIX: Auto-synthesize a transport spot if none was explicitly added
+          const hasTransportItem = day.routeSummary.some(item => item.type === 'transport');
+          if (!hasTransportItem && (day.transportMode || day.transportDetails)) {
+            const cost = day.categoryCosts?.['transport'];
+            const modeLabel = day.transportMode === 'Rental' ? 'Rental Car' : day.transportMode === 'Flights' ? 'Flight' : 'Own Vehicle';
+            let desc = day.transportDetails || `Traveling by ${modeLabel}.`;
+            if (cost !== undefined && cost > 0) desc += ` Cost: $${cost}.`;
+            const imgs = day.categoryImages?.['transport'] || [];
+            spotsToInsert.push({
+              post_id: data.id,
+              day_number: dayNum,
+              title: modeLabel,
+              description: desc,
+              category: 'Transport',
+              image_url: imgs[0] || null,
+              link_url: null,
+              location_coords: null
+            });
+          }
+
+          day.routeSummary.forEach(item => {
             const cost = day.categoryCosts?.[item.type];
             let description = item.description || `Details for ${item.title}.`;
-            if (cost !== undefined && cost > 0) {
-              description += ` Cost: $${cost}.`;
-            }
-            return {
+            if (cost !== undefined && cost > 0) description += ` Cost: $${cost}.`;
+            const imgs = day.categoryImages?.[item.type] || [];
+            spotsToInsert.push({
               post_id: data.id,
-              day_number: idx + 1,
+              day_number: dayNum,
               title: item.title,
               description,
               category: categoryMap[item.type],
-              image_url: day.categoryImages?.[item.type] || null,
+              image_url: imgs[0] || null,
               link_url: item.link,
               location_coords: item.coordinates ? `(${item.coordinates.lng},${item.coordinates.lat})` : null
-            };
+            });
           });
         });
 
@@ -603,16 +667,19 @@ export default function TripBuilderModal({ isOpen, onClose }: TripBuilderModalPr
                 {/* Transport Pillar */}
                 <section className="space-y-6">
                   <div className="flex flex-col gap-4">
-                    {activeDay.categoryImages?.['transport'] && (
-                      <div className="relative w-full h-32 md:h-40 border-2 border-[#0A192F] overflow-hidden group shadow-lg" style={{ borderRadius: '2px' }}>
-                        <img src={activeDay.categoryImages['transport']} alt="Transport Cover" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 filter contrast-125 saturate-150" />
-                        <button
-                          onClick={() => updateActiveDay(prev => { const c = { ...prev.categoryImages }; delete c['transport']; return { ...prev, categoryImages: c }; })}
-                          className="absolute top-2 right-2 p-2 bg-white text-rose-500 border-2 border-transparent hover:border-[#0A192F] transition-all opacity-0 group-hover:opacity-100"
-                          style={{ borderRadius: '2px' }}
-                        >
-                          <Trash2 size={14} />
-                        </button>
+                    {(activeDay.categoryImages?.['transport'] || []).length > 0 && (
+                      <div className="flex gap-2 flex-wrap">
+                        {(activeDay.categoryImages!['transport']).map((imgUrl, imgIdx) => (
+                          <div key={imgIdx} className="relative w-20 h-20 border-2 border-[#0A192F] overflow-hidden group shadow-md flex-shrink-0" style={{ borderRadius: '6px' }}>
+                            <img src={imgUrl} alt="Transport" className="w-full h-full object-cover" />
+                            <button
+                              onClick={() => removeCategoryImage('transport', imgIdx)}
+                              className="absolute top-1 right-1 p-1 bg-white text-rose-500 rounded-full opacity-0 group-hover:opacity-100 transition-all shadow"
+                            >
+                              <X size={10} />
+                            </button>
+                          </div>
+                        ))}
                       </div>
                     )}
                     <div className="flex items-center justify-between">
@@ -633,15 +700,13 @@ export default function TripBuilderModal({ isOpen, onClose }: TripBuilderModalPr
                             className="w-12 bg-transparent border-0 focus:ring-0 text-right font-mono text-xs font-bold text-[#0A192F] p-0"
                           />
                         </div>
-                        {!activeDay.categoryImages?.['transport'] && (
-                          <button
+                        <button
                             onClick={() => { setUploadCategory('transport'); contextFileInputRef.current?.click(); }}
                             className="flex items-center gap-1.5 px-3 py-1.5 bg-white border-2 border-[#0A192F] text-[#0A192F] hover:bg-[#0A192F] hover:text-white transition-colors text-[9px] uppercase tracking-widest font-bold shadow-sm"
                             style={{ borderRadius: '2px' }}
                           >
-                            <ImagePlus size={12} /> Add Cover
+                            <ImagePlus size={12} /> {(activeDay.categoryImages?.['transport'] || []).length > 0 ? '+ More Photos' : 'Add Photos'}
                           </button>
-                        )}
                         <button
                           onClick={() => setShowManualEntry(showManualEntry === 'transport' ? null : 'transport')}
                           className="text-[10px] font-bold text-zinc-400 hover:text-orange-500 transition-colors uppercase tracking-widest"
@@ -683,28 +748,12 @@ export default function TripBuilderModal({ isOpen, onClose }: TripBuilderModalPr
                       <div className="relative w-full">
                         <input
                           type="text"
-                          placeholder={`Enter ${activeDay.transportMode} Details...`}
-                          value={manualTransport}
-                          onChange={(e) => setManualTransport(e.target.value)}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter' && manualTransport.trim()) {
-                              addRouteItem(manualTransport.trim(), '', 'transport');
-                              setManualTransport('');
-                            }
-                          }}
-                          className="w-full pl-6 pr-20 py-4 rounded-2xl bg-zinc-100 border border-zinc-300 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all outline-none text-zinc-800 placeholder:text-zinc-400"
+                          placeholder={`Enter ${activeDay.transportMode === 'Rental' ? 'Rental Car' : activeDay.transportMode === 'Flights' ? 'Flight' : 'Own Vehicle'} details, pickup notes, etc...`}
+                          value={activeDay.transportDetails}
+                          onChange={(e) => updateActiveDay(prev => ({ ...prev, transportDetails: e.target.value }))}
+                          className="w-full pl-6 pr-4 py-4 rounded-2xl bg-zinc-100 border border-zinc-300 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all outline-none text-zinc-800 placeholder:text-zinc-400"
                         />
-                        <button
-                          onClick={() => {
-                            if (manualTransport.trim()) {
-                              addRouteItem(manualTransport.trim(), '', 'transport');
-                              setManualTransport('');
-                            }
-                          }}
-                          className="absolute right-2 top-1/2 -translate-y-1/2 px-4 py-2 bg-[#0A192F] text-white text-xs font-bold rounded-xl hover:bg-black transition-all"
-                        >
-                          Add
-                        </button>
+                        <p className="text-[9px] text-zinc-400 mt-1 ml-2">These details will be auto-saved with your trip — no need to click Add.</p>
                       </div>
                     </>
                   )}
@@ -713,16 +762,19 @@ export default function TripBuilderModal({ isOpen, onClose }: TripBuilderModalPr
                 {/* Stay Pillar */}
                 <section className="space-y-6">
                   <div className="flex flex-col gap-4">
-                    {activeDay.categoryImages?.['hotel'] && (
-                      <div className="relative w-full h-32 md:h-40 border-2 border-[#0A192F] overflow-hidden group shadow-lg" style={{ borderRadius: '2px' }}>
-                        <img src={activeDay.categoryImages['hotel']} alt="Stay Cover" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 filter contrast-125 saturate-150" />
-                        <button
-                          onClick={() => updateActiveDay(prev => { const c = { ...prev.categoryImages }; delete c['hotel']; return { ...prev, categoryImages: c }; })}
-                          className="absolute top-2 right-2 p-2 bg-white text-rose-500 border-2 border-transparent hover:border-[#0A192F] transition-all opacity-0 group-hover:opacity-100"
-                          style={{ borderRadius: '2px' }}
-                        >
-                          <Trash2 size={14} />
-                        </button>
+                    {(activeDay.categoryImages?.['hotel'] || []).length > 0 && (
+                      <div className="flex gap-2 flex-wrap">
+                        {(activeDay.categoryImages!['hotel']).map((imgUrl, imgIdx) => (
+                          <div key={imgIdx} className="relative w-24 h-24 border-2 border-[#0A192F] overflow-hidden group shadow-md flex-shrink-0" style={{ borderRadius: '6px' }}>
+                            <img src={imgUrl} alt="Stay" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                            <button
+                              onClick={() => removeCategoryImage('hotel', imgIdx)}
+                              className="absolute top-1 right-1 p-1 bg-white text-rose-500 rounded-full opacity-0 group-hover:opacity-100 transition-all shadow"
+                            >
+                              <X size={10} />
+                            </button>
+                          </div>
+                        ))}
                       </div>
                     )}
                     <div className="flex items-center justify-between">
@@ -743,15 +795,13 @@ export default function TripBuilderModal({ isOpen, onClose }: TripBuilderModalPr
                             className="w-12 bg-transparent border-0 focus:ring-0 text-right font-mono text-xs font-bold text-[#0A192F] p-0"
                           />
                         </div>
-                        {!activeDay.categoryImages?.['hotel'] && (
-                          <button
+                        <button
                             onClick={() => { setUploadCategory('hotel'); contextFileInputRef.current?.click(); }}
                             className="flex items-center gap-1.5 px-3 py-1.5 bg-white border-2 border-[#0A192F] text-[#0A192F] hover:bg-[#0A192F] hover:text-white transition-colors text-[9px] uppercase tracking-widest font-bold shadow-sm"
                             style={{ borderRadius: '2px' }}
                           >
-                            <ImagePlus size={12} /> Add Cover
+                            <ImagePlus size={12} /> {(activeDay.categoryImages?.['hotel'] || []).length > 0 ? '+ More Photos' : 'Add Photos'}
                           </button>
-                        )}
                         <button
                           onClick={() => setShowManualEntry(showManualEntry === 'hotel' ? null : 'hotel')}
                           className="text-[10px] font-bold text-zinc-400 hover:text-orange-500 transition-colors uppercase tracking-widest"
@@ -806,16 +856,19 @@ export default function TripBuilderModal({ isOpen, onClose }: TripBuilderModalPr
                 {/* Dining Pillar */}
                 <section className="space-y-6">
                   <div className="flex flex-col gap-4">
-                    {activeDay.categoryImages?.['dining'] && (
-                      <div className="relative w-full h-32 md:h-40 border-2 border-[#0A192F] overflow-hidden group shadow-lg" style={{ borderRadius: '2px' }}>
-                        <img src={activeDay.categoryImages['dining']} alt="Dining Cover" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 filter contrast-125 saturate-150" />
-                        <button
-                          onClick={() => updateActiveDay(prev => { const c = { ...prev.categoryImages }; delete c['dining']; return { ...prev, categoryImages: c }; })}
-                          className="absolute top-2 right-2 p-2 bg-white text-rose-500 border-2 border-transparent hover:border-[#0A192F] transition-all opacity-0 group-hover:opacity-100"
-                          style={{ borderRadius: '2px' }}
-                        >
-                          <Trash2 size={14} />
-                        </button>
+                    {(activeDay.categoryImages?.['dining'] || []).length > 0 && (
+                      <div className="flex gap-2 flex-wrap">
+                        {(activeDay.categoryImages!['dining']).map((imgUrl, imgIdx) => (
+                          <div key={imgIdx} className="relative w-24 h-24 border-2 border-[#0A192F] overflow-hidden group shadow-md flex-shrink-0" style={{ borderRadius: '6px' }}>
+                            <img src={imgUrl} alt="Dining" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                            <button
+                              onClick={() => removeCategoryImage('dining', imgIdx)}
+                              className="absolute top-1 right-1 p-1 bg-white text-rose-500 rounded-full opacity-0 group-hover:opacity-100 transition-all shadow"
+                            >
+                              <X size={10} />
+                            </button>
+                          </div>
+                        ))}
                       </div>
                     )}
                     <div className="flex items-center justify-between">
@@ -836,15 +889,13 @@ export default function TripBuilderModal({ isOpen, onClose }: TripBuilderModalPr
                             className="w-12 bg-transparent border-0 focus:ring-0 text-right font-mono text-xs font-bold text-[#0A192F] p-0"
                           />
                         </div>
-                        {!activeDay.categoryImages?.['dining'] && (
-                          <button
+                        <button
                             onClick={() => { setUploadCategory('dining'); contextFileInputRef.current?.click(); }}
                             className="flex items-center gap-1.5 px-3 py-1.5 bg-white border-2 border-[#0A192F] text-[#0A192F] hover:bg-[#0A192F] hover:text-white transition-colors text-[9px] uppercase tracking-widest font-bold shadow-sm"
                             style={{ borderRadius: '2px' }}
                           >
-                            <ImagePlus size={12} /> Add Cover
+                            <ImagePlus size={12} /> {(activeDay.categoryImages?.['dining'] || []).length > 0 ? '+ More Photos' : 'Add Photos'}
                           </button>
-                        )}
                         <button
                           onClick={() => setShowManualEntry(showManualEntry === 'dining' ? null : 'dining')}
                           className="text-[10px] font-bold text-zinc-400 hover:text-orange-500 transition-colors uppercase tracking-widest"
@@ -883,16 +934,19 @@ export default function TripBuilderModal({ isOpen, onClose }: TripBuilderModalPr
                 {/* Activities Pillar */}
                 <section className="space-y-6">
                   <div className="flex flex-col gap-4">
-                    {activeDay.categoryImages?.['activity'] && (
-                      <div className="relative w-full h-32 md:h-40 border-2 border-[#0A192F] overflow-hidden group shadow-lg" style={{ borderRadius: '2px' }}>
-                        <img src={activeDay.categoryImages['activity']} alt="Activity Cover" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 filter contrast-125 saturate-150" />
-                        <button
-                          onClick={() => updateActiveDay(prev => { const c = { ...prev.categoryImages }; delete c['activity']; return { ...prev, categoryImages: c }; })}
-                          className="absolute top-2 right-2 p-2 bg-white text-rose-500 border-2 border-transparent hover:border-[#0A192F] transition-all opacity-0 group-hover:opacity-100"
-                          style={{ borderRadius: '2px' }}
-                        >
-                          <Trash2 size={14} />
-                        </button>
+                    {(activeDay.categoryImages?.['activity'] || []).length > 0 && (
+                      <div className="flex gap-2 flex-wrap">
+                        {(activeDay.categoryImages!['activity']).map((imgUrl, imgIdx) => (
+                          <div key={imgIdx} className="relative w-24 h-24 border-2 border-[#0A192F] overflow-hidden group shadow-md flex-shrink-0" style={{ borderRadius: '6px' }}>
+                            <img src={imgUrl} alt="Activity" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                            <button
+                              onClick={() => removeCategoryImage('activity', imgIdx)}
+                              className="absolute top-1 right-1 p-1 bg-white text-rose-500 rounded-full opacity-0 group-hover:opacity-100 transition-all shadow"
+                            >
+                              <X size={10} />
+                            </button>
+                          </div>
+                        ))}
                       </div>
                     )}
                     <div className="flex items-center justify-between">
@@ -913,15 +967,13 @@ export default function TripBuilderModal({ isOpen, onClose }: TripBuilderModalPr
                             className="w-12 bg-transparent border-0 focus:ring-0 text-right font-mono text-xs font-bold text-[#0A192F] p-0"
                           />
                         </div>
-                        {!activeDay.categoryImages?.['activity'] && (
-                          <button
+                        <button
                             onClick={() => { setUploadCategory('activity'); contextFileInputRef.current?.click(); }}
                             className="flex items-center gap-1.5 px-3 py-1.5 bg-white border-2 border-[#0A192F] text-[#0A192F] hover:bg-[#0A192F] hover:text-white transition-colors text-[9px] uppercase tracking-widest font-bold shadow-sm"
                             style={{ borderRadius: '2px' }}
                           >
-                            <ImagePlus size={12} /> Add Cover
+                            <ImagePlus size={12} /> {(activeDay.categoryImages?.['activity'] || []).length > 0 ? '+ More Photos' : 'Add Photos'}
                           </button>
-                        )}
                         <button
                           onClick={() => setShowManualEntry(showManualEntry === 'activity' ? null : 'activity')}
                           className="text-[10px] font-bold text-zinc-400 hover:text-orange-500 transition-colors uppercase tracking-widest"
@@ -995,12 +1047,13 @@ export default function TripBuilderModal({ isOpen, onClose }: TripBuilderModalPr
                       accept="image/*"
                       className="hidden"
                     />
-                    {/* Hidden input for contextual category covers */}
+                    {/* Hidden input for contextual category covers — multiple allowed */}
                     <input
                       type="file"
                       ref={contextFileInputRef}
                       onChange={handleContextImageUpload}
                       accept="image/*"
+                      multiple
                       className="hidden"
                     />
                   </div>
