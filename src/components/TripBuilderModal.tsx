@@ -253,16 +253,25 @@ export default function TripBuilderModal({ isOpen, onClose, editTrip }: TripBuil
     const fileName = `${session?.user?.id || 'anon'}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
     const filePath = `${session?.user?.id || 'anon'}/${fileName}`;
 
+    console.log(`[Storage Upload] Attempting upload to trip-images. File path: ${filePath}, type: ${file.type}, size: ${file.size}`);
+
     const { error: uploadError } = await supabase.storage
       .from('trip-images')
       .upload(filePath, file, { upsert: true });
 
     if (uploadError) {
-      console.error("Storage upload failed, using fallback:", uploadError);
+      console.error("[Storage Upload Error] Detailed Supabase error:", {
+        message: uploadError.message,
+        name: uploadError.name,
+        status: (uploadError as any).status,
+        statusCode: (uploadError as any).statusCode,
+        error: uploadError
+      });
       throw uploadError;
     }
 
     const { data } = supabase.storage.from('trip-images').getPublicUrl(filePath);
+    console.log(`[Storage Upload Success] Generated public URL: ${data.publicUrl}`);
     return data.publicUrl;
   };
 
