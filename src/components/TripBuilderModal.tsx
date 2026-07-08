@@ -43,6 +43,7 @@ interface TripBuilderModalProps {
       description: string;
       category: 'Transport' | 'Stay' | 'Dining' | 'Activity';
       image_url: string | null;
+      image_urls?: string[] | null;
       link_url: string | null;
     }>;
   } | null;
@@ -179,8 +180,10 @@ export default function TripBuilderModal({ isOpen, onClose, editTrip }: TripBuil
           }));
           const categoryImages: Record<string, string[]> = {};
           daySpots.forEach(s => {
-            if (s.image_url) {
-              const key = catTypeMap[s.category] || 'activity';
+            const key = catTypeMap[s.category] || 'activity';
+            if (Array.isArray(s.image_urls) && s.image_urls.length > 0) {
+              categoryImages[key] = [...(categoryImages[key] || []), ...s.image_urls];
+            } else if (s.image_url) {
               if (!categoryImages[key]) categoryImages[key] = [];
               categoryImages[key].push(s.image_url);
             }
@@ -245,20 +248,59 @@ export default function TripBuilderModal({ isOpen, onClose, editTrip }: TripBuil
   const contextFileInputRef = useRef<HTMLInputElement>(null);
   const [uploadCategory, setUploadCategory] = useState<string | null>(null);
 
-  const handleContextImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const uploadFile = async (file: File): Promise<string> => {
+    const fileExt = file.name.split('.').pop() || 'jpg';
+    const fileName = `${session?.user?.id || 'anon'}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
+    const filePath = `${session?.user?.id || 'anon'}/${fileName}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from('trip-images')
+      .upload(filePath, file, { upsert: true });
+
+    if (uploadError) {
+      console.error("Storage upload failed, using fallback:", uploadError);
+      throw uploadError;
+    }
+
+    const { data } = supabase.storage.from('trip-images').getPublicUrl(filePath);
+    return data.publicUrl;
+  };
+
+  const handleContextImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (files && files.length > 0 && uploadCategory) {
-      const newUrls = Array.from(files).map(f => URL.createObjectURL(f));
-      updateActiveDay(prev => {
-        const existingUrls = (prev.categoryImages || {})[uploadCategory] || [];
-        return {
-          ...prev,
-          categoryImages: {
-            ...(prev.categoryImages || {}),
-            [uploadCategory]: [...existingUrls, ...newUrls]
+      const category = uploadCategory;
+      setIsSaving(true);
+      try {
+        const uploadPromises = Array.from(files).map(async (file) => {
+          try {
+            return await uploadFile(file);
+          } catch (err) {
+            console.error("Supabase upload failed, falling back to base64:", err);
+            return new Promise<string>((resolve) => {
+              const reader = new FileReader();
+              reader.onloadend = () => resolve(reader.result as string);
+              reader.readAsDataURL(file);
+            });
           }
-        };
-      });
+        });
+        const newUrls = await Promise.all(uploadPromises);
+        updateActiveDay(prev => {
+          const existingUrls = (prev.categoryImages || {})[category] || [];
+          return {
+            ...prev,
+            categoryImages: {
+              ...(prev.categoryImages || {}),
+              [category]: [...existingUrls, ...newUrls]
+            }
+          };
+        });
+      } catch (err) {
+        console.error("Failed uploading images:", err);
+        setError("Failed to upload images. Please try again.");
+      } finally {
+        setIsSaving(false);
+      }
     }
     if (contextFileInputRef.current) contextFileInputRef.current.value = '';
     setUploadCategory(null);
@@ -550,12 +592,32 @@ export default function TripBuilderModal({ isOpen, onClose, editTrip }: TripBuil
     }
   };
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (files) {
-      const newImages = Array.from(files).map((file: File) => URL.createObjectURL(file));
-      updateActiveDay(prev => ({ ...prev, images: [...prev.images, ...newImages] }));
+      setIsSaving(true);
+      try {
+        const uploadPromises = Array.from(files).map(async (file) => {
+          try {
+            return await uploadFile(file);
+          } catch (err) {
+            console.error("Supabase upload failed, falling back to base64:", err);
+            return new Promise<string>((resolve) => {
+              const reader = new FileReader();
+              reader.onloadend = () => resolve(reader.result as string);
+              reader.readAsDataURL(file);
+            });
+          }
+        });
+        const newUrls = await Promise.all(uploadPromises);
+        updateActiveDay(prev => ({ ...prev, images: [...prev.images, ...newUrls] }));
+      } catch (err) {
+        console.error("Failed uploading day images:", err);
+      } finally {
+        setIsSaving(false);
+      }
     }
+    if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
 

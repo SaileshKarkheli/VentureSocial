@@ -58,22 +58,12 @@ function resolveImages(spot: any): string[] {
 }
 
 /**
- * Renders a horizontal scrollable gallery for multiple images,
- * or a single image block for one image, or nothing if no images.
+ * Renders a horizontal scrollable gallery for one or multiple images.
  */
 function SpotGallery({ spot, alt }: { spot: any; alt: string }) {
   const images = resolveImages(spot);
   if (images.length === 0) return null;
 
-  if (images.length === 1) {
-    return (
-      <div className="w-full rounded-xl overflow-hidden shadow-md mb-4">
-        <SpotImage src={images[0]} alt={alt} className="w-full aspect-video object-cover" />
-      </div>
-    );
-  }
-
-  // Multiple images — horizontal scrollable strip
   return (
     <div className="flex gap-3 overflow-x-auto pb-2 mb-4" style={{ scrollbarWidth: 'thin' }}>
       {images.map((url, i) => (

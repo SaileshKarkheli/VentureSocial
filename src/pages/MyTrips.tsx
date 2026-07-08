@@ -34,6 +34,7 @@ export default function MyTrips() {
       description: string;
       category: 'Transport' | 'Stay' | 'Dining' | 'Activity';
       image_url: string | null;
+      image_urls?: string[] | null;
       link_url: string | null;
     }>;
   }>(null);
@@ -50,7 +51,7 @@ export default function MyTrips() {
       } else {
         const { data, error } = await supabase
           .from('trip_spots')
-          .select('day_number, title, description, category, image_url, link_url')
+          .select('day_number, title, description, category, image_url, image_urls, link_url')
           .eq('post_id', trip.id)
           .order('day_number', { ascending: true });
         if (!error && data) spots = data;
@@ -64,6 +65,7 @@ export default function MyTrips() {
           description: s.description || '',
           category: s.category as 'Transport' | 'Stay' | 'Dining' | 'Activity',
           image_url: s.image_url || null,
+          image_urls: s.image_urls || null,
           link_url: s.link_url || null
         }))
       });
