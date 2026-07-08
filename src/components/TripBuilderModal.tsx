@@ -386,6 +386,7 @@ export default function TripBuilderModal({ isOpen, onClose, editTrip }: TripBuil
               description: desc,
               category: 'Transport',
               image_url: imgs[0] || null,
+              image_urls: imgs,
               link_url: null
             });
           }
@@ -402,6 +403,7 @@ export default function TripBuilderModal({ isOpen, onClose, editTrip }: TripBuil
               description,
               category: categoryMap[item.type],
               image_url: imgs[0] || null,
+              image_urls: imgs,
               link_url: item.link
             });
           });
@@ -506,6 +508,7 @@ export default function TripBuilderModal({ isOpen, onClose, editTrip }: TripBuil
               description: desc,
               category: 'Transport',
               image_url: imgs[0] || null,
+              image_urls: imgs.length > 0 ? imgs : null,
               link_url: null,
               location_coords: null
             });
@@ -523,6 +526,7 @@ export default function TripBuilderModal({ isOpen, onClose, editTrip }: TripBuil
               description,
               category: categoryMap[item.type],
               image_url: imgs[0] || null,
+              image_urls: imgs.length > 0 ? imgs : null,
               link_url: item.link,
               location_coords: item.coordinates ? `(${item.coordinates.lng},${item.coordinates.lat})` : null
             });
