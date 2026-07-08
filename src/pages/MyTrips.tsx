@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
-import { Plus, ArrowRight, Share2, Trash2, PenSquare } from 'lucide-react';
+import { Plus, ArrowRight, Share2, Trash2, PenSquare, Pencil } from 'lucide-react';
 import React, { useState, useEffect, useMemo } from 'react';
 import TripBuilderModal from '../components/TripBuilderModal';
 import PublishModal from '../components/PublishModal';
@@ -25,6 +25,53 @@ export default function MyTrips() {
   
   const [isBuilderOpen, setIsBuilderOpen] = useState(false);
   const [publishTripId, setPublishTripId] = useState<string | null>(null);
+  const [editTripData, setEditTripData] = useState<null | {
+    id: string;
+    destination: string;
+    spots: Array<{
+      day_number: number;
+      title: string;
+      description: string;
+      category: 'Transport' | 'Stay' | 'Dining' | 'Activity';
+      image_url: string | null;
+      link_url: string | null;
+    }>;
+  }>(null);
+
+  const handleEditTrip = async (trip: DbTrip) => {
+    try {
+      const isMockMode = import.meta.env.VITE_ENABLE_MOCK_MODE === 'true' && !!localStorage.getItem('venturesocial_mock_session');
+      let spots: any[] = [];
+      if (isMockMode) {
+        const customTripsStr = localStorage.getItem('venturesocial_custom_trips');
+        const customTrips = customTripsStr ? JSON.parse(customTripsStr) : [];
+        const found = customTrips.find((t: any) => t.id === trip.id);
+        spots = found?.spots || [];
+      } else {
+        const { data, error } = await supabase
+          .from('trip_spots')
+          .select('day_number, title, description, category, image_url, link_url')
+          .eq('post_id', trip.id)
+          .order('day_number', { ascending: true });
+        if (!error && data) spots = data;
+      }
+      setEditTripData({
+        id: trip.id,
+        destination: trip.country,
+        spots: spots.map((s: any) => ({
+          day_number: s.day_number,
+          title: s.title || '',
+          description: s.description || '',
+          category: s.category as 'Transport' | 'Stay' | 'Dining' | 'Activity',
+          image_url: s.image_url || null,
+          link_url: s.link_url || null
+        }))
+      });
+      setIsBuilderOpen(true);
+    } catch (err) {
+      console.error('Failed to load trip for editing:', err);
+    }
+  };
 
   const handleDeleteTrip = async (tripId: string, country: string) => {
     const confirmed = window.confirm(`Are you sure you want to delete your trip to ${country}? This action cannot be undone.`);
@@ -213,7 +260,11 @@ export default function MyTrips() {
         </div>
       </div>
 
-      <TripBuilderModal isOpen={isBuilderOpen} onClose={() => setIsBuilderOpen(false)} />
+      <TripBuilderModal
+        isOpen={isBuilderOpen}
+        onClose={() => { setIsBuilderOpen(false); setEditTripData(null); }}
+        editTrip={editTripData}
+      />
       
       <PublishModal 
         isOpen={!!publishTripId} 
@@ -262,8 +313,21 @@ export default function MyTrips() {
                     handleDeleteTrip(trip.id, trip.country);
                   }}
                   className="absolute top-3 left-3 p-2 bg-white/20 backdrop-blur-md text-white rounded-xl opacity-0 group-hover:opacity-100 transition-all hover:bg-rose-600 hover:text-white z-20"
+                  title="Delete trip"
                 >
                   <Trash2 size={16} />
+                </button>
+
+                {/* Edit button — centered top */}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleEditTrip(trip);
+                  }}
+                  className="absolute top-3 left-1/2 -translate-x-1/2 p-2 bg-white/20 backdrop-blur-md text-white rounded-xl opacity-0 group-hover:opacity-100 transition-all hover:bg-blue-600 hover:text-white z-20"
+                  title="Edit trip"
+                >
+                  <Pencil size={16} />
                 </button>
 
                 <button 
@@ -272,6 +336,7 @@ export default function MyTrips() {
                     setPublishTripId(trip.id);
                   }}
                   className="absolute top-3 right-3 p-2 bg-white/20 backdrop-blur-md text-white rounded-xl opacity-0 group-hover:opacity-100 transition-all hover:bg-orange-500 hover:text-white z-20"
+                  title="Share to feed"
                 >
                   <Share2 size={16} />
                 </button>

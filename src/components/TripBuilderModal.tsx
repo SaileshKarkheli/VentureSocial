@@ -33,6 +33,19 @@ import { supabase } from '../supabaseClient';
 interface TripBuilderModalProps {
   isOpen: boolean;
   onClose: () => void;
+  /** If provided, opens in edit mode with this trip pre-loaded */
+  editTrip?: {
+    id: string;
+    destination: string;
+    spots: Array<{
+      day_number: number;
+      title: string;
+      description: string;
+      category: 'Transport' | 'Stay' | 'Dining' | 'Activity';
+      image_url: string | null;
+      link_url: string | null;
+    }>;
+  } | null;
 }
 
 type TransportMode = 'Rental' | 'Flights' | 'Own';
@@ -71,7 +84,7 @@ const EXPERT_ITINERARIES = [
   }
 ];
 
-export default function TripBuilderModal({ isOpen, onClose }: TripBuilderModalProps) {
+export default function TripBuilderModal({ isOpen, onClose, editTrip }: TripBuilderModalProps) {
   interface DayState {
     id: string;
     title: string;
@@ -139,8 +152,63 @@ export default function TripBuilderModal({ isOpen, onClose }: TripBuilderModalPr
   };
 
   // Load Google Maps Places script dynamically on mount using VITE_GOOGLE_MAPS_API_KEY
+  // Also seed edit data when opening in edit mode
   useEffect(() => {
     if (isOpen) {
+      if (editTrip) {
+        // Pre-populate from saved trip data
+        setDestination(editTrip.destination);
+        // Build days from spots grouped by day_number
+        const byDay: Record<number, typeof editTrip.spots> = {};
+        editTrip.spots.forEach(s => {
+          if (!byDay[s.day_number]) byDay[s.day_number] = [];
+          byDay[s.day_number].push(s);
+        });
+        const sortedDayNums = Object.keys(byDay).map(Number).sort((a, b) => a - b);
+        const builtDays: DayState[] = sortedDayNums.map((dayNum, idx) => {
+          const daySpots = byDay[dayNum];
+          const catTypeMap: Record<string, RouteItem['type']> = {
+            Transport: 'transport', Stay: 'hotel', Dining: 'dining', Activity: 'activity'
+          };
+          const routeSummary: RouteItem[] = daySpots.map((s, si) => ({
+            id: `edit-${dayNum}-${si}`,
+            title: s.title,
+            link: s.link_url || '',
+            type: catTypeMap[s.category] || 'activity',
+            description: s.description
+          }));
+          const categoryImages: Record<string, string[]> = {};
+          daySpots.forEach(s => {
+            if (s.image_url) {
+              const key = catTypeMap[s.category] || 'activity';
+              if (!categoryImages[key]) categoryImages[key] = [];
+              categoryImages[key].push(s.image_url);
+            }
+          });
+          const transportSpot = daySpots.find(s => s.category === 'Transport');
+          return {
+            id: `day-${idx + 1}`,
+            title: `Day ${idx + 1}`,
+            transportMode: 'Rental' as TransportMode,
+            transportDetails: transportSpot?.description || '',
+            budget: 0,
+            routeSummary,
+            images: [],
+            categoryImages,
+            categoryCosts: {},
+            stayCategory: 'Hotel' as const
+          };
+        });
+        setDays(builtDays.length > 0 ? builtDays : [createEmptyDay(0)]);
+        setCurrentDayIndex(0);
+      } else {
+        // Fresh mode — reset everything
+        setDestination('');
+        setDays([createEmptyDay(0)]);
+        setCurrentDayIndex(0);
+        setError(null);
+      }
+
       const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
       if (apiKey) {
         loadGoogleMapsScript(apiKey).then(() => {
@@ -161,7 +229,7 @@ export default function TripBuilderModal({ isOpen, onClose }: TripBuilderModalPr
         );
       }
     }
-  }, [isOpen]);
+  }, [isOpen, editTrip?.id]);
 
   const activeDay = days[currentDayIndex];
 
