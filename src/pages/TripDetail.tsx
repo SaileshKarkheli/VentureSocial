@@ -44,6 +44,47 @@ function SpotImage({ src, alt, className }: { src: string | null | undefined; al
   );
 }
 
+/**
+ * Resolve the effective image list for a spot:
+ * - Use image_urls array if it has entries
+ * - Fall back to [image_url] for older trips that only have the single field
+ */
+function resolveImages(spot: any): string[] {
+  if (Array.isArray(spot.image_urls) && spot.image_urls.length > 0) {
+    return spot.image_urls.filter(Boolean);
+  }
+  if (spot.image_url) return [spot.image_url];
+  return [];
+}
+
+/**
+ * Renders a horizontal scrollable gallery for multiple images,
+ * or a single image block for one image, or nothing if no images.
+ */
+function SpotGallery({ spot, alt }: { spot: any; alt: string }) {
+  const images = resolveImages(spot);
+  if (images.length === 0) return null;
+
+  if (images.length === 1) {
+    return (
+      <div className="w-full rounded-xl overflow-hidden shadow-md mb-4">
+        <SpotImage src={images[0]} alt={alt} className="w-full aspect-video object-cover" />
+      </div>
+    );
+  }
+
+  // Multiple images — horizontal scrollable strip
+  return (
+    <div className="flex gap-3 overflow-x-auto pb-2 mb-4" style={{ scrollbarWidth: 'thin' }}>
+      {images.map((url, i) => (
+        <div key={i} className="flex-shrink-0 w-48 h-32 rounded-xl overflow-hidden shadow-md border border-zinc-200">
+          <SpotImage src={url} alt={`${alt} ${i + 1}`} className="w-full h-full object-cover" />
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export default function TripDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -229,20 +270,23 @@ export default function TripDetail() {
                             isExpanded={expandedPillars.has(`${dayNum}-transport`)}
                             onToggle={() => togglePillar(`${dayNum}-transport`)}
                           >
-                            <div className="flex items-start gap-6 p-6 bg-zinc-50 rounded-2xl border border-zinc-100 relative">
-                              <div className="p-4 rounded-xl bg-white shadow-sm text-orange-500">
-                                <Car size={24} />
+                            <div className="flex flex-col gap-4 p-6 bg-zinc-50 rounded-2xl border border-zinc-100 relative">
+                              <SpotGallery spot={transport} alt={transport.title} />
+                              <div className="flex items-start gap-6">
+                                <div className="p-4 rounded-xl bg-white shadow-sm text-orange-500 flex-shrink-0">
+                                  <Car size={24} />
+                                </div>
+                                <div className="space-y-2 flex-1">
+                                  <h4 className="font-bold text-[#0A192F] text-lg">{transport.title}</h4>
+                                  <p className="text-zinc-600 leading-relaxed">{transport.description}</p>
+                                </div>
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); setSpotToSave(transport.id); }}
+                                  className="flex-shrink-0 w-10 h-10 rounded-full bg-orange-500 text-white flex items-center justify-center shadow-lg hover:scale-110 transition-transform"
+                                >
+                                  <Plus size={20} />
+                                </button>
                               </div>
-                              <div className="space-y-2">
-                                <h4 className="font-bold text-[#0A192F] text-lg">{transport.title}</h4>
-                                <p className="text-zinc-600 leading-relaxed">{transport.description}</p>
-                              </div>
-                              <button
-                                onClick={(e) => { e.stopPropagation(); setSpotToSave(transport.id); }}
-                                className="absolute top-6 right-6 w-10 h-10 rounded-full bg-orange-500 text-white flex items-center justify-center shadow-lg hover:scale-110 transition-transform"
-                              >
-                                <Plus size={20} />
-                              </button>
                             </div>
                           </PillarSection>
                         )}
@@ -254,23 +298,12 @@ export default function TripDetail() {
                             isExpanded={expandedPillars.has(`${dayNum}-stay`)}
                             onToggle={() => togglePillar(`${dayNum}-stay`)}
                           >
-                            <div className="bg-zinc-50 rounded-2xl p-6 border border-zinc-100 space-y-6 relative">
-                              <div className="flex flex-col md:flex-row gap-6 items-start">
-                                {stay.image_url ? (
-                                  <div className="w-full md:w-1/3 aspect-video rounded-xl overflow-hidden shadow-md flex-shrink-0">
-                                    <SpotImage src={stay.image_url} alt={stay.title} className="w-full h-full object-cover" />
-                                  </div>
-                                ) : null}
-                                <div className="flex-1 space-y-4">
-                                  <div className="flex items-center justify-between">
-                                    <h4 className="text-2xl font-display font-bold text-[#0A192F] pr-12">{stay.title}</h4>
-                                    <button
-                                      onClick={(e) => { e.stopPropagation(); setSpotToSave(stay.id); }}
-                                      className="absolute top-6 right-6 w-12 h-12 rounded-full bg-orange-500 text-white flex items-center justify-center shadow-lg hover:scale-110 transition-transform"
-                                    >
-                                      <Plus size={24} />
-                                    </button>
-                                  </div>
+                            <div className="bg-zinc-50 rounded-2xl p-6 border border-zinc-100 space-y-4 relative">
+                              {/* Image gallery — all uploaded photos at top */}
+                              <SpotGallery spot={stay} alt={stay.title} />
+                              <div className="flex items-start justify-between gap-4">
+                                <div className="space-y-2 flex-1">
+                                  <h4 className="text-2xl font-display font-bold text-[#0A192F]">{stay.title}</h4>
                                   <p className="text-zinc-500 text-sm leading-relaxed">{stay.description}</p>
                                   {stay.link_url && (
                                     <a href={stay.link_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-orange-500 font-bold text-sm hover:underline">
@@ -278,6 +311,12 @@ export default function TripDetail() {
                                     </a>
                                   )}
                                 </div>
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); setSpotToSave(stay.id); }}
+                                  className="flex-shrink-0 w-12 h-12 rounded-full bg-orange-500 text-white flex items-center justify-center shadow-lg hover:scale-110 transition-transform"
+                                >
+                                  <Plus size={24} />
+                                </button>
                               </div>
                             </div>
                           </PillarSection>
@@ -290,23 +329,12 @@ export default function TripDetail() {
                             isExpanded={expandedPillars.has(`${dayNum}-dining`)}
                             onToggle={() => togglePillar(`${dayNum}-dining`)}
                           >
-                            <div className="bg-zinc-50 rounded-2xl p-6 border border-zinc-100 space-y-6 relative">
-                              <div className="flex flex-col md:flex-row gap-6 items-start">
-                                {dining.image_url ? (
-                                  <div className="w-full md:w-1/3 aspect-video rounded-xl overflow-hidden shadow-md flex-shrink-0">
-                                    <SpotImage src={dining.image_url} alt={dining.title} className="w-full h-full object-cover" />
-                                  </div>
-                                ) : null}
-                                <div className="flex-1 space-y-4">
-                                  <div className="flex items-center justify-between">
-                                    <h4 className="text-2xl font-display font-bold text-[#0A192F] pr-12">{dining.title}</h4>
-                                    <button
-                                      onClick={(e) => { e.stopPropagation(); setSpotToSave(dining.id); }}
-                                      className="absolute top-6 right-6 w-12 h-12 rounded-full bg-orange-500 text-white flex items-center justify-center shadow-lg hover:scale-110 transition-transform"
-                                    >
-                                      <Plus size={24} />
-                                    </button>
-                                  </div>
+                            <div className="bg-zinc-50 rounded-2xl p-6 border border-zinc-100 space-y-4 relative">
+                              {/* Image gallery — all uploaded photos at top */}
+                              <SpotGallery spot={dining} alt={dining.title} />
+                              <div className="flex items-start justify-between gap-4">
+                                <div className="space-y-2 flex-1">
+                                  <h4 className="text-2xl font-display font-bold text-[#0A192F]">{dining.title}</h4>
                                   <p className="text-zinc-500 text-sm leading-relaxed">{dining.description}</p>
                                   {dining.link_url && (
                                     <a href={dining.link_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-orange-500 font-bold text-sm hover:underline">
@@ -314,6 +342,12 @@ export default function TripDetail() {
                                     </a>
                                   )}
                                 </div>
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); setSpotToSave(dining.id); }}
+                                  className="flex-shrink-0 w-12 h-12 rounded-full bg-orange-500 text-white flex items-center justify-center shadow-lg hover:scale-110 transition-transform"
+                                >
+                                  <Plus size={24} />
+                                </button>
                               </div>
                             </div>
                           </PillarSection>
@@ -329,28 +363,20 @@ export default function TripDetail() {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                               {activities.map((activity: any) => (
                                 <div key={activity.id} className="bg-zinc-50 rounded-2xl overflow-hidden border border-zinc-100 flex flex-col">
-                                  {activity.image_url ? (
-                                    <div className="relative h-48">
-                                      <SpotImage src={activity.image_url} alt={activity.title} className="w-full h-full object-cover" />
+                                  <div className="p-4 pb-0">
+                                    {/* Image gallery — all uploaded photos */}
+                                    <SpotGallery spot={activity} alt={activity.title} />
+                                  </div>
+                                  <div className="p-4 space-y-2 flex-1">
+                                    <div className="flex items-start justify-between gap-2">
+                                      <h4 className="font-bold text-[#0A192F] text-lg">{activity.title}</h4>
                                       <button
                                         onClick={(e) => { e.stopPropagation(); setSpotToSave(activity.id); }}
-                                        className="absolute top-4 right-4 w-10 h-10 rounded-full bg-orange-500 text-white flex items-center justify-center shadow-lg hover:scale-110 transition-transform"
+                                        className="flex-shrink-0 w-10 h-10 rounded-full bg-orange-500 text-white flex items-center justify-center shadow-lg hover:scale-110 transition-transform"
                                       >
                                         <Plus size={20} />
                                       </button>
                                     </div>
-                                  ) : (
-                                    <div className="relative p-4 flex justify-end">
-                                      <button
-                                        onClick={(e) => { e.stopPropagation(); setSpotToSave(activity.id); }}
-                                        className="w-10 h-10 rounded-full bg-orange-500 text-white flex items-center justify-center shadow-lg hover:scale-110 transition-transform"
-                                      >
-                                        <Plus size={20} />
-                                      </button>
-                                    </div>
-                                  )}
-                                  <div className="p-6 space-y-2">
-                                    <h4 className="font-bold text-[#0A192F] text-lg">{activity.title}</h4>
                                     <p className="text-zinc-500 text-sm leading-relaxed">{activity.description}</p>
                                   </div>
                                 </div>

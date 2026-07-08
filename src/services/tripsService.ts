@@ -100,9 +100,19 @@ export const tripsService = {
           base_price: matchedCustom.base_price || 0,
           profiles: { full_name: 'Alex Explorer', username: 'alex_explorer' }
         };
-        const spots = [
-          { id: '1', day_number: 1, title: 'Arrival & Setup', description: 'Arrive at destination and settle in.', category: 'Transport', image_url: matchedCustom.image }
-        ];
+        // Use the full saved spots array if available (includes image_urls)
+        const spots = Array.isArray(matchedCustom.spots) && matchedCustom.spots.length > 0
+          ? matchedCustom.spots.map((s: any, idx: number) => ({
+              id: s.id || `spot-${idx}`,
+              day_number: s.day_number || 1,
+              title: s.title || '',
+              description: s.description || '',
+              category: s.category || 'Activity',
+              image_url: s.image_url || null,
+              image_urls: s.image_urls || null,
+              link_url: s.link_url || null
+            }))
+          : [{ id: '1', day_number: 1, title: 'Arrival & Setup', description: 'Arrive at destination and settle in.', category: 'Transport', image_url: matchedCustom.image, image_urls: null, link_url: null }];
         return { post, spots };
       }
 
