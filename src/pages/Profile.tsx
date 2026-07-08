@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { User as UserIcon, Mail, Calendar, MapPin, Camera, Edit2, Bookmark, ExternalLink, Bed, Utensils, Info, Plus, Shield, ShieldCheck, MessageSquare, Loader2, Instagram, Twitter, Globe } from 'lucide-react';
+import { User as UserIcon, Mail, Calendar, MapPin, Camera, Edit2, Bookmark, ExternalLink, Bed, Utensils, Info, Plus, Shield, ShieldCheck, MessageSquare, Loader2, Instagram, Twitter, Globe, Play } from 'lucide-react';
 import { useApp } from '../AppContext';
 import ChatOverlay from '../components/ChatOverlay';
 import { supabase } from '../supabaseClient';
@@ -19,6 +19,32 @@ export default function Profile() {
   const [tripCount, setTripCount] = useState(0);
   const [followersCount, setFollowersCount] = useState(0);
   const [pendingRequests, setPendingRequests] = useState<any[]>([]);
+  
+  // Tab State
+  const [activeTab, setActiveTab] = useState<'media' | 'about'>('media');
+  
+  // Media Grid State
+  const [userMedia, setUserMedia] = useState<Array<{ url: string; type: 'image' | 'video' }>>([]);
+  
+  // About Tab Form State
+  const [fullName, setFullName] = useState('');
+  const [bio, setBio] = useState('');
+  const [location, setLocation] = useState('');
+  const [education, setEducation] = useState('');
+  const [dob, setDob] = useState('');
+  const [isSavingProfile, setIsSavingProfile] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+
+  // Sync form states with global profile changes
+  useEffect(() => {
+    if (currentUserProfile) {
+      setFullName(currentUserProfile.full_name || '');
+      setBio(currentUserProfile.bio || '');
+      setLocation(currentUserProfile.location || '');
+      setEducation(currentUserProfile.education || '');
+      setDob(currentUserProfile.dob || '');
+    }
+  }, [currentUserProfile]);
 
   useEffect(() => {
     if (!user) {
@@ -28,17 +54,83 @@ export default function Profile() {
     
     const isMockMode = import.meta.env.VITE_ENABLE_MOCK_MODE === 'true' && !!localStorage.getItem('venturesocial_mock_session');
     if (isMockMode) {
-      setDbProfile({
+      const mockProf = {
         full_name: user.name || 'Alex Explorer',
         username: user.email ? user.email.split('@')[0] : 'alex_explorer',
         bio: "Adventure seeker, photography enthusiast, and coffee lover. Mapping the world one city at a time.",
         location: "San Francisco, CA",
         education: "Stanford University",
         avatar_url: user.avatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=100&h=100",
-        cover_photo_url: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80"
-      });
+        cover_photo_url: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80",
+        dob: "1995-06-15"
+      };
+      setDbProfile(mockProf);
+      setFullName(mockProf.full_name);
+      setBio(mockProf.bio);
+      setLocation(mockProf.location);
+      setEducation(mockProf.education);
+      setDob(mockProf.dob);
       setTripCount(3);
       setFollowersCount(15);
+
+      // Populate mock media
+      const mediaList: Array<{ url: string; type: 'image' | 'video' }> = [];
+      const mockMyTripsData = [
+        {
+          id: '1',
+          availableImages: [
+            'https://images.unsplash.com/photo-1523906834658-6e24ef2386f9?auto=format&fit=crop&w=800&q=80',
+            'https://images.unsplash.com/photo-1552832230-c0197dd311b5?auto=format&fit=crop&w=800&q=80',
+            'https://images.unsplash.com/photo-1516483638261-f4dbaf036963?auto=format&fit=crop&w=800&q=80'
+          ]
+        },
+        {
+          id: '2',
+          availableImages: [
+            'https://images.unsplash.com/photo-1599839619722-39751411ea63?auto=format&fit=crop&w=800&q=80',
+            'https://images.unsplash.com/photo-1541844053589-3462d48979e2?auto=format&fit=crop&w=800&q=80',
+            'https://images.unsplash.com/photo-1571501679680-de32f1e7aad4?auto=format&fit=crop&w=800&q=80'
+          ]
+        },
+        {
+          id: '3',
+          availableImages: [
+            'https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&w=800&q=80',
+            'https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?auto=format&fit=crop&w=800&q=80',
+            'https://images.unsplash.com/photo-1518548419970-58e3b4079ab2?auto=format&fit=crop&w=800&q=80'
+          ]
+        }
+      ];
+      
+      mockMyTripsData.forEach(t => {
+        t.availableImages.forEach(img => {
+          mediaList.push({ url: img, type: 'image' });
+        });
+      });
+
+      mediaList.push({
+        url: 'https://images.unsplash.com/photo-1516483638261-f4dbaf036963?auto=format&fit=crop&w=400&q=80',
+        type: 'video'
+      });
+
+      const customTripsStr = localStorage.getItem('venturesocial_custom_trips');
+      const customTrips = customTripsStr ? JSON.parse(customTripsStr) : [];
+      customTrips.forEach((t: any) => {
+        if (t.spots) {
+          t.spots.forEach((spot: any) => {
+            if (spot.image_url) {
+              mediaList.push({ url: spot.image_url, type: 'image' });
+            }
+            if (spot.video_url) {
+              mediaList.push({ url: spot.video_url, type: 'video' });
+            }
+          });
+        } else if (t.image) {
+          mediaList.push({ url: t.image, type: 'image' });
+        }
+      });
+
+      setUserMedia(mediaList);
       setIsLoading(false);
       return;
     }
@@ -54,6 +146,11 @@ export default function Profile() {
           
         if (data) {
           setDbProfile(data);
+          setFullName(data.full_name || '');
+          setBio(data.bio || '');
+          setLocation(data.location || '');
+          setEducation(data.education || '');
+          setDob(data.dob || '');
           setIsPrivateAccount(data.is_private || false);
         }
 
@@ -72,6 +169,34 @@ export default function Profile() {
           .eq('status', 'pending')
           .order('created_at', { ascending: false });
         setPendingRequests(requestsData || []);
+
+        // Fetch trip spots media
+        const { data: userPosts } = await supabase
+          .from('posts')
+          .select('id')
+          .eq('user_id', user.id);
+          
+        if (userPosts && userPosts.length > 0) {
+          const postIds = userPosts.map((p: any) => p.id);
+          const { data: spotsData } = await supabase
+            .from('trip_spots')
+            .select('*')
+            .in('post_id', postIds);
+            
+          if (spotsData) {
+            const mediaList: Array<{ url: string; type: 'image' | 'video' }> = [];
+            spotsData.forEach((spot: any) => {
+              if (spot.image_url) {
+                mediaList.push({ url: spot.image_url, type: 'image' });
+              }
+              const spotAny = spot as any;
+              if (spotAny.video_url) {
+                mediaList.push({ url: spotAny.video_url, type: 'video' });
+              }
+            });
+            setUserMedia(mediaList);
+          }
+        }
       } catch (err) {
         console.error("Error fetching profile data:", err);
       } finally {
@@ -99,6 +224,45 @@ export default function Profile() {
     }
   };
 
+  const handleSaveAbout = async () => {
+    if (!user) return;
+    setIsSavingProfile(true);
+    setSaveStatus(null);
+    
+    const isMockMode = import.meta.env.VITE_ENABLE_MOCK_MODE === 'true' && !!localStorage.getItem('venturesocial_mock_session');
+    
+    const updatePayload = {
+      full_name: fullName,
+      bio: bio,
+      location: location,
+      education: education,
+      dob: dob
+    };
+
+    try {
+      if (isMockMode) {
+        updateActiveProfile(updatePayload);
+        setDbProfile((prev: any) => ({ ...prev, ...updatePayload }));
+        setSaveStatus({ type: 'success', message: 'Profile saved successfully (Mock Mode).' });
+      } else {
+        const { error } = await supabase
+          .from('profiles')
+          .update(updatePayload)
+          .eq('id', user.id);
+          
+        if (error) throw error;
+        
+        updateActiveProfile(updatePayload);
+        setDbProfile((prev: any) => ({ ...prev, ...updatePayload }));
+        setSaveStatus({ type: 'success', message: 'Profile saved successfully!' });
+      }
+    } catch (err: any) {
+      console.error('Failed to save profile:', err);
+      setSaveStatus({ type: 'error', message: err.message || 'Failed to save profile. Please try again.' });
+    } finally {
+      setIsSavingProfile(false);
+    }
+  };
 
   const userData = {
     name: currentUserProfile?.full_name || dbProfile?.full_name || user?.name || 'New Explorer',
@@ -199,25 +363,160 @@ export default function Profile() {
           </div>
         </div>
 
+        {/* Stats Bar (Full Width) */}
+        <section className="bg-white p-6 rounded-2xl border border-zinc-100 shadow-sm mb-8">
+          <div className="grid grid-cols-3 gap-4 text-center max-w-xl mx-auto">
+            {userData.stats.map((stat) => (
+              <div key={stat.label}>
+                <p className="text-2xl font-display font-bold text-[#0A192F]">{stat.value}</p>
+                <p className="text-xs text-zinc-400 uppercase font-bold">{stat.label}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <div className="md:col-span-2 space-y-8">
-            {(userData.bio || userData.education) && (
+          {/* Main Content Column */}
+          <div className="md:col-span-2 space-y-6">
+            {/* Tab Bar */}
+            <div className="flex border-b border-zinc-200 mb-6 bg-white p-2 rounded-2xl border border-zinc-100 shadow-sm">
+              <button
+                onClick={() => setActiveTab('media')}
+                className={`flex-1 py-3 px-6 font-bold text-sm rounded-xl transition-all ${
+                  activeTab === 'media'
+                    ? 'bg-orange-500 text-white shadow-md'
+                    : 'text-zinc-500 hover:text-[#0A192F] hover:bg-zinc-50'
+                }`}
+              >
+                Photos & Videos
+              </button>
+              <button
+                onClick={() => setActiveTab('about')}
+                className={`flex-1 py-3 px-6 font-bold text-sm rounded-xl transition-all ${
+                  activeTab === 'about'
+                    ? 'bg-orange-500 text-white shadow-md'
+                    : 'text-zinc-500 hover:text-[#0A192F] hover:bg-zinc-50'
+                }`}
+              >
+                About
+              </button>
+            </div>
+
+            {/* Tab Content */}
+            {activeTab === 'media' ? (
               <section className="bg-white p-6 rounded-2xl border border-zinc-100 shadow-sm">
-                {userData.bio && (
-                  <>
-                    <h3 className="text-lg font-bold text-[#0A192F] mb-4">About Me</h3>
-                    <p className="text-zinc-600 leading-relaxed">{userData.bio}</p>
-                  </>
-                )}
-                {userData.education && (
-                  <div className={userData.bio ? "mt-4 pt-4 border-t border-zinc-100" : ""}>
-                    <p className="text-xs text-zinc-400 uppercase font-bold tracking-wider mb-1">Education</p>
-                    <p className="text-sm text-[#0A192F] font-medium">{userData.education}</p>
+                <h3 className="text-lg font-bold text-[#0A192F] mb-6">Photos & Videos</h3>
+                {userMedia.length > 0 ? (
+                  <div className="grid grid-cols-3 gap-1">
+                    {userMedia.map((media, idx) => (
+                      <div
+                        key={idx}
+                        className="relative aspect-square overflow-hidden rounded-xl group cursor-pointer border border-zinc-100 bg-zinc-50 shadow-sm"
+                        onClick={() => setSelectedFullImage(media.url)}
+                      >
+                        <img
+                          src={media.url}
+                          alt=""
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          referrerPolicy="no-referrer"
+                        />
+                        {media.type === 'video' && (
+                          <div className="absolute top-2 right-2 p-1.5 bg-black/60 rounded-full text-white shadow-md">
+                            <Play size={12} className="fill-white" />
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-16 bg-zinc-50 rounded-2xl border border-dashed border-zinc-200">
+                    <Camera size={36} className="mx-auto text-zinc-300 mb-2" />
+                    <p className="text-zinc-400 text-sm font-medium">No photos or videos yet.</p>
                   </div>
                 )}
               </section>
-            )}
+            ) : (
+              /* About Tab Content */
+              <section className="bg-white p-6 rounded-2xl border border-zinc-100 shadow-sm space-y-6">
+                <h3 className="text-lg font-bold text-[#0A192F] mb-2">About Me & Personal Details</h3>
+                
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-bold text-zinc-400 uppercase tracking-widest mb-1.5 ml-1">Full Name</label>
+                    <input
+                      type="text"
+                      value={fullName}
+                      onChange={(e) => setFullName(e.target.value)}
+                      className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all placeholder:text-zinc-400 text-sm font-medium"
+                      placeholder="Full Name"
+                    />
+                  </div>
 
+                  <div>
+                    <label className="block text-xs font-bold text-zinc-400 uppercase tracking-widest mb-1.5 ml-1">Bio</label>
+                    <textarea
+                      value={bio}
+                      onChange={(e) => setBio(e.target.value)}
+                      rows={3}
+                      className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all placeholder:text-zinc-400 text-sm font-medium resize-none custom-scrollbar"
+                      placeholder="Tell the world about your travels..."
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-zinc-400 uppercase tracking-widest mb-1.5 ml-1">Location</label>
+                    <input
+                      type="text"
+                      value={location}
+                      onChange={(e) => setLocation(e.target.value)}
+                      className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all placeholder:text-zinc-400 text-sm font-medium"
+                      placeholder="e.g. San Francisco, CA"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-zinc-400 uppercase tracking-widest mb-1.5 ml-1">Education</label>
+                    <input
+                      type="text"
+                      value={education}
+                      onChange={(e) => setEducation(e.target.value)}
+                      className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all placeholder:text-zinc-400 text-sm font-medium"
+                      placeholder="e.g. Stanford University"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-zinc-400 uppercase tracking-widest mb-1.5 ml-1">Date of Birth</label>
+                    <input
+                      type="date"
+                      value={dob}
+                      onChange={(e) => setDob(e.target.value)}
+                      className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all text-sm text-zinc-700 font-medium"
+                    />
+                  </div>
+                </div>
+
+                {saveStatus && (
+                  <div className={`p-4 rounded-2xl text-xs font-bold ${
+                    saveStatus.type === 'success' ? 'bg-emerald-50 text-emerald-600 border border-emerald-200' : 'bg-red-50 text-red-600 border border-red-200'
+                  }`}>
+                    {saveStatus.message}
+                  </div>
+                )}
+
+                <button
+                  onClick={handleSaveAbout}
+                  disabled={isSavingProfile}
+                  className="w-full bg-[#0A192F] text-white font-bold py-3.5 rounded-2xl shadow-xl hover:bg-black transition-all flex justify-center items-center gap-2 disabled:opacity-50"
+                >
+                  {isSavingProfile ? <Loader2 className="animate-spin" size={18} /> : 'Save About Info'}
+                </button>
+              </section>
+            )}
+          </div>
+
+          {/* Sidebar Column */}
+          <div className="space-y-8">
             {/* Pending Follow Requests Section */}
             {pendingRequests.length > 0 && (
               <section className="bg-white p-6 rounded-2xl border border-zinc-100 shadow-sm space-y-4">
@@ -325,56 +624,7 @@ export default function Profile() {
               )}
             </section>
 
-            <section className="bg-white p-6 rounded-2xl border border-zinc-100 shadow-sm space-y-4">
-              <h3 className="text-lg font-bold text-[#0A192F] mb-4">Personal Information</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                <div className="flex items-center gap-3 text-zinc-600">
-                  <div className="w-10 h-10 rounded-xl bg-zinc-50 flex items-center justify-center">
-                    <UserIcon size={20} className="text-orange-500" />
-                  </div>
-                  <div>
-                    <p className="text-xs text-zinc-400 uppercase font-bold tracking-wider">Full Name</p>
-                    <p className="font-medium text-[#0A192F]">{userData.name}</p>
-                  </div>
-                </div>
-                {userData.email && (
-                  <div className="flex items-center gap-3 text-zinc-600">
-                    <div className="w-10 h-10 rounded-xl bg-zinc-50 flex items-center justify-center">
-                      <Mail size={20} className="text-orange-500" />
-                    </div>
-                    <div>
-                      <p className="text-xs text-zinc-400 uppercase font-bold tracking-wider">Email Address</p>
-                      <p className="font-medium text-[#0A192F]">{userData.email}</p>
-                    </div>
-                  </div>
-                )}
-                {userData.dob && (
-                  <div className="flex items-center gap-3 text-zinc-600">
-                    <div className="w-10 h-10 rounded-xl bg-zinc-50 flex items-center justify-center">
-                      <Calendar size={20} className="text-orange-500" />
-                    </div>
-                    <div>
-                      <p className="text-xs text-zinc-400 uppercase font-bold tracking-wider">Date of Birth</p>
-                      <p className="font-medium text-[#0A192F]">{userData.dob}</p>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </section>
-          </div>
-
-          <div className="space-y-8">
-            <section className="bg-white p-6 rounded-2xl border border-zinc-100 shadow-sm">
-              <div className="grid grid-cols-3 gap-4 text-center">
-                {userData.stats.map((stat) => (
-                  <div key={stat.label}>
-                    <p className="text-2xl font-display font-bold text-[#0A192F]">{stat.value}</p>
-                    <p className="text-xs text-zinc-400 uppercase font-bold">{stat.label}</p>
-                  </div>
-                ))}
-              </div>
-            </section>
-
+            {/* Account Privacy */}
             <section className="bg-white p-6 rounded-2xl border border-zinc-100 shadow-sm">
               <h3 className="text-lg font-bold text-[#0A192F] mb-4">Account Privacy</h3>
               <div className="p-4 rounded-xl border border-zinc-100 bg-zinc-50 flex items-center justify-between">
@@ -401,6 +651,7 @@ export default function Profile() {
               </div>
             </section>
 
+            {/* Social Links */}
             <section className="bg-white p-6 rounded-2xl border border-zinc-100 shadow-sm">
               <h3 className="text-lg font-bold text-[#0A192F] mb-4">Social Links</h3>
               {hasSocialLinks ? (
