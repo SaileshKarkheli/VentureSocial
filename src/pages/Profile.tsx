@@ -186,12 +186,12 @@ export default function Profile() {
           if (spotsData) {
             const mediaList: Array<{ url: string; type: 'image' | 'video' }> = [];
             spotsData.forEach((spot: any) => {
-              if (spot.image_url) {
+              if (Array.isArray(spot.image_urls) && spot.image_urls.length > 0) {
+                spot.image_urls.forEach((url: string) => {
+                  mediaList.push({ url, type: 'image' });
+                });
+              } else if (spot.image_url) {
                 mediaList.push({ url: spot.image_url, type: 'image' });
-              }
-              const spotAny = spot as any;
-              if (spotAny.video_url) {
-                mediaList.push({ url: spotAny.video_url, type: 'video' });
               }
             });
             setUserMedia(mediaList);

@@ -87,23 +87,13 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onCl
         const fileName = `${session.user.id}-${Math.random()}.${fileExt}`;
         const filePath = `${session.user.id}/${fileName}`;
 
-        let { error: uploadError } = await supabase.storage
-          .from('avatars')
+        const { error: uploadError } = await supabase.storage
+          .from('Avatars')
           .upload(filePath, avatarFile, { upsert: true });
-
-        if (uploadError && (uploadError.message === 'Bucket not found' || uploadError.status === 404)) {
-          const { error: createError } = await supabase.storage.createBucket('avatars', { public: true });
-          if (!createError || createError.message?.includes('already exists')) {
-            const retry = await supabase.storage
-              .from('avatars')
-              .upload(filePath, avatarFile, { upsert: true });
-            uploadError = retry.error;
-          }
-        }
 
         if (uploadError) throw uploadError;
 
-        const { data } = supabase.storage.from('avatars').getPublicUrl(filePath);
+        const { data } = supabase.storage.from('Avatars').getPublicUrl(filePath);
         finalAvatarUrl = data.publicUrl;
       }
 
@@ -112,19 +102,9 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onCl
         const fileName = `${session.user.id}-${Math.random()}.${fileExt}`;
         const filePath = `${session.user.id}/${fileName}`;
 
-        let { error: uploadError } = await supabase.storage
+        const { error: uploadError } = await supabase.storage
           .from('covers')
           .upload(filePath, coverFile, { upsert: true });
-
-        if (uploadError && (uploadError.message === 'Bucket not found' || uploadError.status === 404)) {
-          const { error: createError } = await supabase.storage.createBucket('covers', { public: true });
-          if (!createError || createError.message?.includes('already exists')) {
-            const retry = await supabase.storage
-              .from('covers')
-              .upload(filePath, coverFile, { upsert: true });
-            uploadError = retry.error;
-          }
-        }
 
         if (uploadError) throw uploadError;
 
