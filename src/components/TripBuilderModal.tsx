@@ -45,6 +45,8 @@ interface TripBuilderModalProps {
       image_url: string | null;
       image_urls?: string[] | null;
       link_url: string | null;
+      lat?: number | null;
+      lng?: number | null;
     }>;
   } | null;
 }
@@ -176,7 +178,10 @@ export default function TripBuilderModal({ isOpen, onClose, editTrip }: TripBuil
             title: s.title,
             link: s.link_url || '',
             type: catTypeMap[s.category] || 'activity',
-            description: s.description
+            description: s.description,
+            coordinates: (s.lat != null && s.lng != null)
+              ? { lat: Number(s.lat), lng: Number(s.lng) }
+              : undefined
           }));
           const categoryImages: Record<string, string[]> = {};
           daySpots.forEach(s => {
@@ -460,17 +465,32 @@ export default function TripBuilderModal({ isOpen, onClose, editTrip }: TripBuil
           });
         });
 
-        const newTrip = {
-          id: `custom-${Date.now()}`,
-          year: new Date().getFullYear().toString(),
-          country: destination,
-          image: coverPhoto,
-          base_price: totalBudget,
-          spots
-        };
-        customTrips.push(newTrip);
+        if (editTrip?.id) {
+          // Update the existing local trip in place instead of duplicating it.
+          const idx = customTrips.findIndex((t: any) => t.id === editTrip.id);
+          const updatedTrip = {
+            id: editTrip.id,
+            year: new Date().getFullYear().toString(),
+            country: destination,
+            image: coverPhoto,
+            base_price: totalBudget,
+            spots
+          };
+          if (idx >= 0) customTrips[idx] = updatedTrip;
+          else customTrips.push(updatedTrip);
+        } else {
+          const newTrip = {
+            id: `custom-${Date.now()}`,
+            year: new Date().getFullYear().toString(),
+            country: destination,
+            image: coverPhoto,
+            base_price: totalBudget,
+            spots
+          };
+          customTrips.push(newTrip);
+        }
         localStorage.setItem('venturesocial_custom_trips', JSON.stringify(customTrips));
-        window.location.reload(); // Refresh to show new trip
+        window.location.reload(); // Refresh to show saved trip
       } catch (err: any) {
         console.error("Local storage save failed:", err);
         setError("Failed to save trip locally: " + err.message);
@@ -513,87 +533,121 @@ export default function TripBuilderModal({ isOpen, onClose, editTrip }: TripBuil
         console.warn("Exception during proactive profile check/insert:", profileCheckErr);
       }
 
-      const postInsertData = {
-        user_id: session.user.id,
-        location_name: destination,
-        caption: `My Custom Trip to ${destination}`,
-        category: 'Activity', // Required NOT NULL column in posts schema
-        base_price: totalBudget,
-        is_private: true // Created trips are private/drafts by default, shared via PublishModal later
-      };
-      
-      console.log("Inserting post into Supabase:", postInsertData);
-      
-      const { data, error } = await supabase.from('posts').insert(postInsertData).select().single();
+      const isEditing = !!editTrip?.id;
+      let postId: string;
 
-      if (error) {
-        console.error("Posts Insert Error Object:", error);
-        throw new Error(`Failed to insert trip post: ${error.message} (Code: ${error.code})`);
+      if (isEditing) {
+        // Update the existing trip in place instead of inserting a duplicate.
+        // is_private and category are intentionally left untouched so editing a
+        // shared trip does not silently revert its privacy.
+        const { error: updateError } = await supabase
+          .from('posts')
+          .update({
+            location_name: destination,
+            base_price: totalBudget,
+          })
+          .eq('id', editTrip!.id);
+
+        if (updateError) {
+          console.error("Posts Update Error Object:", updateError);
+          throw new Error(`Failed to update trip post: ${updateError.message} (Code: ${updateError.code})`);
+        }
+        postId = editTrip!.id;
+
+        // Replace existing spots so repeated edits don't accumulate duplicates.
+        const { error: deleteError } = await supabase
+          .from('trip_spots')
+          .delete()
+          .eq('post_id', postId);
+
+        if (deleteError) {
+          console.error("Trip Spots Delete Error Object:", deleteError);
+          throw new Error(`Failed to update trip spots: ${deleteError.message} (Code: ${deleteError.code})`);
+        }
+      } else {
+        const postInsertData = {
+          user_id: session.user.id,
+          location_name: destination,
+          caption: `My Custom Trip to ${destination}`,
+          category: 'Activity', // Required NOT NULL column in posts schema
+          base_price: totalBudget,
+          is_private: true // Created trips are private/drafts by default, shared via PublishModal later
+        };
+
+        console.log("Inserting post into Supabase:", postInsertData);
+
+        const { data, error } = await supabase.from('posts').insert(postInsertData).select().single();
+
+        if (error) {
+          console.error("Posts Insert Error Object:", error);
+          throw new Error(`Failed to insert trip post: ${error.message} (Code: ${error.code})`);
+        }
+        postId = data.id;
       }
 
-      if (data) {
-        console.log("Post inserted successfully. Data:", data);
-        
-        const spotsToInsert: any[] = [];
-        days.forEach((day, idx) => {
-          const dayNum = idx + 1;
-          const categoryMap: Record<string, 'Transport' | 'Stay' | 'Dining' | 'Activity'> = {
-            transport: 'Transport',
-            hotel: 'Stay',
-            dining: 'Dining',
-            activity: 'Activity'
-          };
+      const spotsToInsert: any[] = [];
+      days.forEach((day, idx) => {
+        const dayNum = idx + 1;
+        const categoryMap: Record<string, 'Transport' | 'Stay' | 'Dining' | 'Activity'> = {
+          transport: 'Transport',
+          hotel: 'Stay',
+          dining: 'Dining',
+          activity: 'Activity'
+        };
 
-          // BUG 1 FIX: Auto-synthesize a transport spot if none was explicitly added
-          const hasTransportItem = day.routeSummary.some(item => item.type === 'transport');
-          if (!hasTransportItem && (day.transportMode || day.transportDetails)) {
-            const cost = day.categoryCosts?.['transport'];
-            const modeLabel = day.transportMode === 'Rental' ? 'Rental Car' : day.transportMode === 'Flights' ? 'Flight' : 'Own Vehicle';
-            let desc = day.transportDetails || `Traveling by ${modeLabel}.`;
-            if (cost !== undefined && cost > 0) desc += ` Cost: $${cost}.`;
-            const imgs = day.categoryImages?.['transport'] || [];
-            spotsToInsert.push({
-              post_id: data.id,
-              day_number: dayNum,
-              title: modeLabel,
-              description: desc,
-              category: 'Transport',
-              image_url: imgs[0] || null,
-              image_urls: imgs.length > 0 ? imgs : null,
-              link_url: null,
-              location_coords: null
-            });
-          }
+        // BUG 1 FIX: Auto-synthesize a transport spot if none was explicitly added
+        const hasTransportItem = day.routeSummary.some(item => item.type === 'transport');
+        if (!hasTransportItem && (day.transportMode || day.transportDetails)) {
+          const cost = day.categoryCosts?.['transport'];
+          const modeLabel = day.transportMode === 'Rental' ? 'Rental Car' : day.transportMode === 'Flights' ? 'Flight' : 'Own Vehicle';
+          let desc = day.transportDetails || `Traveling by ${modeLabel}.`;
+          if (cost !== undefined && cost > 0) desc += ` Cost: $${cost}.`;
+          const imgs = day.categoryImages?.['transport'] || [];
+          spotsToInsert.push({
+            post_id: postId,
+            day_number: dayNum,
+            title: modeLabel,
+            description: desc,
+            category: 'Transport',
+            image_url: imgs[0] || null,
+            image_urls: imgs.length > 0 ? imgs : null,
+            link_url: null,
+            lat: null,
+            lng: null,
+            location_coords: null
+          });
+        }
 
-          day.routeSummary.forEach(item => {
-            const cost = day.categoryCosts?.[item.type];
-            let description = item.description || `Details for ${item.title}.`;
-            if (cost !== undefined && cost > 0) description += ` Cost: $${cost}.`;
-            const imgs = day.categoryImages?.[item.type] || [];
-            spotsToInsert.push({
-              post_id: data.id,
-              day_number: dayNum,
-              title: item.title,
-              description,
-              category: categoryMap[item.type],
-              image_url: imgs[0] || null,
-              image_urls: imgs.length > 0 ? imgs : null,
-              link_url: item.link,
-              location_coords: item.coordinates ? `(${item.coordinates.lng},${item.coordinates.lat})` : null
-            });
+        day.routeSummary.forEach(item => {
+          const cost = day.categoryCosts?.[item.type];
+          let description = item.description || `Details for ${item.title}.`;
+          if (cost !== undefined && cost > 0) description += ` Cost: $${cost}.`;
+          const imgs = day.categoryImages?.[item.type] || [];
+          spotsToInsert.push({
+            post_id: postId,
+            day_number: dayNum,
+            title: item.title,
+            description,
+            category: categoryMap[item.type],
+            image_url: imgs[0] || null,
+            image_urls: imgs.length > 0 ? imgs : null,
+            link_url: item.link,
+            lat: item.coordinates ? item.coordinates.lat : null,
+            lng: item.coordinates ? item.coordinates.lng : null,
+            location_coords: item.coordinates ? `(${item.coordinates.lng},${item.coordinates.lat})` : null
           });
         });
+      });
 
-        if (spotsToInsert.length > 0) {
-          console.log("Inserting trip spots into Supabase:", spotsToInsert);
-          const { error: spotsError } = await supabase.from('trip_spots').insert(spotsToInsert);
-          if (spotsError) {
-            console.error("Trip Spots Insert Error Object:", spotsError);
-            throw new Error(`Failed to save trip spots: ${spotsError.message} (Code: ${spotsError.code})`);
-          }
+      if (spotsToInsert.length > 0) {
+        console.log("Saving trip spots into Supabase:", spotsToInsert);
+        const { error: spotsError } = await supabase.from('trip_spots').insert(spotsToInsert);
+        if (spotsError) {
+          console.error("Trip Spots Insert Error Object:", spotsError);
+          throw new Error(`Failed to save trip spots: ${spotsError.message} (Code: ${spotsError.code})`);
         }
-        window.location.reload(); // Refresh to show new trip
       }
+      window.location.reload(); // Refresh to show saved trip
     } catch (err: any) {
       console.error("handleFinishTrip caught error:", err);
       setError(err.message || "An unexpected error occurred while saving the trip.");
