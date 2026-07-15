@@ -24,6 +24,7 @@ export default function MyTrips() {
   const [isLoadingTrips, setIsLoadingTrips] = useState(true);
   
   const [isBuilderOpen, setIsBuilderOpen] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
   const [publishTripId, setPublishTripId] = useState<string | null>(null);
   const [editTripData, setEditTripData] = useState<null | {
     id: string;
@@ -242,7 +243,7 @@ export default function MyTrips() {
     };
 
     fetchMyTrips();
-  }, [session?.user?.id]);
+  }, [session?.user?.id, refreshKey]);
 
   return (
     <div className="max-w-7xl mx-auto space-y-12 pb-20 px-4 text-zinc-900">
@@ -280,6 +281,7 @@ export default function MyTrips() {
       <TripBuilderModal
         isOpen={isBuilderOpen}
         onClose={() => { setIsBuilderOpen(false); setEditTripData(null); }}
+        onSaved={() => setRefreshKey(k => k + 1)}
         editTrip={editTripData}
       />
       

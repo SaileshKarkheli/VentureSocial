@@ -31,6 +31,8 @@ import { supabase } from '../supabaseClient';
 interface TripBuilderModalProps {
   isOpen: boolean;
   onClose: () => void;
+  /** Called after a successful save so the parent can refresh its trip list. */
+  onSaved?: () => void;
   /** If provided, opens in edit mode with this trip pre-loaded */
   editTrip?: {
     id: string;
@@ -86,7 +88,7 @@ const EXPERT_ITINERARIES = [
   }
 ];
 
-export default function TripBuilderModal({ isOpen, onClose, editTrip }: TripBuilderModalProps) {
+export default function TripBuilderModal({ isOpen, onClose, onSaved, editTrip }: TripBuilderModalProps) {
   interface DayState {
     id: string;
     title: string;
@@ -114,6 +116,7 @@ export default function TripBuilderModal({ isOpen, onClose, editTrip }: TripBuil
   });
 
   const { session } = useAuth();
+  const { setGlobalToast } = useApp();
 
   const [destination, setDestination] = useState('');
   const [isBudgetPublic, setIsBudgetPublic] = useState(false);
@@ -507,7 +510,10 @@ export default function TripBuilderModal({ isOpen, onClose, editTrip }: TripBuil
           customTrips.push(newTrip);
         }
         localStorage.setItem('venturesocial_custom_trips', JSON.stringify(customTrips));
-        window.location.reload(); // Refresh to show saved trip
+        setIsSaving(false);
+        setGlobalToast(editTrip?.id ? 'Trip updated!' : 'Trip saved!');
+        onClose();
+        onSaved?.();
       } catch (err: any) {
         console.error("Local storage save failed:", err);
         setError("Failed to save trip locally: " + err.message);
@@ -667,7 +673,10 @@ export default function TripBuilderModal({ isOpen, onClose, editTrip }: TripBuil
           throw new Error(`Failed to save trip spots: ${spotsError.message} (Code: ${spotsError.code})`);
         }
       }
-      window.location.reload(); // Refresh to show saved trip
+      setIsSaving(false);
+      setGlobalToast(isEditing ? 'Trip updated!' : 'Trip saved!');
+      onClose();
+      onSaved?.();
     } catch (err: any) {
       console.error("handleFinishTrip caught error:", err);
       setError(err.message || "An unexpected error occurred while saving the trip.");
