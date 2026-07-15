@@ -18,8 +18,6 @@ import {
   Copy,
   Utensils,
   MapPin,
-  Image as ImageIcon,
-  Upload,
   ImagePlus,
   AlertCircle
 } from 'lucide-react';
@@ -249,7 +247,6 @@ export default function TripBuilderModal({ isOpen, onClose, editTrip }: TripBuil
     });
   };
 
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const contextFileInputRef = useRef<HTMLInputElement>(null);
   const [uploadCategory, setUploadCategory] = useState<string | null>(null);
 
@@ -655,34 +652,6 @@ export default function TripBuilderModal({ isOpen, onClose, editTrip }: TripBuil
       setError(err.message || "An unexpected error occurred while saving the trip.");
       setIsSaving(false);
     }
-  };
-
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (files) {
-      setIsSaving(true);
-      try {
-        const uploadPromises = Array.from(files).map(async (file) => {
-          try {
-            return await uploadFile(file);
-          } catch (err) {
-            console.error("Supabase upload failed, falling back to base64:", err);
-            return new Promise<string>((resolve) => {
-              const reader = new FileReader();
-              reader.onloadend = () => resolve(reader.result as string);
-              reader.readAsDataURL(file);
-            });
-          }
-        });
-        const newUrls = await Promise.all(uploadPromises);
-        updateActiveDay(prev => ({ ...prev, images: [...prev.images, ...newUrls] }));
-      } catch (err) {
-        console.error("Failed uploading day images:", err);
-      } finally {
-        setIsSaving(false);
-      }
-    }
-    if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
 
@@ -1210,53 +1179,15 @@ export default function TripBuilderModal({ isOpen, onClose, editTrip }: TripBuil
                   )}
                 </section>
 
-                {/* Add Images Section */}
-                <section className="space-y-6">
-                  <div className="flex items-center gap-3 text-[#0A192F]">
-                    <div className="p-2.5 rounded-xl bg-orange-500/10 text-orange-500 shadow-sm">
-                      <ImageIcon size={20} />
-                    </div>
-                    <h3 className="font-bold uppercase tracking-widest text-[11px]">Add Images</h3>
-                  </div>
-
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                    {activeDay.images.map((img, idx) => (
-                      <div key={idx} className="relative aspect-square rounded-2xl overflow-hidden group">
-                        <img src={img} alt="Uploaded" className="w-full h-full object-cover" />
-                        <button
-                          onClick={() => updateActiveDay(prev => ({ ...prev, images: prev.images.filter((_, i) => i !== idx) }))}
-                          className="absolute top-2 right-2 p-1.5 bg-rose-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                        >
-                          <X size={12} />
-                        </button>
-                      </div>
-                    ))}
-                    <button
-                      onClick={() => fileInputRef.current?.click()}
-                      className="aspect-square rounded-2xl border-2 border-dashed border-zinc-200 flex flex-col items-center justify-center gap-2 text-zinc-400 hover:border-orange-500 hover:text-orange-500 transition-all bg-zinc-50"
-                    >
-                      <Upload size={24} />
-                      <span className="text-[10px] font-bold uppercase tracking-wider">Upload</span>
-                    </button>
-                    <input
-                      type="file"
-                      ref={fileInputRef}
-                      onChange={handleImageUpload}
-                      multiple
-                      accept="image/*"
-                      className="hidden"
-                    />
-                    {/* Hidden input for contextual category covers — multiple allowed */}
-                    <input
-                      type="file"
-                      ref={contextFileInputRef}
-                      onChange={handleContextImageUpload}
-                      accept="image/*"
-                      multiple
-                      className="hidden"
-                    />
-                  </div>
-                </section>
+                {/* Hidden input for contextual per-pillar category photos — multiple allowed */}
+                <input
+                  type="file"
+                  ref={contextFileInputRef}
+                  onChange={handleContextImageUpload}
+                  accept="image/*"
+                  multiple
+                  className="hidden"
+                />
               </div>
 
               {error && (
