@@ -30,8 +30,6 @@ export default function Settings() {
   const [passwordStatus, setPasswordStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
   const [phone, setPhone] = useState('');
-  const [phoneOtpStep, setPhoneOtpStep] = useState<'idle' | 'code_sent'>('idle');
-  const [phoneOtpCode, setPhoneOtpCode] = useState('');
   const [isPhoneBusy, setIsPhoneBusy] = useState(false);
   const [phoneStatus, setPhoneStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
@@ -90,50 +88,22 @@ export default function Settings() {
     }
   };
 
-  const handleSendPhoneVerification = async () => {
-    if (!user?.email || !phone) return;
-    setIsPhoneBusy(true);
-    setPhoneStatus(null);
-    try {
-      const { error } = await supabase.auth.signInWithOtp({
-        email: user.email,
-        options: { shouldCreateUser: false },
-      });
-      if (error) throw error;
-      setPhoneOtpStep('code_sent');
-      setPhoneStatus({ type: 'success', message: `Verification code sent to ${user.email}.` });
-    } catch (err: any) {
-      setPhoneStatus({ type: 'error', message: err.message || 'Failed to send verification code.' });
-    } finally {
-      setIsPhoneBusy(false);
-    }
-  };
-
-  const handleConfirmPhone = async (e: React.FormEvent) => {
+  const handleSavePhone = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user?.email || !phoneOtpCode) return;
+    if (!user) return;
     setIsPhoneBusy(true);
     setPhoneStatus(null);
     try {
-      const { error: verifyError } = await supabase.auth.verifyOtp({
-        email: user.email,
-        token: phoneOtpCode,
-        type: 'email',
-      });
-      if (verifyError) throw verifyError;
-
-      const { error: updateError } = await supabase
+      const { error } = await supabase
         .from('profiles')
         .update({ phone })
         .eq('id', user.id);
-      if (updateError) throw updateError;
+      if (error) throw error;
 
       updateActiveProfile({ phone });
-      setPhoneOtpStep('idle');
-      setPhoneOtpCode('');
-      setPhoneStatus({ type: 'success', message: 'Phone number confirmed and saved.' });
+      setPhoneStatus({ type: 'success', message: 'Phone number saved.' });
     } catch (err: any) {
-      setPhoneStatus({ type: 'error', message: err.message || 'Invalid or expired code.' });
+      setPhoneStatus({ type: 'error', message: err.message || 'Failed to save phone number.' });
     } finally {
       setIsPhoneBusy(false);
     }
@@ -365,47 +335,25 @@ export default function Settings() {
           )}
         </div>
 
-        {/* Phone Number with Email Confirmation Gate */}
+        {/* Phone Number */}
         <div className="space-y-3 border-t border-zinc-100 pt-6">
           <h4 className="font-bold text-[#0A192F] flex items-center gap-2"><Phone size={18} className="text-orange-500" /> Phone Number</h4>
-          <p className="text-sm text-zinc-500">Saving a new number requires confirming a code sent to your email.</p>
-          <div className="flex flex-col sm:flex-row gap-3">
+          <form onSubmit={handleSavePhone} className="flex flex-col sm:flex-row gap-3">
             <input
               type="tel"
               value={phone}
-              onChange={(e) => { setPhone(e.target.value); setPhoneOtpStep('idle'); }}
+              onChange={(e) => setPhone(e.target.value)}
               placeholder="e.g. +1 555 123 4567"
               className="flex-1 px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#3B82F6] focus:border-transparent transition-all placeholder:text-zinc-400 font-medium"
             />
-            {phoneOtpStep === 'idle' && (
-              <button
-                onClick={handleSendPhoneVerification}
-                disabled={isPhoneBusy || !phone}
-                className="bg-[#0A192F] text-white px-6 py-3 rounded-xl font-bold hover:bg-black transition-colors disabled:opacity-50 flex items-center justify-center gap-2 shrink-0"
-              >
-                {isPhoneBusy ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Send Code'}
-              </button>
-            )}
-          </div>
-
-          {phoneOtpStep === 'code_sent' && (
-            <form onSubmit={handleConfirmPhone} className="flex flex-col sm:flex-row gap-3">
-              <input
-                type="text"
-                value={phoneOtpCode}
-                onChange={(e) => setPhoneOtpCode(e.target.value)}
-                placeholder="Enter 6-digit code"
-                className="flex-1 px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#3B82F6] focus:border-transparent transition-all placeholder:text-zinc-400 font-medium font-mono"
-              />
-              <button
-                type="submit"
-                disabled={isPhoneBusy || !phoneOtpCode}
-                className="bg-orange-500 text-white px-6 py-3 rounded-xl font-bold hover:bg-orange-600 transition-colors disabled:opacity-50 flex items-center justify-center gap-2 shrink-0"
-              >
-                {isPhoneBusy ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Confirm & Save'}
-              </button>
-            </form>
-          )}
+            <button
+              type="submit"
+              disabled={isPhoneBusy}
+              className="bg-[#0A192F] text-white px-6 py-3 rounded-xl font-bold hover:bg-black transition-colors disabled:opacity-50 flex items-center justify-center gap-2 shrink-0"
+            >
+              {isPhoneBusy ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Save'}
+            </button>
+          </form>
           {phoneStatus && (
             <p className={`text-sm font-semibold ${phoneStatus.type === 'success' ? 'text-emerald-600' : 'text-red-600'}`}>{phoneStatus.message}</p>
           )}
