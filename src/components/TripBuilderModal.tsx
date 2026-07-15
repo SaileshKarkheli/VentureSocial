@@ -427,9 +427,10 @@ export default function TripBuilderModal({ isOpen, onClose, editTrip }: TripBuil
             activity: 'Activity'
           };
 
-          // BUG 1 FIX: Auto-synthesize a transport spot if none added via routeSummary
+          // Synthesize a transport spot only when the user actually entered transport
+          // details (transportMode defaults to 'Rental', so it can't signal intent).
           const hasTransportItem = day.routeSummary.some(item => item.type === 'transport');
-          if (!hasTransportItem && (day.transportMode || day.transportDetails)) {
+          if (!hasTransportItem && day.transportDetails && day.transportDetails.trim()) {
             const cost = day.categoryCosts?.['transport'];
             const modeLabel = day.transportMode === 'Rental' ? 'Rental Car' : day.transportMode === 'Flights' ? 'Flight' : 'Own Vehicle';
             let desc = day.transportDetails || `Traveling by ${modeLabel}.`;
@@ -595,9 +596,10 @@ export default function TripBuilderModal({ isOpen, onClose, editTrip }: TripBuil
           activity: 'Activity'
         };
 
-        // BUG 1 FIX: Auto-synthesize a transport spot if none was explicitly added
+        // Synthesize a transport spot only when the user actually entered transport
+        // details (transportMode defaults to 'Rental', so it can't signal intent).
         const hasTransportItem = day.routeSummary.some(item => item.type === 'transport');
-        if (!hasTransportItem && (day.transportMode || day.transportDetails)) {
+        if (!hasTransportItem && day.transportDetails && day.transportDetails.trim()) {
           const cost = day.categoryCosts?.['transport'];
           const modeLabel = day.transportMode === 'Rental' ? 'Rental Car' : day.transportMode === 'Flights' ? 'Flight' : 'Own Vehicle';
           let desc = day.transportDetails || `Traveling by ${modeLabel}.`;
