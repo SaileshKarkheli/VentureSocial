@@ -860,7 +860,7 @@ export default function TripBuilderModal({ isOpen, onClose, editTrip }: TripBuil
                             <img src={imgUrl} alt="Transport" className="w-full h-full object-cover" />
                             <button
                               onClick={() => removeCategoryImage('transport', imgIdx)}
-                              className="absolute top-1 right-1 p-1 bg-white text-rose-500 rounded-full opacity-0 group-hover:opacity-100 transition-all shadow"
+                              className="absolute top-1 right-1 p-1 bg-white text-rose-500 rounded-full opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all shadow"
                             >
                               <X size={10} />
                             </button>
@@ -955,7 +955,7 @@ export default function TripBuilderModal({ isOpen, onClose, editTrip }: TripBuil
                             <img src={imgUrl} alt="Stay" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
                             <button
                               onClick={() => removeCategoryImage('hotel', imgIdx)}
-                              className="absolute top-1 right-1 p-1 bg-white text-rose-500 rounded-full opacity-0 group-hover:opacity-100 transition-all shadow"
+                              className="absolute top-1 right-1 p-1 bg-white text-rose-500 rounded-full opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all shadow"
                             >
                               <X size={10} />
                             </button>
@@ -1049,7 +1049,7 @@ export default function TripBuilderModal({ isOpen, onClose, editTrip }: TripBuil
                             <img src={imgUrl} alt="Dining" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
                             <button
                               onClick={() => removeCategoryImage('dining', imgIdx)}
-                              className="absolute top-1 right-1 p-1 bg-white text-rose-500 rounded-full opacity-0 group-hover:opacity-100 transition-all shadow"
+                              className="absolute top-1 right-1 p-1 bg-white text-rose-500 rounded-full opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all shadow"
                             >
                               <X size={10} />
                             </button>
@@ -1127,7 +1127,7 @@ export default function TripBuilderModal({ isOpen, onClose, editTrip }: TripBuil
                             <img src={imgUrl} alt="Activity" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
                             <button
                               onClick={() => removeCategoryImage('activity', imgIdx)}
-                              className="absolute top-1 right-1 p-1 bg-white text-rose-500 rounded-full opacity-0 group-hover:opacity-100 transition-all shadow"
+                              className="absolute top-1 right-1 p-1 bg-white text-rose-500 rounded-full opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all shadow"
                             >
                               <X size={10} />
                             </button>
@@ -1374,7 +1374,7 @@ export default function TripBuilderModal({ isOpen, onClose, editTrip }: TripBuil
                                     <span className="text-[9px] text-zinc-400 uppercase tracking-tighter">{item.type}</span>
                                   </div>
                                 </div>
-                                <div className="flex items-center gap-2 opacity-0 group-hover/item:opacity-100 transition-opacity">
+                                <div className="flex items-center gap-2 opacity-100 md:opacity-0 md:group-hover/item:opacity-100 transition-opacity">
                                   <a href={item.link} target="_blank" rel="noopener noreferrer" className="text-zinc-400 hover:text-orange-500">
                                     <ExternalLink size={12} />
                                   </a>

@@ -329,7 +329,7 @@ export default function MyTrips() {
                     e.stopPropagation();
                     handleDeleteTrip(trip.id, trip.country);
                   }}
-                  className="absolute top-3 left-3 p-2 bg-white/20 backdrop-blur-md text-white rounded-xl opacity-0 group-hover:opacity-100 transition-all hover:bg-rose-600 hover:text-white z-20"
+                  className="absolute top-3 left-3 p-2 bg-white/20 backdrop-blur-md text-white rounded-xl opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all hover:bg-rose-600 hover:text-white z-20"
                   title="Delete trip"
                 >
                   <Trash2 size={16} />
@@ -341,7 +341,7 @@ export default function MyTrips() {
                     e.stopPropagation();
                     handleEditTrip(trip);
                   }}
-                  className="absolute top-3 left-1/2 -translate-x-1/2 p-2 bg-white/20 backdrop-blur-md text-white rounded-xl opacity-0 group-hover:opacity-100 transition-all hover:bg-blue-600 hover:text-white z-20"
+                  className="absolute top-3 left-1/2 -translate-x-1/2 p-2 bg-white/20 backdrop-blur-md text-white rounded-xl opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all hover:bg-blue-600 hover:text-white z-20"
                   title="Edit trip"
                 >
                   <Pencil size={16} />
@@ -352,7 +352,7 @@ export default function MyTrips() {
                     e.stopPropagation();
                     setPublishTripId(trip.id);
                   }}
-                  className="absolute top-3 right-3 p-2 bg-white/20 backdrop-blur-md text-white rounded-xl opacity-0 group-hover:opacity-100 transition-all hover:bg-orange-500 hover:text-white z-20"
+                  className="absolute top-3 right-3 p-2 bg-white/20 backdrop-blur-md text-white rounded-xl opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all hover:bg-orange-500 hover:text-white z-20"
                   title="Share to feed"
                 >
                   <Share2 size={16} />
