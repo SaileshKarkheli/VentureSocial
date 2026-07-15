@@ -28,6 +28,7 @@ export default function MyTrips() {
   const [editTripData, setEditTripData] = useState<null | {
     id: string;
     destination: string;
+    isBudgetPublic?: boolean;
     spots: Array<{
       day_number: number;
       title: string;
@@ -45,11 +46,13 @@ export default function MyTrips() {
     try {
       const isMockMode = import.meta.env.VITE_ENABLE_MOCK_MODE === 'true' && !!localStorage.getItem('venturesocial_mock_session');
       let spots: any[] = [];
+      let isBudgetPublic = false;
       if (isMockMode) {
         const customTripsStr = localStorage.getItem('venturesocial_custom_trips');
         const customTrips = customTripsStr ? JSON.parse(customTripsStr) : [];
         const found = customTrips.find((t: any) => t.id === trip.id);
         spots = found?.spots || [];
+        isBudgetPublic = !!found?.is_budget_public;
       } else {
         const { data, error } = await supabase
           .from('trip_spots')
@@ -57,10 +60,18 @@ export default function MyTrips() {
           .eq('post_id', trip.id)
           .order('day_number', { ascending: true });
         if (!error && data) spots = data;
+
+        const { data: postData } = await supabase
+          .from('posts')
+          .select('is_budget_public')
+          .eq('id', trip.id)
+          .single();
+        isBudgetPublic = !!postData?.is_budget_public;
       }
       setEditTripData({
         id: trip.id,
         destination: trip.country,
+        isBudgetPublic,
         spots: spots.map((s: any) => ({
           day_number: s.day_number,
           title: s.title || '',

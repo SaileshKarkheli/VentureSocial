@@ -35,6 +35,7 @@ interface TripBuilderModalProps {
   editTrip?: {
     id: string;
     destination: string;
+    isBudgetPublic?: boolean;
     spots: Array<{
       day_number: number;
       title: string;
@@ -159,6 +160,7 @@ export default function TripBuilderModal({ isOpen, onClose, editTrip }: TripBuil
       if (editTrip) {
         // Pre-populate from saved trip data
         setDestination(editTrip.destination);
+        setIsBudgetPublic(editTrip.isBudgetPublic ?? false);
         // Build days from spots grouped by day_number
         const byDay: Record<number, typeof editTrip.spots> = {};
         editTrip.spots.forEach(s => {
@@ -210,6 +212,7 @@ export default function TripBuilderModal({ isOpen, onClose, editTrip }: TripBuil
       } else {
         // Fresh mode — reset everything
         setDestination('');
+        setIsBudgetPublic(false);
         setDays([createEmptyDay(0)]);
         setCurrentDayIndex(0);
         setError(null);
@@ -472,6 +475,7 @@ export default function TripBuilderModal({ isOpen, onClose, editTrip }: TripBuil
             country: destination,
             image: coverPhoto,
             base_price: totalBudget,
+            is_budget_public: isBudgetPublic,
             spots
           };
           if (idx >= 0) customTrips[idx] = updatedTrip;
@@ -483,6 +487,7 @@ export default function TripBuilderModal({ isOpen, onClose, editTrip }: TripBuil
             country: destination,
             image: coverPhoto,
             base_price: totalBudget,
+            is_budget_public: isBudgetPublic,
             spots
           };
           customTrips.push(newTrip);
@@ -543,6 +548,7 @@ export default function TripBuilderModal({ isOpen, onClose, editTrip }: TripBuil
           .update({
             location_name: destination,
             base_price: totalBudget,
+            is_budget_public: isBudgetPublic,
           })
           .eq('id', editTrip!.id);
 
@@ -569,7 +575,8 @@ export default function TripBuilderModal({ isOpen, onClose, editTrip }: TripBuil
           caption: `My Custom Trip to ${destination}`,
           category: 'Activity', // Required NOT NULL column in posts schema
           base_price: totalBudget,
-          is_private: true // Created trips are private/drafts by default, shared via PublishModal later
+          is_private: true, // Created trips are private/drafts by default, shared via PublishModal later
+          is_budget_public: isBudgetPublic
         };
 
         console.log("Inserting post into Supabase:", postInsertData);
