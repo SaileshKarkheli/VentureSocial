@@ -134,7 +134,12 @@ export default function TripBuilderModal({ isOpen, onClose, editTrip }: TripBuil
 
   const handleDeleteDay = (idxToDelete: number) => {
     if (idxToDelete === 0) return; // Cannot delete Day 1
-    
+
+    const confirmed = window.confirm(
+      `Delete Day ${idxToDelete + 1} and everything on it (stops, photos, costs)? This can't be undone.`
+    );
+    if (!confirmed) return;
+
     setDays(prev => {
       const filtered = prev.filter((_, i) => i !== idxToDelete);
       // Renumber day titles and IDs
@@ -366,6 +371,15 @@ export default function TripBuilderModal({ isOpen, onClose, editTrip }: TripBuil
   };
 
   const handleRemix = () => {
+    const hasWork = destination.trim() !== '' ||
+      days.some(d => d.routeSummary.length > 0 || (d.transportDetails && d.transportDetails.trim()));
+    if (hasWork) {
+      const confirmed = window.confirm(
+        'Load an expert itinerary? This replaces the destination and everything you\'ve entered so far.'
+      );
+      if (!confirmed) return;
+    }
+
     const randomItinerary = EXPERT_ITINERARIES[Math.floor(Math.random() * EXPERT_ITINERARIES.length)];
     setDestination(randomItinerary.destination);
     setDays([{
