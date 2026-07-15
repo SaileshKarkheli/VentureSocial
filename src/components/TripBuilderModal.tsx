@@ -119,6 +119,7 @@ export default function TripBuilderModal({ isOpen, onClose, onSaved, editTrip }:
   const { setGlobalToast } = useApp();
 
   const [destination, setDestination] = useState('');
+  const [destinationCoords, setDestinationCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [isBudgetPublic, setIsBudgetPublic] = useState(false);
   const [days, setDays] = useState<DayState[]>([createEmptyDay(0)]);
   const [currentDayIndex, setCurrentDayIndex] = useState(0);
@@ -168,6 +169,7 @@ export default function TripBuilderModal({ isOpen, onClose, onSaved, editTrip }:
       if (editTrip) {
         // Pre-populate from saved trip data
         setDestination(editTrip.destination);
+        setDestinationCoords(null); // re-geocoded from the destination string on save
         setIsBudgetPublic(editTrip.isBudgetPublic ?? false);
         // Build days from spots grouped by day_number
         const byDay: Record<number, typeof editTrip.spots> = {};
@@ -220,6 +222,7 @@ export default function TripBuilderModal({ isOpen, onClose, onSaved, editTrip }:
       } else {
         // Fresh mode — reset everything
         setDestination('');
+        setDestinationCoords(null);
         setIsBudgetPublic(false);
         setDays([createEmptyDay(0)]);
         setCurrentDayIndex(0);
@@ -233,12 +236,18 @@ export default function TripBuilderModal({ isOpen, onClose, onSaved, editTrip }:
           if (destinationInputRef.current && win.google && win.google.maps && win.google.maps.places) {
             const destAutocomplete = new win.google.maps.places.Autocomplete(destinationInputRef.current, {
               types: ['geocode', 'establishment'],
-              fields: ['name', 'formatted_address']
+              fields: ['name', 'formatted_address', 'geometry']
             });
             destAutocomplete.addListener('place_changed', () => {
               const place = destAutocomplete.getPlace();
               const placeName = place.name || place.formatted_address || '';
               setDestination(placeName);
+              if (place.geometry && place.geometry.location) {
+                setDestinationCoords({
+                  lat: place.geometry.location.lat(),
+                  lng: place.geometry.location.lng()
+                });
+              }
             });
           }
         }).catch((err) =>
@@ -397,6 +406,31 @@ export default function TripBuilderModal({ isOpen, onClose, onSaved, editTrip }:
     setCurrentDayIndex(0);
   };
 
+  // Resolve a destination string to coordinates via the Maps JS Geocoder.
+  // Returns null if Maps isn't loaded or the address can't be resolved.
+  const geocodeDestination = (address: string): Promise<{ lat: number; lng: number } | null> => {
+    return new Promise((resolve) => {
+      const win = window as any;
+      if (!win.google || !win.google.maps || !win.google.maps.Geocoder) {
+        resolve(null);
+        return;
+      }
+      try {
+        const geocoder = new win.google.maps.Geocoder();
+        geocoder.geocode({ address }, (results: any, status: string) => {
+          if (status === 'OK' && results && results[0] && results[0].geometry?.location) {
+            const loc = results[0].geometry.location;
+            resolve({ lat: loc.lat(), lng: loc.lng() });
+          } else {
+            resolve(null);
+          }
+        });
+      } catch {
+        resolve(null);
+      }
+    });
+  };
+
   const handleFinishTrip = async () => {
     if (isSaving) return;
     setError(null);
@@ -424,6 +458,11 @@ export default function TripBuilderModal({ isOpen, onClose, onSaved, editTrip }:
         if (firstImg) { coverPhoto = firstImg; break; }
       }
     }
+
+    // Geocode the destination so trips carry coordinates for location-based
+    // discovery. Prefer coords captured from the autocomplete selection; fall
+    // back to geocoding the typed/edited destination string.
+    const destCoords = destinationCoords || await geocodeDestination(destination);
 
     const isMockMode = import.meta.env.VITE_ENABLE_MOCK_MODE === 'true' && !!localStorage.getItem('venturesocial_mock_session');
     
@@ -493,6 +532,8 @@ export default function TripBuilderModal({ isOpen, onClose, onSaved, editTrip }:
             image: coverPhoto,
             base_price: totalBudget,
             is_budget_public: isBudgetPublic,
+            lat: destCoords?.lat ?? null,
+            lng: destCoords?.lng ?? null,
             spots
           };
           if (idx >= 0) customTrips[idx] = updatedTrip;
@@ -505,6 +546,8 @@ export default function TripBuilderModal({ isOpen, onClose, onSaved, editTrip }:
             image: coverPhoto,
             base_price: totalBudget,
             is_budget_public: isBudgetPublic,
+            lat: destCoords?.lat ?? null,
+            lng: destCoords?.lng ?? null,
             spots
           };
           customTrips.push(newTrip);
@@ -569,6 +612,8 @@ export default function TripBuilderModal({ isOpen, onClose, onSaved, editTrip }:
             location_name: destination,
             base_price: totalBudget,
             is_budget_public: isBudgetPublic,
+            lat: destCoords?.lat ?? null,
+            lng: destCoords?.lng ?? null,
           })
           .eq('id', editTrip!.id);
 
@@ -596,7 +641,9 @@ export default function TripBuilderModal({ isOpen, onClose, onSaved, editTrip }:
           category: 'Activity', // Required NOT NULL column in posts schema
           base_price: totalBudget,
           is_private: true, // Created trips are private/drafts by default, shared via PublishModal later
-          is_budget_public: isBudgetPublic
+          is_budget_public: isBudgetPublic,
+          lat: destCoords?.lat ?? null,
+          lng: destCoords?.lng ?? null
         };
 
         console.log("Inserting post into Supabase:", postInsertData);
