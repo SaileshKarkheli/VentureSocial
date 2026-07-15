@@ -23,7 +23,15 @@ interface SearchBoxProps {
 export default function SearchBox({ placeholder, context, onSelect, className = "", types, inputClassName = "" }: SearchBoxProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const autocompleteRef = useRef<any>(null);
+  const onSelectRef = useRef(onSelect);
   const [isReady, setIsReady] = useState(false);
+
+  // Keep the latest onSelect in a ref so the setup effect can run once on mount.
+  // Depending on onSelect directly rebuilt the Autocomplete on every parent
+  // render (onSelect is usually an inline arrow), leaking listeners/instances.
+  useEffect(() => {
+    onSelectRef.current = onSelect;
+  }, [onSelect]);
 
   useEffect(() => {
     const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
@@ -36,6 +44,7 @@ export default function SearchBox({ placeholder, context, onSelect, className = 
       .then(() => {
         setIsReady(true);
         const win = window as any;
+        if (autocompleteRef.current) return; // already initialised — don't rebuild
         if (inputRef.current && win.google && win.google.maps && win.google.maps.places) {
           autocompleteRef.current = new win.google.maps.places.Autocomplete(inputRef.current, {
             fields: ['name', 'geometry', 'photos', 'url', 'place_id', 'formatted_address'],
@@ -66,13 +75,15 @@ export default function SearchBox({ placeholder, context, onSelect, className = 
               placeId: place.place_id
             };
 
-            onSelect(result);
+            onSelectRef.current(result);
             if (inputRef.current) inputRef.current.value = '';
           });
         }
       })
       .catch((err) => console.error(err));
-  }, [onSelect]);
+    // Runs once on mount; onSelect is read via ref to avoid rebuilding.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div className={`relative w-full ${className}`}>
