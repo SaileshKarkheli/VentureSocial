@@ -665,10 +665,16 @@ export default function TripBuilderModal({ isOpen, onClose, editTrip }: TripBuil
     setShowManualEntry(null);
   };
 
-  const getDayCost = (day: DayState) => {
-    if (day.budget > 0) return day.budget;
+  const getItemizedCost = (day: DayState) => {
     const costs = Object.values(day.categoryCosts || {}) as number[];
     return costs.reduce((a, b) => a + b, 0);
+  };
+
+  // A manual "Cost Estimate" (day.budget) overrides the itemized per-pillar costs.
+  // The UI flags this when both are present so itemized costs are never silently dropped.
+  const getDayCost = (day: DayState) => {
+    if (day.budget > 0) return day.budget;
+    return getItemizedCost(day);
   };
 
   const totalBudget = days.reduce((sum, day) => sum + getDayCost(day), 0);
@@ -821,6 +827,11 @@ export default function TripBuilderModal({ isOpen, onClose, editTrip }: TripBuil
                       />
                     </div>
                   </div>
+                  {activeDay.budget > 0 && getItemizedCost(activeDay) > 0 && (
+                    <p className="text-[11px] font-semibold text-amber-600 mt-2 max-w-md">
+                      This manual estimate is overriding your itemized total of ${getItemizedCost(activeDay).toFixed(2)}. Clear this field to use the itemized sum instead.
+                    </p>
+                  )}
                 </div>
                 <button
                   onClick={onClose}
