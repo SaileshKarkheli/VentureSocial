@@ -139,7 +139,8 @@ export const remixService = {
           id,
           custom_day,
           trip_spots (
-            id, title, description, category, image_url, link_url, day_number,
+            id, title, description, category, image_url, image_urls, link_url, day_number,
+            lat, lng,
             post_id,
             posts ( id, user_id )
           )

@@ -6,6 +6,7 @@ import SmartImage from '../components/SmartImage';
 import { remixService } from '../services/remixService';
 import { supabase } from '../supabaseClient';
 import { useAuth } from '../context/AuthContext';
+import { useApp } from '../AppContext';
 
 export default function RemixStudio() {
   const { session } = useAuth();
@@ -153,6 +154,8 @@ export default function RemixStudio() {
 // Subcomponent for the Workspace View (Mirroring PillarSection)
 function WorkspaceView({ folder, onClose }: { folder: any, onClose: () => void }) {
   const { session } = useAuth();
+  const { setGlobalToast } = useApp();
+  const navigate = useNavigate();
   const [spots, setSpots] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [expandedDay, setExpandedDay] = useState<number | null>(1);
@@ -203,28 +206,101 @@ function WorkspaceView({ folder, onClose }: { folder: any, onClose: () => void }
   const handleFinalize = async () => {
     if (spots.length === 0 || !session?.user?.id) return;
     setIsFinalizing(true);
-    
-    // Extract unique original creators
-    const creatorIds = new Set<string>();
-    spots.forEach(s => {
-      const creatorId = s.trip_spots?.posts?.user_id;
-      if (creatorId && creatorId !== session?.user?.id) {
-        creatorIds.add(creatorId);
-      }
-    });
 
-    // Send notifications to original creators
-    for (const creatorId of creatorIds) {
-      await supabase.from('notifications').insert({
-        user_id: creatorId,
-        actor_id: session.user.id,
-        type: 'remix',
-        is_read: false
-      });
+    const isMockMode = import.meta.env.VITE_ENABLE_MOCK_MODE === 'true' && !!localStorage.getItem('venturesocial_mock_session');
+    if (isMockMode) {
+      setGlobalToast('Remix saved (mock mode).');
+      setIsFinalizing(false);
+      return;
     }
 
-    setIsFinalizing(false);
-    showNotification('Remix Finalized! Original creators have been notified.');
+    try {
+      // Original creators (for provenance + notifications). source_user_id is a
+      // single column, so use the primary creator as best-effort attribution.
+      const creatorIds = new Set<string>();
+      spots.forEach(s => {
+        const creatorId = s.trip_spots?.posts?.user_id;
+        if (creatorId && creatorId !== session.user.id) creatorIds.add(creatorId);
+      });
+      const primaryCreator = creatorIds.size > 0 ? Array.from(creatorIds)[0] : null;
+
+      // Derive post coordinates from the first spot that has them, so the remix
+      // is discoverable by location like any other trip.
+      let postLat: number | null = null;
+      let postLng: number | null = null;
+      for (const s of spots) {
+        const ts = s.trip_spots;
+        if (ts && ts.lat != null && ts.lng != null) {
+          postLat = Number(ts.lat);
+          postLng = Number(ts.lng);
+          break;
+        }
+      }
+
+      // 1) Create the remixer's own trip (private draft), attributed to the source.
+      const { data: postData, error: postError } = await supabase
+        .from('posts')
+        .insert({
+          user_id: session.user.id,
+          location_name: folder.name,
+          caption: `My Remix of ${folder.name}`,
+          category: 'Activity', // NOT NULL in posts schema
+          base_price: 0,
+          is_private: true, // remix starts as a private draft, publish later
+          source_user_id: primaryCreator,
+          lat: postLat,
+          lng: postLng
+        })
+        .select()
+        .single();
+
+      if (postError) throw new Error(`Failed to create trip: ${postError.message}`);
+
+      // 2) Copy every assembled spot by value into the new trip, preserving the
+      // day the remixer arranged it on (custom_day).
+      const spotsToInsert = spots.map(s => {
+        const ts = s.trip_spots || {};
+        const dayNum = s.custom_day || ts.day_number || 1;
+        const imgs = Array.isArray(ts.image_urls) ? ts.image_urls : [];
+        const lat = ts.lat != null ? Number(ts.lat) : null;
+        const lng = ts.lng != null ? Number(ts.lng) : null;
+        return {
+          post_id: postData.id,
+          day_number: dayNum,
+          title: ts.title || 'Untitled',
+          description: ts.description || null,
+          category: ts.category || 'Activity',
+          image_url: ts.image_url || imgs[0] || null,
+          image_urls: imgs.length > 0 ? imgs : null,
+          link_url: ts.link_url || null,
+          lat,
+          lng,
+          location_coords: (lat != null && lng != null) ? `(${lng},${lat})` : null
+        };
+      });
+
+      if (spotsToInsert.length > 0) {
+        const { error: spotsError } = await supabase.from('trip_spots').insert(spotsToInsert);
+        if (spotsError) throw new Error(`Failed to copy spots: ${spotsError.message}`);
+      }
+
+      // 3) Notify the original creators that their trip was remixed.
+      for (const creatorId of creatorIds) {
+        await supabase.from('notifications').insert({
+          user_id: creatorId,
+          actor_id: session.user.id,
+          type: 'remix',
+          is_read: false
+        });
+      }
+
+      setGlobalToast('Remix saved to My Trips!');
+      navigate('/my-trips');
+    } catch (err: any) {
+      console.error('Failed to finalize remix:', err);
+      showNotification(err.message || 'Failed to save remix. Please try again.');
+      setIsFinalizing(false);
+    }
   };
 
   // Group by custom_day or original day_number
@@ -301,7 +377,7 @@ function WorkspaceView({ folder, onClose }: { folder: any, onClose: () => void }
           className="flex items-center gap-2 px-6 py-3 bg-orange-500 text-white font-bold rounded-xl shadow-lg shadow-orange-500/20 hover:bg-orange-400 transition-colors disabled:opacity-50"
         >
           <ShoppingBag size={20} />
-          {isFinalizing ? 'Finalizing...' : 'Checkout & Finalize Remix'}
+          {isFinalizing ? 'Saving...' : 'Save to My Trips'}
         </button>
       </div>
 
