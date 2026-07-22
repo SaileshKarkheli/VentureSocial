@@ -146,8 +146,22 @@ export const tripsService = {
 
       if (postData) {
         const { data: profile } = await supabase.from('profiles').select('full_name, username').eq('id', postData.user_id).single();
-        const postWithProfile = { ...postData, profiles: profile };
-        const { data: spotsData } = await supabase.from('trip_spots').select('*').eq('post_id', tripId).order('day_number');
+
+        // For remixed trips, resolve the original creator for attribution.
+        let sourceProfile = null;
+        if (postData.source_user_id && postData.source_user_id !== postData.user_id) {
+          const { data: src } = await supabase.from('profiles').select('id, full_name, username').eq('id', postData.source_user_id).single();
+          sourceProfile = src || null;
+        }
+
+        const postWithProfile = { ...postData, profiles: profile, sourceProfile };
+        // Order by day, then a stable tiebreak so a day's flow (and its route) is deterministic.
+        const { data: spotsData } = await supabase
+          .from('trip_spots')
+          .select('*')
+          .eq('post_id', tripId)
+          .order('day_number', { ascending: true })
+          .order('created_at', { ascending: true });
         return { post: postWithProfile, spots: spotsData || [] };
       }
       throw new Error("No post found with that ID");

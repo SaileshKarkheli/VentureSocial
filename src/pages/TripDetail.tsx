@@ -14,8 +14,32 @@ import {
   LayoutGrid,
   Users,
   CalendarDays,
-  ImageOff
+  ImageOff,
+  TrainFront,
+  Bus,
+  Ship,
+  Footprints,
+  Bike,
+  Repeat2
 } from 'lucide-react';
+
+/** Infer a travel mode + icon from a Transport spot's title/description text. */
+function inferTransport(spot: any): { label: string; Icon: any } {
+  const text = `${spot?.title || ''} ${spot?.description || ''}`.toLowerCase();
+  if (/(flight|fly|plane|\bair\b|airline)/.test(text)) return { label: 'Flight', Icon: Plane };
+  if (/(train|rail|shinkansen|metro|subway|tram)/.test(text)) return { label: 'Train', Icon: TrainFront };
+  if (/(bus|coach)/.test(text)) return { label: 'Bus', Icon: Bus };
+  if (/(ferry|boat|cruise|gondola|ship|sail)/.test(text)) return { label: 'Boat', Icon: Ship };
+  if (/(walk|on foot|by foot)/.test(text)) return { label: 'Walk', Icon: Footprints };
+  if (/(bike|cycl|scooter)/.test(text)) return { label: 'Bike', Icon: Bike };
+  return { label: 'Drive', Icon: Car };
+}
+
+/** Strip the "Cost: $X." text the builder appends into spot descriptions. */
+function cleanDescription(desc: any): string {
+  if (!desc) return '';
+  return String(desc).replace(/\s*Cost:\s*\$?\d+(?:\.\d+)?\.?/gi, '').trim();
+}
 import { tripsService } from '../services/tripsService';
 import { SaveSpotModal } from '../components/remix/SaveSpotModal';
 import { PillarSection } from '../components/remix/TimelineComponents';
@@ -147,6 +171,18 @@ export default function TripDetail() {
   }
 
   const totalDays = tripSpots.length > 0 ? Math.max(...tripSpots.map((s: any) => s.day_number || 1)) : 0;
+  const totalStops = tripSpots.length;
+
+  // Distinct travel modes used across the trip ("how they traveled").
+  const transportModes = Array.from(
+    new Map(
+      tripSpots
+        .filter((s: any) => s.category === 'Transport')
+        .map((s: any) => { const t = inferTransport(s); return [t.label, t]; })
+    ).values()
+  );
+
+  const sourceName = post.sourceProfile?.full_name || post.sourceProfile?.username;
 
   return (
     <div className="max-w-6xl mx-auto space-y-12 pb-20 px-4">
@@ -170,6 +206,12 @@ export default function TripDetail() {
               "{post.caption}"
             </p>
           )}
+          {sourceName && (
+            <div className="inline-flex items-center gap-2 text-orange-600 font-bold text-sm px-3 py-1.5 bg-orange-500/10 rounded-full border border-orange-500/20">
+              <Repeat2 size={14} />
+              Remixed from {sourceName}
+            </div>
+          )}
           <div className="flex flex-wrap items-center gap-4 mt-6">
             <div className="flex items-center gap-2 text-[#0A192F] font-bold px-4 py-2 bg-zinc-100 rounded-xl">
               <Users size={16} className="text-orange-500" />
@@ -181,10 +223,28 @@ export default function TripDetail() {
                 {totalDays} {totalDays === 1 ? 'Day' : 'Days'}
               </div>
             )}
+            {totalStops > 0 && (
+              <div className="flex items-center gap-2 text-[#0A192F] font-bold px-4 py-2 bg-zinc-100 rounded-xl">
+                <MapPin size={16} className="text-orange-500" />
+                {totalStops} {totalStops === 1 ? 'Stop' : 'Stops'}
+              </div>
+            )}
             {post.base_price > 0 && (
               <div className="flex items-center gap-2 px-4 py-2 bg-zinc-100 rounded-xl">
-                <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Est. Cost</span>
-                <span className="font-mono text-sm font-bold text-[#0A192F]">${post.base_price}</span>
+                <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Total Spend</span>
+                <span className="font-mono text-sm font-bold text-[#0A192F]">${Number(post.base_price).toLocaleString()}</span>
+              </div>
+            )}
+            {transportModes.length > 0 && (
+              <div className="flex items-center gap-2 px-4 py-2 bg-zinc-100 rounded-xl">
+                <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">How</span>
+                <div className="flex items-center gap-2 text-[#0A192F]">
+                  {transportModes.map(({ label, Icon }) => (
+                    <span key={label} className="flex items-center gap-1 text-sm font-bold" title={label}>
+                      <Icon size={16} className="text-orange-500" />
+                    </span>
+                  ))}
+                </div>
               </div>
             )}
           </div>
@@ -270,7 +330,7 @@ export default function TripDetail() {
                                 </div>
                                 <div className="space-y-2 flex-1">
                                   <h4 className="font-bold text-[#0A192F] text-lg">{transport.title}</h4>
-                                  <p className="text-zinc-600 leading-relaxed">{transport.description}</p>
+                                  <p className="text-zinc-600 leading-relaxed">{cleanDescription(transport.description)}</p>
                                 </div>
                                 <button
                                   onClick={(e) => { e.stopPropagation(); setSpotToSave(transport.id); }}
@@ -296,7 +356,7 @@ export default function TripDetail() {
                               <div className="flex items-start justify-between gap-4">
                                 <div className="space-y-2 flex-1">
                                   <h4 className="text-2xl font-display font-bold text-[#0A192F]">{stay.title}</h4>
-                                  <p className="text-zinc-500 text-sm leading-relaxed">{stay.description}</p>
+                                  <p className="text-zinc-500 text-sm leading-relaxed">{cleanDescription(stay.description)}</p>
                                   {stay.link_url && (
                                     <a href={stay.link_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-orange-500 font-bold text-sm hover:underline">
                                       Official Booking Site
@@ -327,7 +387,7 @@ export default function TripDetail() {
                               <div className="flex items-start justify-between gap-4">
                                 <div className="space-y-2 flex-1">
                                   <h4 className="text-2xl font-display font-bold text-[#0A192F]">{dining.title}</h4>
-                                  <p className="text-zinc-500 text-sm leading-relaxed">{dining.description}</p>
+                                  <p className="text-zinc-500 text-sm leading-relaxed">{cleanDescription(dining.description)}</p>
                                   {dining.link_url && (
                                     <a href={dining.link_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-orange-500 font-bold text-sm hover:underline">
                                       View Menu
@@ -369,7 +429,7 @@ export default function TripDetail() {
                                         <Plus size={20} />
                                       </button>
                                     </div>
-                                    <p className="text-zinc-500 text-sm leading-relaxed">{activity.description}</p>
+                                    <p className="text-zinc-500 text-sm leading-relaxed">{cleanDescription(activity.description)}</p>
                                   </div>
                                 </div>
                               ))}
