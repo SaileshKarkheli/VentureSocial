@@ -107,6 +107,7 @@ export default function Search() {
             comments(count),
             remix_stats(count)
           `)
+          .eq('is_private', false) // Discover/Search only surfaces public trips, never private drafts
           .order('created_at', { ascending: false });
 
         if (error) throw error;
