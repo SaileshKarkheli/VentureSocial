@@ -215,12 +215,19 @@ function WorkspaceView({ folder, onClose }: { folder: any, onClose: () => void }
     }
 
     try {
-      // Original creators (for provenance + notifications). source_user_id is a
-      // single column, so use the primary creator as best-effort attribution.
+      // Original creators (for provenance + notifications) and their posts (for
+      // the "remixed N times" creator-reward count). source_user_id is a single
+      // column, so use the primary creator as best-effort attribution.
       const creatorIds = new Set<string>();
+      const remixedPostIds = new Set<string>();
       spots.forEach(s => {
-        const creatorId = s.trip_spots?.posts?.user_id;
-        if (creatorId && creatorId !== session.user.id) creatorIds.add(creatorId);
+        const ts = s.trip_spots;
+        const ownerId = ts?.posts?.user_id;
+        const originalPostId = ts?.post_id || ts?.posts?.id;
+        if (ownerId && ownerId !== session.user.id) {
+          creatorIds.add(ownerId);
+          if (originalPostId) remixedPostIds.add(originalPostId);
+        }
       });
       const primaryCreator = creatorIds.size > 0 ? Array.from(creatorIds)[0] : null;
 
@@ -284,7 +291,14 @@ function WorkspaceView({ folder, onClose }: { folder: any, onClose: () => void }
         if (spotsError) throw new Error(`Failed to copy spots: ${spotsError.message}`);
       }
 
-      // 3) Notify the original creators that their trip was remixed.
+      // 3) Record a remix on each original trip so its creator sees the count,
+      //    and notify the creators that their trip was remixed.
+      for (const postId of remixedPostIds) {
+        await supabase.from('remix_stats').insert({
+          user_id: session.user.id,
+          post_id: postId
+        });
+      }
       for (const creatorId of creatorIds) {
         await supabase.from('notifications').insert({
           user_id: creatorId,

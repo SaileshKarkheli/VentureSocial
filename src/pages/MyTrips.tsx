@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
-import { Plus, ArrowRight, Share2, Trash2, PenSquare, Pencil } from 'lucide-react';
+import { Plus, ArrowRight, Share2, Trash2, PenSquare, Pencil, Repeat2 } from 'lucide-react';
 import React, { useState, useEffect, useMemo } from 'react';
 import TripBuilderModal from '../components/TripBuilderModal';
 import PublishModal from '../components/PublishModal';
@@ -14,6 +14,8 @@ interface DbTrip {
   year: string;
   country: string;
   image: string;
+  isPrivate?: boolean;
+  remixCount?: number;
 }
 
 export default function MyTrips() {
@@ -361,6 +363,18 @@ export default function MyTrips() {
                 </button>
 
                 <div className="absolute inset-x-0 bottom-0 p-4 text-center z-20">
+                  {(trip.isPrivate || (trip.remixCount ?? 0) > 0) && (
+                    <div className="flex items-center justify-center gap-2 mb-2">
+                      {trip.isPrivate && (
+                        <span className="text-[9px] font-bold uppercase tracking-widest text-white/90 bg-white/20 backdrop-blur-md px-2 py-0.5 rounded-full border border-white/20">Draft</span>
+                      )}
+                      {(trip.remixCount ?? 0) > 0 && (
+                        <span className="flex items-center gap-1 text-[9px] font-bold uppercase tracking-widest text-white bg-orange-500/90 px-2 py-0.5 rounded-full shadow-sm">
+                          <Repeat2 size={10} /> {trip.remixCount} {trip.remixCount === 1 ? 'Remix' : 'Remixes'}
+                        </span>
+                      )}
+                    </div>
+                  )}
                   <span className="block text-orange-500 font-bold text-[10px] uppercase tracking-[0.2em] mb-1 drop-shadow-sm">
                     {trip.year}
                   </span>

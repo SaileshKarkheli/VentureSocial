@@ -35,7 +35,9 @@ export const tripsService = {
           id,
           location_name,
           created_at,
-          trip_spots ( image_url )
+          is_private,
+          trip_spots ( image_url ),
+          remix_stats ( count )
         `)
         .eq('user_id', userId)
         .order('created_at', { ascending: false });
@@ -52,7 +54,9 @@ export const tripsService = {
           id: post.id,
           year: new Date(post.created_at).getFullYear().toString(),
           country: post.location_name,
-          image: spotWithImage?.image_url || fallbackImage
+          image: spotWithImage?.image_url || fallbackImage,
+          isPrivate: post.is_private ?? true,
+          remixCount: post.remix_stats?.[0]?.count || 0
         };
       });
     } catch (err) {
