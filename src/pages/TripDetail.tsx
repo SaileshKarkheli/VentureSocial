@@ -19,6 +19,7 @@ import {
 import { tripsService } from '../services/tripsService';
 import { SaveSpotModal } from '../components/remix/SaveSpotModal';
 import { PillarSection } from '../components/remix/TimelineComponents';
+import DayTravelSummary from '../components/DayTravelSummary';
 
 /** Render image only if the URL is a real non-empty string; otherwise show a clean placeholder */
 function SpotImage({ src, alt, className }: { src: string | null | undefined; alt: string; className?: string }) {
@@ -236,6 +237,7 @@ export default function TripDetail() {
                         <MapPin size={14} />
                         <span>{post.location_name}</span>
                       </div>
+                      <DayTravelSummary spots={typedSpots} className="mt-1.5" />
                     </div>
                   </div>
                   <div className={`p-3 rounded-full text-[#0A192F] transition-transform duration-500 ${expandedDay === dayNum ? 'rotate-180 bg-orange-500 text-white shadow-lg' : 'bg-zinc-50'}`}>
