@@ -520,6 +520,26 @@ export default function TripBuilderModal({ isOpen, onClose, onSaved, editTrip }:
               link_url: item.link
             });
           });
+
+          // Ensure uploaded photos are never lost: persist an image-only spot for
+          // any pillar that has images but no named place added.
+          const coveredCats = new Set<string>(day.routeSummary.map(i => i.type));
+          if (!hasTransportItem && day.transportDetails && day.transportDetails.trim()) coveredCats.add('transport');
+          Object.keys(day.categoryImages || {}).forEach(catKey => {
+            const imgs2 = day.categoryImages?.[catKey] || [];
+            if (imgs2.length > 0 && !coveredCats.has(catKey) && categoryMap[catKey]) {
+              spots.push({
+                id: `${catKey}-${dayNum}-photos`,
+                day_number: dayNum,
+                title: categoryMap[catKey],
+                description: '',
+                category: categoryMap[catKey],
+                image_url: imgs2[0] || null,
+                image_urls: imgs2,
+                link_url: null
+              });
+            }
+          });
         });
 
         if (editTrip?.id) {
@@ -709,6 +729,32 @@ export default function TripBuilderModal({ isOpen, onClose, onSaved, editTrip }:
             lng: item.coordinates ? item.coordinates.lng : null,
             location_coords: item.coordinates ? `(${item.coordinates.lng},${item.coordinates.lat})` : null
           });
+        });
+
+        // Ensure uploaded photos are never lost: for any pillar that has images
+        // but no named place added, persist an image-only spot so the photos and
+        // the day are saved.
+        const coveredCats = new Set<string>(day.routeSummary.map(i => i.type));
+        if (!hasTransportItem && day.transportDetails && day.transportDetails.trim()) coveredCats.add('transport');
+        Object.keys(day.categoryImages || {}).forEach(catKey => {
+          const imgs = day.categoryImages?.[catKey] || [];
+          if (imgs.length > 0 && !coveredCats.has(catKey) && categoryMap[catKey]) {
+            const cost = day.categoryCosts?.[catKey];
+            const description = cost !== undefined && cost > 0 ? `Cost: $${cost}.` : null;
+            spotsToInsert.push({
+              post_id: postId,
+              day_number: dayNum,
+              title: categoryMap[catKey],
+              description,
+              category: categoryMap[catKey],
+              image_url: imgs[0] || null,
+              image_urls: imgs.length > 0 ? imgs : null,
+              link_url: null,
+              lat: null,
+              lng: null,
+              location_coords: null
+            });
+          }
         });
       });
 
