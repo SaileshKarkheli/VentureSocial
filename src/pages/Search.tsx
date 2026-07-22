@@ -8,9 +8,47 @@ import { DayHighlightCarousel, PillarSection } from '../components/remix/Timelin
 import { supabase } from '../supabaseClient';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { loadGoogleMapsScript } from '../utils/googleMapsLoader';
 
 const FilterBar = React.lazy(() => import('../components/FilterBar'));
 const SaveSpotModal = React.lazy(() => import('../components/remix/SaveSpotModal').then(module => ({ default: module.SaveSpotModal })));
+
+// --- Location-based discovery helpers ---
+const toRad = (d: number) => (d * Math.PI) / 180;
+const haversineKm = (a: { lat: number; lng: number }, b: { lat: number; lng: number }) => {
+  const R = 6371; // km
+  const dLat = toRad(b.lat - a.lat);
+  const dLng = toRad(b.lng - a.lng);
+  const lat1 = toRad(a.lat);
+  const lat2 = toRad(b.lat);
+  const h = Math.sin(dLat / 2) ** 2 + Math.sin(dLng / 2) ** 2 * Math.cos(lat1) * Math.cos(lat2);
+  return 2 * R * Math.asin(Math.sqrt(h));
+};
+const formatDistanceMi = (km: number) => {
+  const mi = km * 0.621371;
+  return mi < 10 ? `${mi.toFixed(1)} mi away` : `${Math.round(mi).toLocaleString()} mi away`;
+};
+const geocodeQuery = (address: string): Promise<{ lat: number; lng: number } | null> => {
+  return new Promise((resolve) => {
+    const win = window as any;
+    if (!win.google?.maps?.Geocoder) {
+      resolve(null);
+      return;
+    }
+    try {
+      new win.google.maps.Geocoder().geocode({ address }, (results: any, status: string) => {
+        if (status === 'OK' && results?.[0]?.geometry?.location) {
+          const loc = results[0].geometry.location;
+          resolve({ lat: loc.lat(), lng: loc.lng() });
+        } else {
+          resolve(null);
+        }
+      });
+    } catch {
+      resolve(null);
+    }
+  });
+};
 
 export default function Search() {
   const { publicPosts, searchQuery, setSearchQuery, filters, sortBy, customTripSpots, toggleCustomSpot, currentUserProfile } = useApp();
@@ -20,6 +58,10 @@ export default function Search() {
   // Local database states for direct fetching
   const [dbPosts, setDbPosts] = useState<any[]>([]);
   const [isDbLoading, setIsDbLoading] = useState(true);
+
+  // Coordinates of the searched place (for proximity-based discovery). Null when
+  // the query is empty or can't be geocoded (then we fall back to text matching).
+  const [searchCoords, setSearchCoords] = useState<{ lat: number; lng: number } | null>(null);
 
   // User Auth and Remixed Spots check layer
   const { session } = useAuth();
@@ -92,7 +134,9 @@ export default function Search() {
           activities: row.activities || [],
           hotelType: row.hotel_type || row.category || 'Boutique',
           price: row.price || row.base_price || 0,
-          isPrivate: row.is_private || false
+          isPrivate: row.is_private || false,
+          lat: row.lat != null ? Number(row.lat) : null,
+          lng: row.lng != null ? Number(row.lng) : null
         }));
         setDbPosts(mapped);
       } catch (err) {
@@ -160,28 +204,82 @@ export default function Search() {
     return () => clearTimeout(timeoutId);
   }, [searchQuery, searchTab]);
 
+  // Geocode the itinerary search query (debounced) so trips can be ranked by
+  // proximity to the searched place. Clears coords when the query is empty or
+  // can't be resolved, in which case the list falls back to text matching.
+  React.useEffect(() => {
+    if (searchTab !== 'itineraries') return;
+    const q = searchQuery.trim();
+    if (!q) {
+      setSearchCoords(null);
+      return;
+    }
+    let cancelled = false;
+    const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+    const timeoutId = setTimeout(async () => {
+      if (!apiKey) {
+        setSearchCoords(null);
+        return;
+      }
+      try {
+        await loadGoogleMapsScript(apiKey);
+        const coords = await geocodeQuery(q);
+        if (!cancelled) setSearchCoords(coords);
+      } catch {
+        if (!cancelled) setSearchCoords(null);
+      }
+    }, 500);
+    return () => {
+      cancelled = true;
+      clearTimeout(timeoutId);
+    };
+  }, [searchQuery, searchTab]);
+
+  const trimmedQuery = searchQuery.trim().toLowerCase();
+  // When we have coordinates for the searched place, rank trips by real distance
+  // (closest first) instead of text matching — so e.g. searching "Italy" surfaces
+  // a Rome trip even though "Italy" isn't in its name.
+  const proximityActive = !!(trimmedQuery && searchCoords);
+
+  const getEngagementScore = (p: any) => {
+    const likes = typeof p.likes === 'number' ? p.likes : p.likes?.[0]?.count || 0;
+    const comments = typeof p.comments === 'number' ? p.comments : p.comments?.[0]?.count || 0;
+    const remixes = p.remix_stats?.[0]?.count || p.remixes || 0;
+    return (likes * 1) + (comments * 2) + (remixes * 5) + ((p.rating || 5) * 10);
+  };
+
   const filteredPosts = dbPosts
     .filter(post => {
-      const matchesSearch = post.location.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                           post.caption.toLowerCase().includes(searchQuery.toLowerCase());
+      // Text search only gates results when proximity isn't available.
+      const matchesSearch = proximityActive
+        ? true
+        : (!trimmedQuery ||
+           post.location.toLowerCase().includes(trimmedQuery) ||
+           post.caption.toLowerCase().includes(trimmedQuery));
       const matchesStars = post.rating >= filters.minStars;
-      const matchesActivities = filters.activities.length === 0 || 
+      const matchesActivities = filters.activities.length === 0 ||
                                filters.activities.every(activity => post.activities.includes(activity));
-      const matchesHotelType = filters.hotelTypes.length === 0 || 
+      const matchesHotelType = filters.hotelTypes.length === 0 ||
                               filters.hotelTypes.includes(post.hotelType);
       const matchesPrice = post.price >= filters.priceRange[0] && post.price <= filters.priceRange[1];
 
       return matchesSearch && matchesStars && matchesActivities && matchesHotelType && matchesPrice;
     })
+    .map((post: any) => {
+      const distanceKm = (proximityActive && post.lat != null && post.lng != null)
+        ? haversineKm(searchCoords!, { lat: post.lat, lng: post.lng })
+        : null;
+      return { ...post, distanceKm };
+    })
     .sort((a: any, b: any) => {
-      // Phase 4 Engagement Score Algorithm (1/2/5/10) - Strictly via Supabase Schemas
-      const getScore = (p: any) => {
-        const likes = typeof p.likes === 'number' ? p.likes : p.likes?.[0]?.count || 0;
-        const comments = typeof p.comments === 'number' ? p.comments : p.comments?.[0]?.count || 0;
-        const remixes = p.remix_stats?.[0]?.count || p.remixes || 0;
-        return (likes * 1) + (comments * 2) + (remixes * 5) + ((p.rating || 5) * 10);
-      };
-      return getScore(b) - getScore(a); // Always sort highest Engagement Score to the absolute top
+      if (proximityActive) {
+        // Closest first; trips missing coordinates sink to the bottom.
+        const da = a.distanceKm ?? Infinity;
+        const db = b.distanceKm ?? Infinity;
+        if (da !== db) return da - db;
+      }
+      // Default / tiebreak: engagement score (1/2/5/10), highest first.
+      return getEngagementScore(b) - getEngagementScore(a);
     });
 
   return (
@@ -232,8 +330,12 @@ export default function Search() {
             {/* Left Pane: Best Viewed Itineraries List */}
         <div className={`flex-1 flex flex-col h-full bg-white rounded-3xl border border-zinc-200 shadow-sm overflow-hidden ${selectedPost ? 'hidden lg:flex lg:w-1/3' : 'w-full'}`}>
           <div className="p-6 border-b border-zinc-100 bg-zinc-50 shrink-0">
-            <h2 className="text-xl font-display font-bold text-[#0A192F]">Top Creator Itineraries</h2>
-            <p className="text-sm text-zinc-500">Sorted by engagement. Select to view and remix.</p>
+            <h2 className="text-xl font-display font-bold text-[#0A192F]">
+              {proximityActive ? `Trips near "${searchQuery.trim()}"` : 'Top Creator Itineraries'}
+            </h2>
+            <p className="text-sm text-zinc-500">
+              {proximityActive ? 'Closest first. Select to view and remix.' : 'Sorted by engagement. Select to view and remix.'}
+            </p>
           </div>
           
           <div className="flex-1 overflow-y-auto p-4 space-y-4">
@@ -256,6 +358,9 @@ export default function Search() {
                       <h3 className="font-bold text-[#0A192F]">{post.user}</h3>
                       <div className="flex items-center gap-1 text-xs text-orange-500 font-bold uppercase tracking-wider">
                         <MapPin size={12} /> {post.location}
+                        {post.distanceKm != null && (
+                          <span className="ml-2 text-zinc-400 normal-case font-semibold tracking-normal">· {formatDistanceMi(post.distanceKm)}</span>
+                        )}
                       </div>
                     </div>
                   </div>
