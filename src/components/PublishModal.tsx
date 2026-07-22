@@ -78,7 +78,7 @@ export default function PublishModal({ isOpen, onClose, preselectedTripId, onPub
   };
 
   const handlePublish = async () => {
-    if (!selectedTrip || selectedImages.length === 0) return;
+    if (!selectedTrip || !caption.trim()) return;
     setIsPublishing(true);
 
     try {
@@ -108,60 +108,43 @@ export default function PublishModal({ isOpen, onClose, preselectedTripId, onPub
       const activitySpots = (tripDetail?.spots || []).filter((s: any) => s.category === 'Activity');
       const finalActivities = activitySpots.length > 0 ? activitySpots.map((s: any) => s.title) : [];
 
-      // 1. Insert parent record into public.posts
-      const { data: parentPost, error: parentError } = await supabase
+      // Publish IN PLACE: flip the existing draft to public instead of inserting
+      // a duplicate trip. The trip already owns its spots, so we don't re-create
+      // them — publishing only changes visibility + feed metadata.
+      const { error: updateError } = await supabase
         .from('posts')
-        .insert({
-          user_id: user.id,
-          location_name: selectedTrip.country,
+        .update({
+          is_private: false,
           caption: caption,
           rating: userRating,
           hotel_type: hotelType,
           price: finalPrice,
-          activities: finalActivities,
-          category: 'Activity' // Safely matches constraints checking
+          activities: finalActivities
         })
-        .select()
-        .single();
+        .eq('id', selectedTripId)
+        .eq('user_id', user.id);
 
-      if (parentError) throw parentError;
+      if (updateError) throw updateError;
 
-      // 2. Insert detailed itinerary spots mapping via post_id
-      const spotsToInsert = selectedImages.map((imgUrl, idx) => {
-        const originalSpot = tripDetail?.spots.find((s: any) => s.image_url === imgUrl);
-        return {
-          post_id: parentPost.id,
-          day_number: originalSpot?.day_number || idx + 1,
-          title: originalSpot?.title || `Day ${idx + 1} Highlight`,
-          description: originalSpot?.description || `Highlight from ${selectedTrip.country}`,
-          category: originalSpot?.category || 'Activity',
-          image_url: imgUrl,
-          activities: originalSpot?.activities || []
-        };
-      });
-
-      const { error: spotsError } = await supabase
-        .from('trip_spots')
-        .insert(spotsToInsert);
-
-      if (spotsError) throw spotsError;
-
-      // 3. Construct a fully formatted local Post object
+      // Build a local Post object from the trip's real spots for optimistic feed state.
+      const spots = tripDetail?.spots || [];
       const formattedPost = {
-        id: parentPost.id,
+        id: selectedTripId,
         userId: user.id,
-        tripId: parentPost.id,
+        tripId: selectedTripId,
         user: activeProfile?.full_name || activeProfile?.username || user?.name || 'Current User',
         avatar: activeProfile?.avatar_url || user?.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=100&h=100',
         location: selectedTrip.country,
-        images: spotsToInsert.map((spot, idx) => ({
-          id: `temp-spot-${idx}`,
-          url: spot.image_url,
-          day: spot.day_number,
-          description: spot.description,
-          activities: spot.activities,
-          coordinates: undefined
-        })),
+        images: spots
+          .map((spot: any, idx: number) => ({
+            id: `spot-${spot.id || idx}`,
+            url: (Array.isArray(spot.image_urls) && spot.image_urls[0]) || spot.image_url,
+            day: spot.day_number,
+            description: spot.description,
+            activities: spot.activities || [],
+            coordinates: (spot.lat != null && spot.lng != null) ? { lat: Number(spot.lat), lng: Number(spot.lng) } : undefined
+          }))
+          .filter((img: any) => img.url),
         caption: caption,
         likes: 0,
         comments: 0,
@@ -342,7 +325,7 @@ export default function PublishModal({ isOpen, onClose, preselectedTripId, onPub
             </button>
             <button 
               onClick={handlePublish}
-              disabled={isPublishing || !caption.trim() || selectedImages.length === 0}
+              disabled={isPublishing || !caption.trim()}
               className="bg-orange-500 text-white font-bold px-8 py-3 rounded-xl shadow-xl hover:bg-orange-600 transition-all flex items-center gap-2 group disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isPublishing ? 'Publishing...' : 'Publish to Feed'}
