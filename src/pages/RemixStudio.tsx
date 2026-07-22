@@ -7,6 +7,8 @@ import { remixService } from '../services/remixService';
 import { supabase } from '../supabaseClient';
 import { useAuth } from '../context/AuthContext';
 import { useApp } from '../AppContext';
+import DayTravelSummary from '../components/DayTravelSummary';
+import { TravelMode } from '../hooks/useDayRoute';
 
 export default function RemixStudio() {
   const { session } = useAuth();
@@ -162,6 +164,7 @@ function WorkspaceView({ folder, onClose }: { folder: any, onClose: () => void }
   const [expandedPillar, setExpandedPillar] = useState<string | null>(null);
   const [notification, setNotification] = useState<string | null>(null);
   const [isFinalizing, setIsFinalizing] = useState(false);
+  const [travelMode, setTravelMode] = useState<TravelMode>('DRIVING');
 
   useEffect(() => {
     fetchSpots();
@@ -395,9 +398,23 @@ function WorkspaceView({ folder, onClose }: { folder: any, onClose: () => void }
         </button>
       </div>
 
-      <div className="mb-8">
-        <h2 className="text-3xl font-display font-bold text-[#0A192F]">{folder.name}</h2>
-        <p className="text-zinc-500 font-medium mt-1">Reassign spots to build your custom itinerary.</p>
+      <div className="mb-8 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+        <div>
+          <h2 className="text-3xl font-display font-bold text-[#0A192F]">{folder.name}</h2>
+          <p className="text-zinc-500 font-medium mt-1">Reassign spots to build your custom itinerary.</p>
+        </div>
+        <div className="flex items-center gap-1 bg-zinc-100 p-1 rounded-full border border-zinc-200 shrink-0">
+          {(['DRIVING', 'TRANSIT', 'WALKING'] as TravelMode[]).map((m) => (
+            <button
+              key={m}
+              onClick={() => setTravelMode(m)}
+              className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all ${travelMode === m ? 'bg-[#0A192F] text-white shadow' : 'text-zinc-500 hover:text-[#0A192F]'}`}
+              title={`Recompute travel times for ${m.toLowerCase()}`}
+            >
+              {m === 'DRIVING' ? 'Drive' : m === 'TRANSIT' ? 'Transit' : 'Walk'}
+            </button>
+          ))}
+        </div>
       </div>
 
       <div className="space-y-6" style={{ zoom: 0.9 } as any}>
@@ -447,6 +464,7 @@ function WorkspaceView({ folder, onClose }: { folder: any, onClose: () => void }
                           <h3 className="text-2xl font-display font-bold text-[#0A192F] group-hover:text-orange-500 transition-colors">
                             Day {dayNum}
                           </h3>
+                          <DayTravelSummary spots={daySpots.map((s: any) => s.trip_spots)} mode={travelMode} className="mt-1.5" />
                         </div>
                       </div>
                       <div className="flex items-center gap-4">

@@ -9,6 +9,7 @@ import { supabase } from '../supabaseClient';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { loadGoogleMapsScript } from '../utils/googleMapsLoader';
+import DayTravelSummary from '../components/DayTravelSummary';
 
 const FilterBar = React.lazy(() => import('../components/FilterBar'));
 const SaveSpotModal = React.lazy(() => import('../components/remix/SaveSpotModal').then(module => ({ default: module.SaveSpotModal })));
@@ -475,6 +476,7 @@ export default function Search() {
                                       <MapPin size={14} />
                                       <span>{selectedPost?.location}</span>
                                     </div>
+                                    <DayTravelSummary spots={typedSpots} className="mt-1.5" />
                                   </div>
                                 </div>
                                 <div className="flex items-center gap-4">
