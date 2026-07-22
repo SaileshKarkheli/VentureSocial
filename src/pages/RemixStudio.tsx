@@ -247,6 +247,16 @@ function WorkspaceView({ folder, onClose }: { folder: any, onClose: () => void }
         }
       }
 
+      // Carry expenditure over: the original app stores per-stop costs as
+      // "Cost: $X" text inside the spot description, so sum those into the trip
+      // total rather than leaving the remix at $0.
+      const extractCost = (desc: any) => {
+        if (!desc) return 0;
+        const m = String(desc).match(/Cost:\s*\$?(\d+(?:\.\d+)?)/i);
+        return m ? parseFloat(m[1]) : 0;
+      };
+      const totalCost = spots.reduce((sum, s) => sum + extractCost(s.trip_spots?.description), 0);
+
       // 1) Create the remixer's own trip (private draft), attributed to the source.
       const { data: postData, error: postError } = await supabase
         .from('posts')
@@ -255,7 +265,7 @@ function WorkspaceView({ folder, onClose }: { folder: any, onClose: () => void }
           location_name: folder.name,
           caption: `My Remix of ${folder.name}`,
           category: 'Activity', // NOT NULL in posts schema
-          base_price: 0,
+          base_price: totalCost,
           is_private: true, // remix starts as a private draft, publish later
           source_user_id: primaryCreator,
           lat: postLat,
