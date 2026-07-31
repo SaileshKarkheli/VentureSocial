@@ -203,7 +203,7 @@ export default function BlogDetail() {
 
   if (!isNew && !blog) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center text-zinc-500">
+      <div className="min-h-screen flex flex-col items-center justify-center text-body">
         <BookOpen size={48} className="mb-4 text-zinc-300" />
         <p className="text-lg font-bold">Blog not found</p>
         <button onClick={() => navigate('/blogs')} className="mt-4 text-orange-500 font-bold hover:underline">
@@ -228,7 +228,7 @@ export default function BlogDetail() {
     <motion.div 
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="bg-white min-h-screen pb-20 text-zinc-900"
+      className="bg-white min-h-screen pb-20 text-ink"
     >
       {/* Header Section */}
       <header className="relative h-[50vh] w-full overflow-hidden">
@@ -297,34 +297,34 @@ export default function BlogDetail() {
           /* Edit Mode */
           <div className="space-y-6">
             <div className="space-y-2">
-              <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Title</label>
+              <label className="text-xs font-bold text-muted uppercase tracking-widest">Title</label>
               <input
                 type="text"
                 value={editForm.title}
                 onChange={(e) => setEditForm(prev => ({ ...prev, title: e.target.value }))}
                 placeholder="Give your story a captivating title..."
-                className="w-full bg-zinc-50 border border-zinc-200 rounded-xl p-4 text-xl font-bold text-[#0A192F] focus:ring-2 focus:ring-orange-500/50 outline-none"
+                className="w-full bg-tint border border-hairline rounded-xl p-4 text-xl font-bold text-ink focus:ring-2 focus:ring-orange-500/50 outline-none"
               />
             </div>
 
             <div className="space-y-2">
-              <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Cover Image URL</label>
+              <label className="text-xs font-bold text-muted uppercase tracking-widest">Cover Image URL</label>
               <input
                 type="text"
                 value={editForm.cover_image}
                 onChange={(e) => setEditForm(prev => ({ ...prev, cover_image: e.target.value }))}
                 placeholder="https://images.unsplash.com/..."
-                className="w-full bg-zinc-50 border border-zinc-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-orange-500/50 outline-none"
+                className="w-full bg-tint border border-hairline rounded-xl p-3 text-sm focus:ring-2 focus:ring-orange-500/50 outline-none"
               />
             </div>
 
             <div className="space-y-2">
-              <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Linked Trip</label>
+              <label className="text-xs font-bold text-muted uppercase tracking-widest">Linked Trip</label>
               <select
                 value={editForm.trip_id}
                 onChange={(e) => setEditForm(prev => ({ ...prev, trip_id: e.target.value }))}
                 disabled={!!urlTripId}
-                className="w-full bg-zinc-50 border border-zinc-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-orange-500/50 outline-none disabled:opacity-75 disabled:cursor-not-allowed"
+                className="w-full bg-tint border border-hairline rounded-xl p-3 text-sm focus:ring-2 focus:ring-orange-500/50 outline-none disabled:opacity-75 disabled:cursor-not-allowed"
               >
                 <option value="">None (standalone blog)</option>
                 {userTrips.map(trip => (
@@ -334,15 +334,15 @@ export default function BlogDetail() {
             </div>
 
             <div className="space-y-2">
-              <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Content</label>
+              <label className="text-xs font-bold text-muted uppercase tracking-widest">Content</label>
               <textarea
                 value={editForm.content}
                 onChange={(e) => setEditForm(prev => ({ ...prev, content: e.target.value }))}
                 placeholder="Tell your story... Use double line breaks to separate paragraphs. Paste image URLs on their own line to embed them."
                 rows={20}
-                className="w-full bg-zinc-50 border border-zinc-200 rounded-xl p-4 text-sm leading-relaxed focus:ring-2 focus:ring-orange-500/50 outline-none resize-y"
+                className="w-full bg-tint border border-hairline rounded-xl p-4 text-sm leading-relaxed focus:ring-2 focus:ring-orange-500/50 outline-none resize-y"
               />
-              <p className="text-[10px] text-zinc-400">
+              <p className="text-[10px] text-muted">
                 Tip: Separate paragraphs with a blank line. Paste image URLs on their own line to embed them automatically.
               </p>
             </div>
@@ -350,7 +350,7 @@ export default function BlogDetail() {
             <div className="flex items-center justify-between pt-4">
               <button
                 onClick={() => isNew ? navigate('/blogs') : navigate(`/blog/${tripId}`)}
-                className="flex items-center gap-2 px-6 py-3 rounded-xl bg-zinc-100 text-zinc-600 font-bold hover:bg-zinc-200 transition-colors"
+                className="flex items-center gap-2 px-6 py-3 rounded-xl bg-cream text-zinc-600 font-bold hover:bg-zinc-200 transition-colors"
               >
                 <X size={18} />
                 Cancel
@@ -388,7 +388,7 @@ export default function BlogDetail() {
                   </p>
                 ) : (
                   <figure className="space-y-4 py-8">
-                    <div className="rounded-2xl overflow-hidden shadow-2xl border border-zinc-100">
+                    <div className="rounded-2xl overflow-hidden shadow-2xl border border-hairline">
                       <SmartImage 
                         src={section.content} 
                         alt="Blog image"
@@ -397,7 +397,7 @@ export default function BlogDetail() {
                       />
                     </div>
                     {section.caption && (
-                      <figcaption className="text-center italic text-zinc-400 font-serif">
+                      <figcaption className="text-center italic text-muted font-serif">
                         {section.caption}
                       </figcaption>
                     )}
@@ -408,7 +408,7 @@ export default function BlogDetail() {
 
             <div className="pt-20 text-center">
               <div className="w-24 h-1 bg-orange-500 mx-auto mb-8 rounded-full" />
-              <p className="font-serif italic text-zinc-400">Fin.</p>
+              <p className="font-serif italic text-muted">Fin.</p>
             </div>
           </>
         )}

@@ -95,7 +95,7 @@ export default function MediaCarousel({ images, className }: MediaCarouselProps)
 
   if (!images || images.length === 0 || !images[currentIndex]) {
     return (
-      <div className={className || "relative aspect-[4/5] overflow-hidden bg-zinc-100 group"}>
+      <div className={className || "relative aspect-[4/5] overflow-hidden bg-cream group"}>
         <SmartImage
           src="https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?auto=format&fit=crop&w=800&q=80"
           alt="Default Cover"
@@ -109,7 +109,7 @@ export default function MediaCarousel({ images, className }: MediaCarouselProps)
   return (
     <>
       <div 
-        className={className || "relative aspect-[4/5] overflow-hidden bg-zinc-100 group cursor-pointer"} 
+        className={className || "relative aspect-[4/5] overflow-hidden bg-cream group cursor-pointer"} 
         onClick={() => setIsFullscreen(true)}
       >
         <AnimatePresence mode="wait">
@@ -132,7 +132,7 @@ export default function MediaCarousel({ images, className }: MediaCarouselProps)
             key={currentIndex}
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="px-3 py-1.5 rounded-xl bg-white/80 backdrop-blur-md text-[#0A192F] border border-zinc-200 shadow-xl"
+            className="px-3 py-1.5 rounded-xl bg-white/80 backdrop-blur-md text-ink border border-hairline shadow-xl"
           >
             <span className="text-[10px] font-bold uppercase tracking-widest text-orange-500 block">
               Day {images[currentIndex].day}

@@ -28,9 +28,9 @@ export default function DayTravelSummary({ spots, mode = 'DRIVING', className = 
     <div className={`inline-flex items-center gap-1.5 text-xs font-semibold ${className}`}>
       <Navigation size={12} className="text-orange-500" />
       {loading ? (
-        <span className="text-zinc-400">Calculating route…</span>
+        <span className="text-muted">Calculating route…</span>
       ) : (
-        <span className="text-zinc-500">
+        <span className="text-body">
           {isApprox ? '~' : ''}{miles} mi{durationText ? ` · ~${durationText}` : ''}{isApprox ? ' (approx)' : ''}
         </span>
       )}

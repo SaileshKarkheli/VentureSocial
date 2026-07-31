@@ -87,13 +87,13 @@ export default function SearchBox({ placeholder, context, onSelect, className = 
 
   return (
     <div className={`relative w-full ${className}`}>
-      <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400" size={18} />
+      <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 text-muted" size={18} />
       <input
         ref={inputRef}
         type="text"
         placeholder={isReady ? placeholder : "Loading Maps SDK..."}
         disabled={!isReady}
-        className={`w-full pl-12 pr-10 py-4 rounded-2xl bg-zinc-100 border border-zinc-300 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all outline-none text-zinc-800 placeholder:text-zinc-400 disabled:opacity-50 ${inputClassName}`}
+        className={`w-full pl-12 pr-10 py-4 rounded-2xl bg-cream border border-zinc-300 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all outline-none text-ink placeholder:text-muted disabled:opacity-50 ${inputClassName}`}
       />
       {!isReady && (
         <Loader2 className="absolute right-4 top-1/2 -translate-y-1/2 text-orange-500 animate-spin" size={18} />

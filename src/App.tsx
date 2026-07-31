@@ -50,9 +50,9 @@ export default function App() {
           <Route path="/messages" element={<ProtectedRoute><Messages /></ProtectedRoute>} />
           
           {/* Placeholder routes for the rest of the sidebar */}
-          <Route path="/photos" element={<ProtectedRoute><div className="p-8 text-center text-zinc-500">Photos coming soon...</div></ProtectedRoute>} />
-          <Route path="/videos" element={<ProtectedRoute><div className="p-8 text-center text-zinc-500">Videos coming soon...</div></ProtectedRoute>} />
-          <Route path="/clubs" element={<ProtectedRoute><div className="p-8 text-center text-zinc-500">Travel Clubs coming soon...</div></ProtectedRoute>} />
+          <Route path="/photos" element={<ProtectedRoute><div className="p-8 text-center text-body">Photos coming soon...</div></ProtectedRoute>} />
+          <Route path="/videos" element={<ProtectedRoute><div className="p-8 text-center text-body">Videos coming soon...</div></ProtectedRoute>} />
+          <Route path="/clubs" element={<ProtectedRoute><div className="p-8 text-center text-body">Travel Clubs coming soon...</div></ProtectedRoute>} />
           <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
         </Route>
         <Route path="/" element={<Login />} />

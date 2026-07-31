@@ -160,11 +160,11 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onCl
           initial={{ scale: 0.95, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.95, opacity: 0 }}
-          className="relative w-full max-w-lg bg-white rounded-3xl shadow-2xl p-6 border border-zinc-100 max-h-[90vh] overflow-y-auto custom-scrollbar"
+          className="relative w-full max-w-lg bg-white rounded-3xl shadow-2xl p-6 border border-hairline max-h-[90vh] overflow-y-auto custom-scrollbar"
         >
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-display font-bold text-[#0A192F]">Edit Profile</h2>
-            <button onClick={onClose} className="p-2 rounded-full hover:bg-zinc-100 transition-colors text-zinc-500">
+            <h2 className="text-2xl font-display font-bold text-ink">Edit Profile</h2>
+            <button onClick={onClose} className="p-2 rounded-full hover:bg-cream transition-colors text-body">
               <X size={20} />
             </button>
           </div>
@@ -175,7 +175,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onCl
               <div>
                 <label className="block text-sm font-bold text-zinc-700 mb-2">Avatar</label>
                 <div className="flex items-center gap-4">
-                  <div className="w-16 h-16 rounded-3xl bg-zinc-100 overflow-hidden shrink-0 border border-zinc-200 shadow-sm">
+                  <div className="w-16 h-16 rounded-3xl bg-cream overflow-hidden shrink-0 border border-hairline shadow-sm">
                     {avatarFile ? (
                       <img src={URL.createObjectURL(avatarFile)} alt="Preview" className="w-full h-full object-cover" />
                     ) : activeProfile?.avatar_url ? (
@@ -184,7 +184,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onCl
                       <img src={userProfile.avatar_url} alt="Current" className="w-full h-full object-cover" />
                     ) : null}
                   </div>
-                  <label className="cursor-pointer flex items-center gap-2 px-4 py-2 rounded-2xl bg-zinc-50 border border-zinc-200 hover:bg-zinc-100 hover:border-zinc-300 transition-all text-sm font-bold text-zinc-700">
+                  <label className="cursor-pointer flex items-center gap-2 px-4 py-2 rounded-2xl bg-tint border border-hairline hover:bg-cream hover:border-zinc-300 transition-all text-sm font-bold text-zinc-700">
                     <Upload size={16} />
                     Choose File
                     <input type="file" accept="image/*" className="hidden" onChange={(e) => {
@@ -199,7 +199,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onCl
               <div>
                 <label className="block text-sm font-bold text-zinc-700 mb-2">Cover Photo</label>
                 <div className="flex items-center gap-4">
-                  <div className="w-16 h-16 rounded-3xl bg-zinc-100 overflow-hidden shrink-0 border border-zinc-200 shadow-sm">
+                  <div className="w-16 h-16 rounded-3xl bg-cream overflow-hidden shrink-0 border border-hairline shadow-sm">
                     {coverFile ? (
                       <img src={URL.createObjectURL(coverFile)} alt="Preview" className="w-full h-full object-cover" />
                     ) : activeProfile?.cover_photo_url ? (
@@ -208,7 +208,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onCl
                       <img src={userProfile.cover_photo_url} alt="Current" className="w-full h-full object-cover" />
                     ) : null}
                   </div>
-                  <label className="cursor-pointer flex items-center gap-2 px-4 py-2 rounded-2xl bg-zinc-50 border border-zinc-200 hover:bg-zinc-100 hover:border-zinc-300 transition-all text-sm font-bold text-zinc-700">
+                  <label className="cursor-pointer flex items-center gap-2 px-4 py-2 rounded-2xl bg-tint border border-hairline hover:bg-cream hover:border-zinc-300 transition-all text-sm font-bold text-zinc-700">
                     <Upload size={16} />
                     Choose File
                     <input type="file" accept="image/*" className="hidden" onChange={(e) => {
@@ -228,7 +228,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onCl
                 type="text"
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
-                className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all placeholder:text-zinc-400"
+                className="w-full px-4 py-3 bg-tint border border-hairline rounded-2xl focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all placeholder:text-muted"
                 placeholder="Your Name"
               />
             </div>
@@ -240,7 +240,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onCl
                 type="date"
                 value={dob}
                 onChange={(e) => setDob(e.target.value)}
-                className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all text-zinc-700"
+                className="w-full px-4 py-3 bg-tint border border-hairline rounded-2xl focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all text-zinc-700"
               />
             </div>
 
@@ -251,7 +251,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onCl
                 type="text"
                 value={location}
                 onChange={(e) => setLocation(e.target.value)}
-                className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all placeholder:text-zinc-400"
+                className="w-full px-4 py-3 bg-tint border border-hairline rounded-2xl focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all placeholder:text-muted"
                 placeholder="e.g. Paris, France"
               />
             </div>
@@ -263,7 +263,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onCl
                 type="text"
                 value={education}
                 onChange={(e) => setEducation(e.target.value)}
-                className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all placeholder:text-zinc-400"
+                className="w-full px-4 py-3 bg-tint border border-hairline rounded-2xl focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all placeholder:text-muted"
                 placeholder="e.g. Master's in English"
               />
             </div>
@@ -275,41 +275,41 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onCl
                 value={bio}
                 onChange={(e) => setBio(e.target.value)}
                 rows={3}
-                className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all placeholder:text-zinc-400 resize-none custom-scrollbar"
+                className="w-full px-4 py-3 bg-tint border border-hairline rounded-2xl focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all placeholder:text-muted resize-none custom-scrollbar"
                 placeholder="Tell the world about your travels..."
               />
             </div>
 
             {/* Social Links */}
-            <div className="space-y-4 border-t border-zinc-100 pt-4">
-              <h3 className="text-sm font-bold text-[#0A192F]">Social Links</h3>
+            <div className="space-y-4 border-t border-hairline pt-4">
+              <h3 className="text-sm font-bold text-ink">Social Links</h3>
               <div>
-                <label className="block text-xs font-bold text-zinc-500 mb-1">Instagram</label>
+                <label className="block text-xs font-bold text-body mb-1">Instagram</label>
                 <input
                   type="url"
                   value={instagram}
                   onChange={(e) => setInstagram(e.target.value)}
-                  className="w-full px-4 py-2 bg-zinc-50 border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all placeholder:text-zinc-400 text-sm"
+                  className="w-full px-4 py-2 bg-tint border border-hairline rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all placeholder:text-muted text-sm"
                   placeholder="https://instagram.com/yourhandle"
                 />
               </div>
               <div>
-                <label className="block text-xs font-bold text-zinc-500 mb-1">Twitter / X</label>
+                <label className="block text-xs font-bold text-body mb-1">Twitter / X</label>
                 <input
                   type="url"
                   value={twitter}
                   onChange={(e) => setTwitter(e.target.value)}
-                  className="w-full px-4 py-2 bg-zinc-50 border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all placeholder:text-zinc-400 text-sm"
+                  className="w-full px-4 py-2 bg-tint border border-hairline rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all placeholder:text-muted text-sm"
                   placeholder="https://x.com/yourhandle"
                 />
               </div>
               <div>
-                <label className="block text-xs font-bold text-zinc-500 mb-1">Personal Website</label>
+                <label className="block text-xs font-bold text-body mb-1">Personal Website</label>
                 <input
                   type="url"
                   value={website}
                   onChange={(e) => setWebsite(e.target.value)}
-                  className="w-full px-4 py-2 bg-zinc-50 border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all placeholder:text-zinc-400 text-sm"
+                  className="w-full px-4 py-2 bg-tint border border-hairline rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all placeholder:text-muted text-sm"
                   placeholder="https://yourwebsite.com"
                 />
               </div>
@@ -326,7 +326,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onCl
             <button
               onClick={handleSave}
               disabled={isUploading}
-              className="w-full py-4 bg-[#0A192F] text-white font-bold rounded-2xl shadow-xl shadow-blue-500/20 hover:bg-black transition-all disabled:opacity-50 flex justify-center items-center gap-2"
+              className="w-full py-4 bg-ink text-white font-bold rounded-2xl shadow-xl shadow-orange-500/20 hover:bg-black transition-all disabled:opacity-50 flex justify-center items-center gap-2"
             >
               {isUploading ? <Loader2 className="animate-spin" size={20} /> : 'Save Profile'}
             </button>

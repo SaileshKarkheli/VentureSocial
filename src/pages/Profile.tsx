@@ -288,8 +288,8 @@ export default function Profile() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8 pb-20 text-zinc-900">
-      <div className="relative h-64 rounded-3xl overflow-hidden bg-zinc-200 border border-zinc-200">
+    <div className="max-w-4xl mx-auto space-y-8 pb-20 text-ink">
+      <div className="relative h-64 rounded-3xl overflow-hidden bg-zinc-200 border border-hairline">
         {userData.cover ? (
           <img
             src={userData.cover}
@@ -299,13 +299,13 @@ export default function Profile() {
             onClick={() => setSelectedFullImage(userData.cover)}
           />
         ) : (
-          <div className="w-full h-full bg-gradient-to-tr from-[#0A192F]/5 to-[#0A192F]/10 flex items-center justify-center">
-            <Camera size={48} className="text-[#0A192F]/20" />
+          <div className="w-full h-full bg-gradient-to-tr from-ink/5 to-ink/10 flex items-center justify-center">
+            <Camera size={48} className="text-ink/20" />
           </div>
         )}
         <button 
           onClick={() => setIsEditModalOpen(true)}
-          className="absolute bottom-4 right-4 bg-white/80 backdrop-blur-md text-zinc-900 p-2 rounded-full hover:bg-white transition-colors border border-zinc-200 shadow-lg cursor-pointer z-10"
+          className="absolute bottom-4 right-4 bg-white/80 backdrop-blur-md text-ink p-2 rounded-full hover:bg-white transition-colors border border-hairline shadow-lg cursor-pointer z-10"
         >
           <Camera size={20} />
         </button>
@@ -324,7 +324,7 @@ export default function Profile() {
                   onClick={() => setSelectedFullImage(userData.avatar)}
                 />
               ) : (
-                <div className="w-full h-full bg-zinc-100 rounded-2xl flex items-center justify-center">
+                <div className="w-full h-full bg-cream rounded-2xl flex items-center justify-center">
                   <UserIcon size={48} className="text-zinc-300" />
                 </div>
               )}
@@ -338,9 +338,9 @@ export default function Profile() {
           </div>
 
           <div className="flex-1 pb-4">
-            <h2 className="text-4xl font-display font-bold text-[#0A192F]">{userData.name}</h2>
+            <h2 className="text-4xl font-display font-bold text-ink">{userData.name}</h2>
             {userData.location && (
-              <div className="flex items-center gap-2 text-zinc-500 mt-1">
+              <div className="flex items-center gap-2 text-body mt-1">
                 <MapPin size={16} className="text-orange-500" />
                 <span>{userData.location}</span>
               </div>
@@ -350,7 +350,7 @@ export default function Profile() {
           <div className="flex flex-col sm:flex-row gap-3 pb-4">
             <button 
               onClick={() => setIsEditModalOpen(true)}
-              className="bg-[#0A192F] text-white px-6 py-2 rounded-xl font-bold hover:bg-black transition-colors shadow-lg"
+              className="bg-ink text-white px-6 py-2 rounded-xl font-bold hover:bg-black transition-colors shadow-lg"
             >
               Edit Profile
             </button>
@@ -364,12 +364,12 @@ export default function Profile() {
         </div>
 
         {/* Stats Bar (Full Width) */}
-        <section className="bg-white p-6 rounded-2xl border border-zinc-100 shadow-sm mb-8">
+        <section className="bg-white p-6 rounded-2xl border border-hairline shadow-sm mb-8">
           <div className="grid grid-cols-3 gap-4 text-center max-w-xl mx-auto">
             {userData.stats.map((stat) => (
               <div key={stat.label}>
-                <p className="text-2xl font-display font-bold text-[#0A192F]">{stat.value}</p>
-                <p className="text-xs text-zinc-400 uppercase font-bold">{stat.label}</p>
+                <p className="text-2xl font-display font-bold text-ink">{stat.value}</p>
+                <p className="text-xs text-muted uppercase font-bold">{stat.label}</p>
               </div>
             ))}
           </div>
@@ -379,13 +379,13 @@ export default function Profile() {
           {/* Main Content Column */}
           <div className="md:col-span-2 space-y-6">
             {/* Tab Bar */}
-            <div className="flex border-b border-zinc-200 mb-6 bg-white p-2 rounded-2xl border border-zinc-100 shadow-sm">
+            <div className="flex border-b border-hairline mb-6 bg-white p-2 rounded-2xl border border-hairline shadow-sm">
               <button
                 onClick={() => setActiveTab('media')}
                 className={`flex-1 py-3 px-6 font-bold text-sm rounded-xl transition-all ${
                   activeTab === 'media'
                     ? 'bg-orange-500 text-white shadow-md'
-                    : 'text-zinc-500 hover:text-[#0A192F] hover:bg-zinc-50'
+                    : 'text-body hover:text-ink hover:bg-tint'
                 }`}
               >
                 Photos & Videos
@@ -395,7 +395,7 @@ export default function Profile() {
                 className={`flex-1 py-3 px-6 font-bold text-sm rounded-xl transition-all ${
                   activeTab === 'about'
                     ? 'bg-orange-500 text-white shadow-md'
-                    : 'text-zinc-500 hover:text-[#0A192F] hover:bg-zinc-50'
+                    : 'text-body hover:text-ink hover:bg-tint'
                 }`}
               >
                 About
@@ -404,14 +404,14 @@ export default function Profile() {
 
             {/* Tab Content */}
             {activeTab === 'media' ? (
-              <section className="bg-white p-6 rounded-2xl border border-zinc-100 shadow-sm">
-                <h3 className="text-lg font-bold text-[#0A192F] mb-6">Photos & Videos</h3>
+              <section className="bg-white p-6 rounded-2xl border border-hairline shadow-sm">
+                <h3 className="text-lg font-bold text-ink mb-6">Photos & Videos</h3>
                 {userMedia.length > 0 ? (
                   <div className="grid grid-cols-3 gap-1">
                     {userMedia.map((media, idx) => (
                       <div
                         key={idx}
-                        className="relative aspect-square overflow-hidden rounded-xl group cursor-pointer border border-zinc-100 bg-zinc-50 shadow-sm"
+                        className="relative aspect-square overflow-hidden rounded-xl group cursor-pointer border border-hairline bg-tint shadow-sm"
                         onClick={() => setSelectedFullImage(media.url)}
                       >
                         <img
@@ -429,69 +429,69 @@ export default function Profile() {
                     ))}
                   </div>
                 ) : (
-                  <div className="text-center py-16 bg-zinc-50 rounded-2xl border border-dashed border-zinc-200">
+                  <div className="text-center py-16 bg-tint rounded-2xl border border-dashed border-hairline">
                     <Camera size={36} className="mx-auto text-zinc-300 mb-2" />
-                    <p className="text-zinc-400 text-sm font-medium">No photos or videos yet.</p>
+                    <p className="text-muted text-sm font-medium">No photos or videos yet.</p>
                   </div>
                 )}
               </section>
             ) : (
               /* About Tab Content */
-              <section className="bg-white p-6 rounded-2xl border border-zinc-100 shadow-sm space-y-6">
-                <h3 className="text-lg font-bold text-[#0A192F] mb-2">About Me & Personal Details</h3>
+              <section className="bg-white p-6 rounded-2xl border border-hairline shadow-sm space-y-6">
+                <h3 className="text-lg font-bold text-ink mb-2">About Me & Personal Details</h3>
                 
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-xs font-bold text-zinc-400 uppercase tracking-widest mb-1.5 ml-1">Full Name</label>
+                    <label className="block text-xs font-bold text-muted uppercase tracking-widest mb-1.5 ml-1">Full Name</label>
                     <input
                       type="text"
                       value={fullName}
                       onChange={(e) => setFullName(e.target.value)}
-                      className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all placeholder:text-zinc-400 text-sm font-medium"
+                      className="w-full px-4 py-3 bg-tint border border-hairline rounded-2xl focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all placeholder:text-muted text-sm font-medium"
                       placeholder="Full Name"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-bold text-zinc-400 uppercase tracking-widest mb-1.5 ml-1">Bio</label>
+                    <label className="block text-xs font-bold text-muted uppercase tracking-widest mb-1.5 ml-1">Bio</label>
                     <textarea
                       value={bio}
                       onChange={(e) => setBio(e.target.value)}
                       rows={3}
-                      className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all placeholder:text-zinc-400 text-sm font-medium resize-none custom-scrollbar"
+                      className="w-full px-4 py-3 bg-tint border border-hairline rounded-2xl focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all placeholder:text-muted text-sm font-medium resize-none custom-scrollbar"
                       placeholder="Tell the world about your travels..."
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-bold text-zinc-400 uppercase tracking-widest mb-1.5 ml-1">Location</label>
+                    <label className="block text-xs font-bold text-muted uppercase tracking-widest mb-1.5 ml-1">Location</label>
                     <input
                       type="text"
                       value={location}
                       onChange={(e) => setLocation(e.target.value)}
-                      className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all placeholder:text-zinc-400 text-sm font-medium"
+                      className="w-full px-4 py-3 bg-tint border border-hairline rounded-2xl focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all placeholder:text-muted text-sm font-medium"
                       placeholder="e.g. San Francisco, CA"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-bold text-zinc-400 uppercase tracking-widest mb-1.5 ml-1">Education</label>
+                    <label className="block text-xs font-bold text-muted uppercase tracking-widest mb-1.5 ml-1">Education</label>
                     <input
                       type="text"
                       value={education}
                       onChange={(e) => setEducation(e.target.value)}
-                      className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all placeholder:text-zinc-400 text-sm font-medium"
+                      className="w-full px-4 py-3 bg-tint border border-hairline rounded-2xl focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all placeholder:text-muted text-sm font-medium"
                       placeholder="e.g. Stanford University"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-bold text-zinc-400 uppercase tracking-widest mb-1.5 ml-1">Date of Birth</label>
+                    <label className="block text-xs font-bold text-muted uppercase tracking-widest mb-1.5 ml-1">Date of Birth</label>
                     <input
                       type="date"
                       value={dob}
                       onChange={(e) => setDob(e.target.value)}
-                      className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all text-sm text-zinc-700 font-medium"
+                      className="w-full px-4 py-3 bg-tint border border-hairline rounded-2xl focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all text-sm text-zinc-700 font-medium"
                     />
                   </div>
                 </div>
@@ -507,7 +507,7 @@ export default function Profile() {
                 <button
                   onClick={handleSaveAbout}
                   disabled={isSavingProfile}
-                  className="w-full bg-[#0A192F] text-white font-bold py-3.5 rounded-2xl shadow-xl hover:bg-black transition-all flex justify-center items-center gap-2 disabled:opacity-50"
+                  className="w-full bg-ink text-white font-bold py-3.5 rounded-2xl shadow-xl hover:bg-black transition-all flex justify-center items-center gap-2 disabled:opacity-50"
                 >
                   {isSavingProfile ? <Loader2 className="animate-spin" size={18} /> : 'Save About Info'}
                 </button>
@@ -519,26 +519,26 @@ export default function Profile() {
           <div className="space-y-8">
             {/* Pending Follow Requests Section */}
             {pendingRequests.length > 0 && (
-              <section className="bg-white p-6 rounded-2xl border border-zinc-100 shadow-sm space-y-4">
-                <h3 className="text-lg font-bold text-[#0A192F] flex items-center gap-2">
+              <section className="bg-white p-6 rounded-2xl border border-hairline shadow-sm space-y-4">
+                <h3 className="text-lg font-bold text-ink flex items-center gap-2">
                   <Shield size={20} className="text-orange-500" />
                   Follow Requests
                   <span className="text-xs font-bold text-white bg-orange-500 px-2 py-0.5 rounded-full">{pendingRequests.length}</span>
                 </h3>
                 <div className="space-y-3">
                   {pendingRequests.map((req: any) => (
-                    <div key={req.id} className="flex items-center justify-between p-4 rounded-xl bg-zinc-50 border border-zinc-100">
+                    <div key={req.id} className="flex items-center justify-between p-4 rounded-xl bg-tint border border-hairline">
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-full overflow-hidden bg-zinc-200">
                           {req.requester?.avatar_url ? (
                             <img src={req.requester.avatar_url} alt="" className="w-full h-full object-cover" />
                           ) : (
-                            <UserIcon size={20} className="text-zinc-400 m-2" />
+                            <UserIcon size={20} className="text-muted m-2" />
                           )}
                         </div>
                         <div>
-                          <p className="font-bold text-[#0A192F] text-sm">{req.requester?.full_name || req.requester?.username || 'Unknown'}</p>
-                          <p className="text-xs text-zinc-400">@{req.requester?.username}</p>
+                          <p className="font-bold text-ink text-sm">{req.requester?.full_name || req.requester?.username || 'Unknown'}</p>
+                          <p className="text-xs text-muted">@{req.requester?.username}</p>
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
@@ -569,13 +569,13 @@ export default function Profile() {
             )}
 
             {/* Saved Items Section */}
-            <section className="bg-white p-6 rounded-2xl border border-zinc-100 shadow-sm space-y-6">
+            <section className="bg-white p-6 rounded-2xl border border-hairline shadow-sm space-y-6">
               <div className="flex items-center justify-between">
-                <h3 className="text-lg font-bold text-[#0A192F] flex items-center gap-2">
+                <h3 className="text-lg font-bold text-ink flex items-center gap-2">
                   <Bookmark size={20} className="text-orange-500" />
                   Saved for Later
                 </h3>
-                <span className="text-xs font-bold text-zinc-400 bg-zinc-50 px-2 py-1 rounded-lg">
+                <span className="text-xs font-bold text-muted bg-tint px-2 py-1 rounded-lg">
                   {savedItems.length} ITEMS
                 </span>
               </div>
@@ -587,17 +587,17 @@ export default function Profile() {
                       key={item.id}
                       initial={{ opacity: 0, x: -10 }}
                       animate={{ opacity: 1, x: 0 }}
-                      className="flex items-center justify-between p-4 rounded-xl bg-zinc-50 border border-zinc-100 group"
+                      className="flex items-center justify-between p-4 rounded-xl bg-tint border border-hairline group"
                     >
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-lg bg-white flex items-center justify-center text-orange-500 shadow-sm border border-zinc-100">
+                        <div className="w-10 h-10 rounded-lg bg-white flex items-center justify-center text-orange-500 shadow-sm border border-hairline">
                           {item.type === 'Stay' && <Bed size={20} />}
                           {item.type === 'Restaurant' && <Utensils size={20} />}
                           {item.type === 'Service' && <Info size={20} />}
                         </div>
                         <div>
                           <p className="text-[10px] font-bold text-orange-500 uppercase tracking-wider">{item.type}</p>
-                          <p className="font-bold text-[#0A192F] text-sm">{item.name}</p>
+                          <p className="font-bold text-ink text-sm">{item.name}</p>
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
@@ -605,11 +605,11 @@ export default function Profile() {
                           href={item.link}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="p-2 rounded-lg bg-white text-zinc-400 hover:text-orange-500 transition-colors shadow-sm border border-zinc-100"
+                          className="p-2 rounded-lg bg-white text-muted hover:text-orange-500 transition-colors shadow-sm border border-hairline"
                         >
                           <ExternalLink size={16} />
                         </a>
-                        <button className="p-2 rounded-lg bg-white text-zinc-400 hover:text-rose-500 transition-colors shadow-sm border border-zinc-100">
+                        <button className="p-2 rounded-lg bg-white text-muted hover:text-rose-500 transition-colors shadow-sm border border-hairline">
                           <Plus size={16} className="rotate-45" />
                         </button>
                       </div>
@@ -617,23 +617,23 @@ export default function Profile() {
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-8 bg-zinc-50 rounded-xl border border-dashed border-zinc-200">
+                <div className="text-center py-8 bg-tint rounded-xl border border-dashed border-hairline">
                   <Bookmark size={24} className="mx-auto text-zinc-300 mb-2" />
-                  <p className="text-zinc-400 text-sm">No saved items yet.</p>
+                  <p className="text-muted text-sm">No saved items yet.</p>
                 </div>
               )}
             </section>
 
             {/* Account Privacy */}
-            <section className="bg-white p-6 rounded-2xl border border-zinc-100 shadow-sm">
-              <h3 className="text-lg font-bold text-[#0A192F] mb-4">Account Privacy</h3>
-              <div className="p-4 rounded-xl border border-zinc-100 bg-zinc-50 flex items-center justify-between">
+            <section className="bg-white p-6 rounded-2xl border border-hairline shadow-sm">
+              <h3 className="text-lg font-bold text-ink mb-4">Account Privacy</h3>
+              <div className="p-4 rounded-xl border border-hairline bg-tint flex items-center justify-between">
                 <div>
-                  <h4 className="font-bold text-[#0A192F] text-sm flex items-center gap-2">
-                    {isPrivateAccount ? <Shield size={16} className="text-zinc-500" /> : <ShieldCheck size={16} className="text-orange-500" />}
+                  <h4 className="font-bold text-ink text-sm flex items-center gap-2">
+                    {isPrivateAccount ? <Shield size={16} className="text-body" /> : <ShieldCheck size={16} className="text-orange-500" />}
                     {isPrivateAccount ? 'Private Account' : 'Public Account (Standard)'}
                   </h4>
-                  <p className="text-xs text-zinc-500 mt-1 max-w-[200px]">
+                  <p className="text-xs text-body mt-1 max-w-[200px]">
                     {isPrivateAccount
                       ? 'Only approved followers can view your trips.'
                       : 'Anyone can view your trips and follow you instantly.'}
@@ -652,8 +652,8 @@ export default function Profile() {
             </section>
 
             {/* Social Links */}
-            <section className="bg-white p-6 rounded-2xl border border-zinc-100 shadow-sm">
-              <h3 className="text-lg font-bold text-[#0A192F] mb-4">Social Links</h3>
+            <section className="bg-white p-6 rounded-2xl border border-hairline shadow-sm">
+              <h3 className="text-lg font-bold text-ink mb-4">Social Links</h3>
               {hasSocialLinks ? (
                 <div className="space-y-3">
                   {socialLinks.instagram && (
@@ -661,11 +661,11 @@ export default function Profile() {
                       href={socialLinks.instagram}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center gap-3 w-full text-left px-4 py-2.5 rounded-xl bg-zinc-50 text-zinc-600 hover:bg-orange-500/10 hover:text-orange-500 transition-colors text-sm font-medium border border-zinc-100"
+                      className="flex items-center gap-3 w-full text-left px-4 py-2.5 rounded-xl bg-tint text-zinc-600 hover:bg-orange-500/10 hover:text-orange-500 transition-colors text-sm font-medium border border-hairline"
                     >
                       <Instagram size={16} />
                       <span className="truncate">Instagram</span>
-                      <ExternalLink size={12} className="ml-auto text-zinc-400" />
+                      <ExternalLink size={12} className="ml-auto text-muted" />
                     </a>
                   )}
                   {socialLinks.twitter && (
@@ -673,11 +673,11 @@ export default function Profile() {
                       href={socialLinks.twitter}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center gap-3 w-full text-left px-4 py-2.5 rounded-xl bg-zinc-50 text-zinc-600 hover:bg-orange-500/10 hover:text-orange-500 transition-colors text-sm font-medium border border-zinc-100"
+                      className="flex items-center gap-3 w-full text-left px-4 py-2.5 rounded-xl bg-tint text-zinc-600 hover:bg-orange-500/10 hover:text-orange-500 transition-colors text-sm font-medium border border-hairline"
                     >
                       <Twitter size={16} />
                       <span className="truncate">Twitter / X</span>
-                      <ExternalLink size={12} className="ml-auto text-zinc-400" />
+                      <ExternalLink size={12} className="ml-auto text-muted" />
                     </a>
                   )}
                   {socialLinks.website && (
@@ -685,16 +685,16 @@ export default function Profile() {
                       href={socialLinks.website}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center gap-3 w-full text-left px-4 py-2.5 rounded-xl bg-zinc-50 text-zinc-600 hover:bg-orange-500/10 hover:text-orange-500 transition-colors text-sm font-medium border border-zinc-100"
+                      className="flex items-center gap-3 w-full text-left px-4 py-2.5 rounded-xl bg-tint text-zinc-600 hover:bg-orange-500/10 hover:text-orange-500 transition-colors text-sm font-medium border border-hairline"
                     >
                       <Globe size={16} />
                       <span className="truncate">Website</span>
-                      <ExternalLink size={12} className="ml-auto text-zinc-400" />
+                      <ExternalLink size={12} className="ml-auto text-muted" />
                     </a>
                   )}
                 </div>
               ) : (
-                <p className="text-sm text-zinc-400 text-center py-4">No social links added yet.</p>
+                <p className="text-sm text-muted text-center py-4">No social links added yet.</p>
               )}
             </section>
           </div>

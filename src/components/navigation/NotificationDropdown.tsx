@@ -84,7 +84,7 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ isOp
     switch (type) {
       case 'follow': return <UserPlus size={16} className="text-orange-500" />;
       case 'like': return <Heart size={16} className="text-red-500" />;
-      case 'trip_invite': return <Calendar size={16} className="text-blue-500" />;
+      case 'trip_invite': return <Calendar size={16} className="text-transport" />;
       default: return null;
     }
   };
@@ -108,10 +108,10 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ isOp
         animate={{ opacity: 1, y: 0, scale: 1 }}
         exit={{ opacity: 0, y: 10, scale: 0.95 }}
         transition={{ duration: 0.2 }}
-        className="absolute top-full right-0 mt-4 w-80 md:w-96 bg-white rounded-3xl shadow-2xl border border-zinc-100 overflow-hidden z-[100]"
+        className="absolute top-full right-0 mt-4 w-80 md:w-96 bg-white rounded-3xl shadow-2xl border border-hairline overflow-hidden z-[100]"
       >
-        <div className="p-4 border-b border-zinc-100 bg-zinc-50 flex justify-between items-center shrink-0">
-          <h3 className="font-display font-bold text-[#0A192F]">Notifications</h3>
+        <div className="p-4 border-b border-hairline bg-tint flex justify-between items-center shrink-0">
+          <h3 className="font-display font-bold text-ink">Notifications</h3>
           {notifications.some(n => !n.is_read) && (
             <button 
               className="text-xs text-orange-500 font-bold hover:text-orange-600"
@@ -128,11 +128,11 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ isOp
 
         <div className="max-h-96 overflow-y-auto custom-scrollbar">
           {loading ? (
-            <div className="p-8 text-center text-zinc-400 text-sm font-bold uppercase tracking-widest">
+            <div className="p-8 text-center text-muted text-sm font-bold uppercase tracking-widest">
               Loading...
             </div>
           ) : notifications.length === 0 ? (
-            <div className="p-8 text-center text-zinc-400 text-sm font-bold uppercase tracking-widest">
+            <div className="p-8 text-center text-muted text-sm font-bold uppercase tracking-widest">
               No new notifications
             </div>
           ) : (
@@ -141,13 +141,13 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ isOp
                 <div 
                   key={notif.id}
                   onClick={() => handleNotificationClick(notif)}
-                  className={`flex items-start gap-4 p-4 cursor-pointer hover:bg-zinc-50 transition-colors ${!notif.is_read ? 'bg-orange-50/30' : ''}`}
+                  className={`flex items-start gap-4 p-4 cursor-pointer hover:bg-tint transition-colors ${!notif.is_read ? 'bg-orange-50/30' : ''}`}
                 >
-                  <div className="w-12 h-12 rounded-2xl bg-zinc-100 overflow-hidden shrink-0 border border-zinc-200 relative">
+                  <div className="w-12 h-12 rounded-2xl bg-cream overflow-hidden shrink-0 border border-hairline relative">
                     {notif.actor?.avatar_url ? (
                       <img src={notif.actor.avatar_url} alt={notif.actor.full_name} className="w-full h-full object-cover" />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center text-zinc-400 font-bold">
+                      <div className="w-full h-full flex items-center justify-center text-muted font-bold">
                         {notif.actor?.full_name?.[0] || '?'}
                       </div>
                     )}
@@ -157,11 +157,11 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ isOp
                   </div>
                   
                   <div className="flex-1 min-w-0 pt-1">
-                    <p className="text-sm text-[#0A192F] leading-tight">
+                    <p className="text-sm text-ink leading-tight">
                       <span className="font-bold">{notif.actor?.full_name || 'Someone'}</span>{' '}
-                      <span className="text-zinc-500">{getNotificationText(notif.type)}</span>
+                      <span className="text-body">{getNotificationText(notif.type)}</span>
                     </p>
-                    <p className="text-xs text-zinc-400 mt-1 font-medium">
+                    <p className="text-xs text-muted mt-1 font-medium">
                       {new Date(notif.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
                     </p>
                   </div>

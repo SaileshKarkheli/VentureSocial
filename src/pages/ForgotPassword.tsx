@@ -29,15 +29,15 @@ export default function ForgotPassword() {
   };
 
   return (
-    <div className="min-h-screen bg-zinc-50 flex items-center justify-center p-6 relative">
+    <div className="min-h-screen bg-tint flex items-center justify-center p-6 relative">
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-blue-500/5 rounded-full blur-[100px]" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-orange-500/5 rounded-full blur-[100px]" />
       </div>
 
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-md bg-white rounded-3xl shadow-xl p-8 border border-zinc-100 z-10"
+        className="w-full max-w-md bg-white rounded-3xl shadow-xl p-8 border border-hairline z-10"
       >
         <div className="flex justify-center mb-6 text-orange-500">
           <div className="p-4 bg-orange-500/10 rounded-full">
@@ -45,10 +45,10 @@ export default function ForgotPassword() {
           </div>
         </div>
         
-        <h2 className="text-2xl font-display font-bold text-center text-[#0A192F] mb-2">
+        <h2 className="text-2xl font-display font-bold text-center text-ink mb-2">
           Find Your Account
         </h2>
-        <p className="text-zinc-500 text-center mb-8 text-sm">
+        <p className="text-body text-center mb-8 text-sm">
           Please enter your email address to search for your account.
         </p>
 
@@ -65,11 +65,11 @@ export default function ForgotPassword() {
             className="flex flex-col items-center justify-center py-6 text-center"
           >
             <CheckCircle2 size={48} className="text-green-500 mb-4" />
-            <h3 className="text-xl font-bold text-[#0A192F] mb-2">Check your email</h3>
-            <p className="text-zinc-500 text-sm mb-6">We've sent password reset instructions to your email address.</p>
+            <h3 className="text-xl font-bold text-ink mb-2">Check your email</h3>
+            <p className="text-body text-sm mb-6">We've sent password reset instructions to your email address.</p>
             <Link 
               to="/login"
-              className="py-3 px-8 bg-[#0A192F] text-white font-bold rounded-xl shadow-lg hover:bg-black transition-all w-full text-center"
+              className="py-3 px-8 bg-ink text-white font-bold rounded-xl shadow-lg hover:bg-black transition-all w-full text-center"
             >
               Return to Login
             </Link>
@@ -82,7 +82,7 @@ export default function ForgotPassword() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#3B82F6] focus:border-transparent transition-all placeholder:text-zinc-400"
+                className="w-full px-4 py-3 bg-tint border border-hairline rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all placeholder:text-muted"
                 placeholder="Email address"
                 disabled={loading}
               />
@@ -91,14 +91,14 @@ export default function ForgotPassword() {
             <div className="pt-4 flex gap-3">
               <Link
                 to="/login"
-                className="flex-1 py-3 px-4 bg-zinc-100 text-zinc-700 font-bold rounded-xl hover:bg-zinc-200 transition-all text-center"
+                className="flex-1 py-3 px-4 bg-cream text-zinc-700 font-bold rounded-xl hover:bg-zinc-200 transition-all text-center"
               >
                 Cancel
               </Link>
               <button
                 type="submit"
                 disabled={loading || !email}
-                className="flex-1 py-3 px-4 bg-[#3B82F6] text-white font-bold rounded-xl shadow-lg shadow-blue-500/20 hover:bg-blue-600 transition-all disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="flex-1 py-3 px-4 bg-orange-500 text-white font-bold rounded-xl shadow-lg shadow-orange-500/20 hover:bg-orange-600 transition-all disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 {loading ? (
                   <Loader2 className="w-5 h-5 animate-spin" />

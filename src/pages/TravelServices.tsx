@@ -48,12 +48,12 @@ export default function TravelServices() {
   }, [travelServices, selectedCategories, searchQuery]);
 
   return (
-    <div className="flex gap-8 pb-20 text-zinc-900">
+    <div className="flex gap-8 pb-20 text-ink">
       {/* Sticky Sidebar Filter */}
       <aside className="w-64 flex-shrink-0">
         <div className="sticky top-24 space-y-8">
           <div>
-            <h2 className="text-2xl font-display font-bold text-[#0A192F] mb-6">Activities</h2>
+            <h2 className="text-2xl font-display font-bold text-ink mb-6">Activities</h2>
             <div className="space-y-2">
               {categories.map((category) => {
                 const isActive = selectedCategories.includes(category);
@@ -64,7 +64,7 @@ export default function TravelServices() {
                     className={`w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-200 group border border-transparent ${
                       isActive 
                         ? 'bg-orange-500 text-white font-bold shadow-lg shadow-orange-500/20' 
-                        : 'text-zinc-500 hover:bg-white hover:text-[#0A192F] hover:shadow-sm'
+                        : 'text-body hover:bg-white hover:text-ink hover:shadow-sm'
                     }`}
                   >
                     <span className="text-sm">{category}</span>
@@ -75,12 +75,12 @@ export default function TravelServices() {
             </div>
           </div>
 
-          <div className="p-6 bg-white border border-zinc-200 rounded-3xl text-[#0A192F] space-y-4 shadow-sm">
+          <div className="p-6 bg-white border border-hairline rounded-3xl text-ink space-y-4 shadow-sm">
             <h4 className="font-bold text-orange-500">Need a Guide?</h4>
-            <p className="text-xs text-zinc-500 leading-relaxed">
+            <p className="text-xs text-body leading-relaxed">
               Connect with local experts for a personalized travel experience.
             </p>
-            <button className="w-full py-2 bg-zinc-50 hover:bg-zinc-100 border border-zinc-200 rounded-xl text-xs font-bold transition-colors">
+            <button className="w-full py-2 bg-tint hover:bg-cream border border-hairline rounded-xl text-xs font-bold transition-colors">
               Browse Guides
             </button>
           </div>
@@ -91,8 +91,8 @@ export default function TravelServices() {
       <main className="flex-1 space-y-8">
         <header className="flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div>
-            <h1 className="text-4xl font-display font-bold text-[#0A192F]">Travel Guide</h1>
-            <p className="text-zinc-500">Discover and book curated travel experiences.</p>
+            <h1 className="text-4xl font-display font-bold text-ink">Travel Guide</h1>
+            <p className="text-body">Discover and book curated travel experiences.</p>
           </div>
         </header>
 
@@ -105,7 +105,7 @@ export default function TravelServices() {
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.9 }}
-                className="group bg-white rounded-[2rem] overflow-hidden border border-zinc-100 shadow-sm hover:shadow-xl transition-all duration-500 flex flex-col"
+                className="group bg-white rounded-[2rem] overflow-hidden border border-hairline shadow-sm hover:shadow-xl transition-all duration-500 flex flex-col"
               >
                 <div className="relative h-56 overflow-hidden">
                   <SmartImage
@@ -114,7 +114,7 @@ export default function TravelServices() {
                     locationName={service.location}
                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                   />
-                  <div className="absolute top-4 left-4 px-3 py-1 rounded-full bg-white/80 backdrop-blur-sm text-[10px] font-bold text-[#0A192F] uppercase tracking-widest shadow-sm border border-zinc-100">
+                  <div className="absolute top-4 left-4 px-3 py-1 rounded-full bg-white/80 backdrop-blur-sm text-[10px] font-bold text-ink uppercase tracking-widest shadow-sm border border-hairline">
                     {service.category}
                   </div>
                   <div className="absolute top-4 right-4 flex items-center gap-1 px-2 py-1 rounded-lg bg-orange-500/90 backdrop-blur-sm text-white text-xs font-bold">
@@ -125,19 +125,19 @@ export default function TravelServices() {
 
                 <div className="p-6 flex-1 flex flex-col justify-between space-y-4">
                   <div>
-                    <div className="flex items-center gap-1 text-zinc-400 text-[10px] font-bold uppercase tracking-wider mb-1">
+                    <div className="flex items-center gap-1 text-muted text-[10px] font-bold uppercase tracking-wider mb-1">
                       <MapPin size={10} />
                       {service.location}
                     </div>
-                    <h3 className="text-xl font-display font-bold text-[#0A192F] group-hover:text-orange-500 transition-colors">
+                    <h3 className="text-xl font-display font-bold text-ink group-hover:text-orange-500 transition-colors">
                       {service.name}
                     </h3>
                   </div>
 
                   <div className="flex items-center justify-between pt-4 border-t border-zinc-50">
                     <div>
-                      <span className="text-xs text-zinc-400 block font-bold uppercase tracking-tighter">Starting from</span>
-                      <span className="text-2xl font-display font-bold text-[#0A192F]">${service.price}</span>
+                      <span className="text-xs text-muted block font-bold uppercase tracking-tighter">Starting from</span>
+                      <span className="text-2xl font-display font-bold text-ink">${service.price}</span>
                     </div>
                     <button
                       onClick={() => saveItem({ ...service, type: 'Service' })}
@@ -154,10 +154,10 @@ export default function TravelServices() {
         </div>
 
         {filteredServices.length === 0 && (
-          <div className="text-center py-20 bg-white rounded-[3rem] border-2 border-dashed border-zinc-100">
+          <div className="text-center py-20 bg-white rounded-[3rem] border-2 border-dashed border-hairline">
             <Filter size={48} className="mx-auto text-zinc-200 mb-4" />
-            <h3 className="text-xl font-bold text-[#0A192F]">No services found</h3>
-            <p className="text-zinc-500">Try adjusting your filters or search query.</p>
+            <h3 className="text-xl font-bold text-ink">No services found</h3>
+            <p className="text-body">Try adjusting your filters or search query.</p>
             <button 
               onClick={() => {
                 setSelectedCategories(['All']);

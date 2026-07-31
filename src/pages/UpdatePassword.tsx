@@ -55,11 +55,11 @@ export default function UpdatePassword() {
   };
 
   return (
-    <div className="min-h-screen bg-zinc-50 flex items-center justify-center p-6">
+    <div className="min-h-screen bg-tint flex items-center justify-center p-6">
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-md bg-white rounded-[2rem] shadow-xl p-8 border border-zinc-100"
+        className="w-full max-w-md bg-white rounded-[2rem] shadow-xl p-8 border border-hairline"
       >
         <div className="flex justify-center mb-6 text-orange-500">
           <div className="p-4 bg-orange-500/10 rounded-full">
@@ -67,10 +67,10 @@ export default function UpdatePassword() {
           </div>
         </div>
         
-        <h2 className="text-2xl font-display font-bold text-center text-[#0A192F] mb-2">
+        <h2 className="text-2xl font-display font-bold text-center text-ink mb-2">
           Secure Your Account
         </h2>
-        <p className="text-zinc-500 text-center mb-8 text-sm">
+        <p className="text-body text-center mb-8 text-sm">
           Please enter your new password below.
         </p>
 
@@ -87,8 +87,8 @@ export default function UpdatePassword() {
             className="flex flex-col items-center justify-center py-6 text-center"
           >
             <CheckCircle2 size={48} className="text-green-500 mb-4" />
-            <h3 className="text-xl font-bold text-[#0A192F] mb-2">Password Updated!</h3>
-            <p className="text-zinc-500 text-sm">Redirecting you to the home feed...</p>
+            <h3 className="text-xl font-bold text-ink mb-2">Password Updated!</h3>
+            <p className="text-body text-sm">Redirecting you to the home feed...</p>
           </motion.div>
         ) : (
           <form onSubmit={handleUpdate} className="space-y-4">
@@ -103,14 +103,14 @@ export default function UpdatePassword() {
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   minLength={6}
-                  className="w-full px-4 py-3 pr-12 bg-zinc-50 border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#3B82F6] focus:border-transparent transition-all placeholder:text-zinc-400"
+                  className="w-full px-4 py-3 pr-12 bg-tint border border-hairline rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all placeholder:text-muted"
                   placeholder="••••••••"
                   disabled={loading}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword((v) => !v)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-zinc-600 transition-colors"
                   tabIndex={-1}
                 >
                   {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -129,14 +129,14 @@ export default function UpdatePassword() {
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   required
                   minLength={6}
-                  className="w-full px-4 py-3 pr-12 bg-zinc-50 border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#3B82F6] focus:border-transparent transition-all placeholder:text-zinc-400"
+                  className="w-full px-4 py-3 pr-12 bg-tint border border-hairline rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all placeholder:text-muted"
                   placeholder="••••••••"
                   disabled={loading}
                 />
                 <button
                   type="button"
                   onClick={() => setShowConfirmPassword((v) => !v)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-zinc-600 transition-colors"
                   tabIndex={-1}
                 >
                   {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -147,7 +147,7 @@ export default function UpdatePassword() {
             <button
               type="submit"
               disabled={loading || !password || !confirmPassword}
-              className="w-full mt-6 py-3 px-4 bg-[#0A192F] text-white font-bold rounded-xl shadow-lg shadow-blue-500/20 hover:bg-black transition-all disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="w-full mt-6 py-3 px-4 bg-ink text-white font-bold rounded-xl shadow-lg shadow-orange-500/20 hover:bg-black transition-all disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {loading ? (
                 <>

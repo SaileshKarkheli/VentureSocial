@@ -169,10 +169,10 @@ export default function Settings() {
   };
 
   return (
-    <div className="max-w-3xl mx-auto space-y-12 pb-20 px-6 text-zinc-900 mt-6">
+    <div className="max-w-3xl mx-auto space-y-12 pb-20 px-6 text-ink mt-6">
       <header className="space-y-2">
-        <h2 className="text-4xl font-display font-bold text-[#0A192F]">Settings</h2>
-        <p className="text-zinc-500">Manage your profile metadata, performance parameters, and storage cache.</p>
+        <h2 className="text-4xl font-display font-bold text-ink">Settings</h2>
+        <p className="text-body">Manage your profile metadata, performance parameters, and storage cache.</p>
       </header>
 
       <AnimatePresence>
@@ -201,68 +201,68 @@ export default function Settings() {
       </AnimatePresence>
 
       {/* Account Info Form Section */}
-      <section className="bg-white p-8 rounded-3xl border border-zinc-150 shadow-sm space-y-6">
-        <h3 className="text-xl font-bold text-[#0A192F] border-b border-zinc-100 pb-4">
+      <section className="bg-white p-8 rounded-3xl border border-hairline shadow-sm space-y-6">
+        <h3 className="text-xl font-bold text-ink border-b border-hairline pb-4">
           Profile Information
         </h3>
         
         <form onSubmit={handleSave} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
-              <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Full Name</label>
+              <label className="text-xs font-bold text-body uppercase tracking-wider">Full Name</label>
               <input
                 type="text"
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
                 placeholder="e.g. Alex Explorer"
-                className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#3B82F6] focus:border-transparent transition-all placeholder:text-zinc-400 font-medium"
+                className="w-full px-4 py-3 bg-tint border border-hairline rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all placeholder:text-muted font-medium"
               />
             </div>
             
             <div className="space-y-2">
-              <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Username</label>
+              <label className="text-xs font-bold text-body uppercase tracking-wider">Username</label>
               <input
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 placeholder="e.g. alex_explorer"
-                className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#3B82F6] focus:border-transparent transition-all placeholder:text-zinc-400 font-medium font-mono"
+                className="w-full px-4 py-3 bg-tint border border-hairline rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all placeholder:text-muted font-medium font-mono"
               />
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
-              <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Location</label>
+              <label className="text-xs font-bold text-body uppercase tracking-wider">Location</label>
               <input
                 type="text"
                 value={location}
                 onChange={(e) => setLocation(e.target.value)}
                 placeholder="e.g. New York, USA"
-                className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#3B82F6] focus:border-transparent transition-all placeholder:text-zinc-400 font-medium"
+                className="w-full px-4 py-3 bg-tint border border-hairline rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all placeholder:text-muted font-medium"
               />
             </div>
             
             <div className="space-y-2">
-              <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Education</label>
+              <label className="text-xs font-bold text-body uppercase tracking-wider">Education</label>
               <input
                 type="text"
                 value={education}
                 onChange={(e) => setEducation(e.target.value)}
                 placeholder="e.g. Stanford University"
-                className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#3B82F6] focus:border-transparent transition-all placeholder:text-zinc-400 font-medium"
+                className="w-full px-4 py-3 bg-tint border border-hairline rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all placeholder:text-muted font-medium"
               />
             </div>
           </div>
 
           <div className="space-y-2">
-            <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Biography</label>
+            <label className="text-xs font-bold text-body uppercase tracking-wider">Biography</label>
             <textarea
               rows={4}
               value={bio}
               onChange={(e) => setBio(e.target.value)}
               placeholder="Tell us about your travels..."
-              className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#3B82F6] focus:border-transparent transition-all placeholder:text-zinc-400 font-medium resize-none"
+              className="w-full px-4 py-3 bg-tint border border-hairline rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all placeholder:text-muted font-medium resize-none"
             />
           </div>
 
@@ -270,7 +270,7 @@ export default function Settings() {
             <button
               type="submit"
               disabled={isSaving}
-              className="bg-[#0A192F] text-white px-8 py-3.5 rounded-xl font-bold hover:bg-black transition-colors flex items-center justify-center gap-2 shadow-lg disabled:opacity-50"
+              className="bg-ink text-white px-8 py-3.5 rounded-xl font-bold hover:bg-black transition-colors flex items-center justify-center gap-2 shadow-lg disabled:opacity-50"
             >
               {isSaving ? (
                 <>
@@ -289,27 +289,27 @@ export default function Settings() {
       </section>
 
       {/* Account Security Section */}
-      <section className="bg-white p-8 rounded-3xl border border-zinc-150 shadow-sm space-y-8">
-        <h3 className="text-xl font-bold text-[#0A192F] border-b border-zinc-100 pb-4">
+      <section className="bg-white p-8 rounded-3xl border border-hairline shadow-sm space-y-8">
+        <h3 className="text-xl font-bold text-ink border-b border-hairline pb-4">
           Account Security
         </h3>
 
         {/* Email Change */}
         <div className="space-y-3">
-          <h4 className="font-bold text-[#0A192F] flex items-center gap-2"><Mail size={18} className="text-orange-500" /> Email Address</h4>
-          <p className="text-sm text-zinc-500">Current: {user?.email || 'Unknown'}</p>
+          <h4 className="font-bold text-ink flex items-center gap-2"><Mail size={18} className="text-orange-500" /> Email Address</h4>
+          <p className="text-sm text-body">Current: {user?.email || 'Unknown'}</p>
           <form onSubmit={handleUpdateEmail} className="flex flex-col sm:flex-row gap-3">
             <input
               type="email"
               value={newEmail}
               onChange={(e) => setNewEmail(e.target.value)}
               placeholder="New email address"
-              className="flex-1 px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#3B82F6] focus:border-transparent transition-all placeholder:text-zinc-400 font-medium"
+              className="flex-1 px-4 py-3 bg-tint border border-hairline rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all placeholder:text-muted font-medium"
             />
             <button
               type="submit"
               disabled={isUpdatingEmail || !newEmail}
-              className="bg-[#0A192F] text-white px-6 py-3 rounded-xl font-bold hover:bg-black transition-colors disabled:opacity-50 flex items-center justify-center gap-2 shrink-0"
+              className="bg-ink text-white px-6 py-3 rounded-xl font-bold hover:bg-black transition-colors disabled:opacity-50 flex items-center justify-center gap-2 shrink-0"
             >
               {isUpdatingEmail ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Update Email'}
             </button>
@@ -320,13 +320,13 @@ export default function Settings() {
         </div>
 
         {/* Password Change */}
-        <div className="space-y-3 border-t border-zinc-100 pt-6">
-          <h4 className="font-bold text-[#0A192F] flex items-center gap-2"><Lock size={18} className="text-orange-500" /> Password</h4>
-          <p className="text-sm text-zinc-500">We'll email you a secure link to set a new password.</p>
+        <div className="space-y-3 border-t border-hairline pt-6">
+          <h4 className="font-bold text-ink flex items-center gap-2"><Lock size={18} className="text-orange-500" /> Password</h4>
+          <p className="text-sm text-body">We'll email you a secure link to set a new password.</p>
           <button
             onClick={handleRequestPasswordChange}
             disabled={isRequestingPasswordReset}
-            className="bg-zinc-100 text-zinc-700 px-6 py-3 rounded-xl font-bold hover:bg-zinc-200 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+            className="bg-cream text-zinc-700 px-6 py-3 rounded-xl font-bold hover:bg-zinc-200 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
           >
             {isRequestingPasswordReset ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Change Password'}
           </button>
@@ -336,20 +336,20 @@ export default function Settings() {
         </div>
 
         {/* Phone Number */}
-        <div className="space-y-3 border-t border-zinc-100 pt-6">
-          <h4 className="font-bold text-[#0A192F] flex items-center gap-2"><Phone size={18} className="text-orange-500" /> Phone Number</h4>
+        <div className="space-y-3 border-t border-hairline pt-6">
+          <h4 className="font-bold text-ink flex items-center gap-2"><Phone size={18} className="text-orange-500" /> Phone Number</h4>
           <form onSubmit={handleSavePhone} className="flex flex-col sm:flex-row gap-3">
             <input
               type="tel"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               placeholder="e.g. +1 555 123 4567"
-              className="flex-1 px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#3B82F6] focus:border-transparent transition-all placeholder:text-zinc-400 font-medium"
+              className="flex-1 px-4 py-3 bg-tint border border-hairline rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all placeholder:text-muted font-medium"
             />
             <button
               type="submit"
               disabled={isPhoneBusy}
-              className="bg-[#0A192F] text-white px-6 py-3 rounded-xl font-bold hover:bg-black transition-colors disabled:opacity-50 flex items-center justify-center gap-2 shrink-0"
+              className="bg-ink text-white px-6 py-3 rounded-xl font-bold hover:bg-black transition-colors disabled:opacity-50 flex items-center justify-center gap-2 shrink-0"
             >
               {isPhoneBusy ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Save'}
             </button>
@@ -360,18 +360,18 @@ export default function Settings() {
         </div>
 
         {/* Connected Accounts */}
-        <div className="space-y-3 border-t border-zinc-100 pt-6">
-          <h4 className="font-bold text-[#0A192F] flex items-center gap-2"><Link2 size={18} className="text-orange-500" /> Connected Accounts</h4>
+        <div className="space-y-3 border-t border-hairline pt-6">
+          <h4 className="font-bold text-ink flex items-center gap-2"><Link2 size={18} className="text-orange-500" /> Connected Accounts</h4>
           <div className="space-y-2">
             {['google', 'email'].map((provider) => {
               const connected = identities.some((i) => i.provider === provider);
               return (
-                <div key={provider} className="flex items-center justify-between p-4 rounded-xl bg-zinc-50 border border-zinc-150">
+                <div key={provider} className="flex items-center justify-between p-4 rounded-xl bg-tint border border-hairline">
                   <span className="font-medium text-zinc-700 text-sm">{providerLabels[provider] || provider}</span>
                   {connected ? (
                     <span className="text-emerald-600 text-xs font-bold flex items-center gap-1"><CheckCircle2 size={14} /> Connected</span>
                   ) : (
-                    <span className="text-zinc-400 text-xs font-bold">Not connected</span>
+                    <span className="text-muted text-xs font-bold">Not connected</span>
                   )}
                 </div>
               );
@@ -381,16 +381,16 @@ export default function Settings() {
       </section>
 
       {/* App Performance Settings Section */}
-      <section className="bg-white p-8 rounded-3xl border border-zinc-150 shadow-sm space-y-6">
-        <h3 className="text-xl font-bold text-[#0A192F] border-b border-zinc-100 pb-4">
+      <section className="bg-white p-8 rounded-3xl border border-hairline shadow-sm space-y-6">
+        <h3 className="text-xl font-bold text-ink border-b border-hairline pb-4">
           Preferences & Diagnostics
         </h3>
         
         <div className="space-y-6">
-          <div className="flex items-center justify-between p-6 bg-zinc-50 rounded-2xl border border-zinc-150">
+          <div className="flex items-center justify-between p-6 bg-tint rounded-2xl border border-hairline">
             <div className="space-y-1">
-              <h4 className="font-bold text-[#0A192F]">App Performance Optimization</h4>
-              <p className="text-sm text-zinc-500 max-w-lg">
+              <h4 className="font-bold text-ink">App Performance Optimization</h4>
+              <p className="text-sm text-body max-w-lg">
                 Accelerate rendering timelines, lazy-load heavy media components, and streamline background handshake operations.
               </p>
             </div>
@@ -402,10 +402,10 @@ export default function Settings() {
             </button>
           </div>
 
-          <div className="flex flex-col md:flex-row md:items-center justify-between p-6 bg-zinc-50 rounded-2xl border border-zinc-150 gap-4">
+          <div className="flex flex-col md:flex-row md:items-center justify-between p-6 bg-tint rounded-2xl border border-hairline gap-4">
             <div className="space-y-1">
-              <h4 className="font-bold text-[#0A192F]">Cache Cleansing Flush</h4>
-              <p className="text-sm text-zinc-500 max-w-lg">
+              <h4 className="font-bold text-ink">Cache Cleansing Flush</h4>
+              <p className="text-sm text-body max-w-lg">
                 Instantly clear local state values, local storage cache identifiers, and force a browser reload to synchronize with the server.
               </p>
             </div>

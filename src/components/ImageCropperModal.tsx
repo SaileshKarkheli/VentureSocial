@@ -100,7 +100,7 @@ export default function ImageCropperModal({ imageSrc, aspectRatio, onCropComplet
       >
         <div className="p-4 flex items-center justify-between border-b border-white/10 z-10 bg-zinc-900">
           <h2 className="text-white font-bold font-display">Crop & Resize Image</h2>
-          <button onClick={onClose} className="p-2 rounded-full text-zinc-400 hover:text-white hover:bg-white/10 transition-colors">
+          <button onClick={onClose} className="p-2 rounded-full text-muted hover:text-white hover:bg-white/10 transition-colors">
             <X size={20} />
           </button>
         </div>
@@ -122,7 +122,7 @@ export default function ImageCropperModal({ imageSrc, aspectRatio, onCropComplet
 
         <div className="p-6 bg-zinc-900 border-t border-white/10 space-y-6 z-10">
           <div className="space-y-2">
-            <div className="flex justify-between text-xs font-bold text-zinc-400 uppercase">
+            <div className="flex justify-between text-xs font-bold text-muted uppercase">
               <span>Zoom Out</span>
               <span>Zoom In</span>
             </div>

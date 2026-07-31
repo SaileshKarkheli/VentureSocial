@@ -59,7 +59,7 @@ export default function CollageGrid({ items, type }: CollageGridProps) {
               className="w-full h-auto object-cover transition-transform duration-700 group-hover:scale-110"
             />
           ) : (
-            <div className="relative aspect-[9/16] bg-zinc-100">
+            <div className="relative aspect-[9/16] bg-cream">
               <video
                 src={(item as any).url}
                 className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity"
@@ -68,7 +68,7 @@ export default function CollageGrid({ items, type }: CollageGridProps) {
                 onMouseOver={(e) => (e.target as HTMLVideoElement).play()}
                 onMouseOut={(e) => (e.target as HTMLVideoElement).pause()}
               />
-              <div className="absolute inset-0 flex items-center justify-center text-[#0A192F]/50 group-hover:text-[#0A192F] transition-colors">
+              <div className="absolute inset-0 flex items-center justify-center text-ink/50 group-hover:text-ink transition-colors">
                 <Play size={48} fill="currentColor" />
               </div>
             </div>
@@ -77,12 +77,12 @@ export default function CollageGrid({ items, type }: CollageGridProps) {
           {/* Hover Overlays */}
           <div className="absolute inset-0 bg-white/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-between p-4">
             <div className="flex justify-end">
-              <div className="flex items-center gap-1.5 text-[#0A192F] font-bold">
+              <div className="flex items-center gap-1.5 text-ink font-bold">
                 <Heart size={18} className="fill-rose-500 text-rose-500" />
                 <span>{item.likes}</span>
               </div>
             </div>
-            <div className="flex items-center gap-2 text-[#0A192F]">
+            <div className="flex items-center gap-2 text-ink">
               <div className="p-1.5 rounded-lg bg-orange-500/90 text-white">
                 <MapPin size={14} />
               </div>

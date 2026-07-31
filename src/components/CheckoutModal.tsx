@@ -134,18 +134,18 @@ export default function CheckoutModal({ isOpen, onClose }: CheckoutModalProps) {
         >
           <CheckCircle2 size={48} />
         </motion.div>
-        <h2 className="text-3xl font-display font-bold text-[#0A192F] mb-2">Booking Confirmed!</h2>
-        <p className="text-zinc-500 max-w-sm">Your itinerary, flights, and car rentals are successfully booked. You're ready to go!</p>
+        <h2 className="text-3xl font-display font-bold text-ink mb-2">Booking Confirmed!</h2>
+        <p className="text-body max-w-sm">Your itinerary, flights, and car rentals are successfully booked. You're ready to go!</p>
       </div>
     );
   } else if (cartItems.length === 0 && customTripSpots.length === 0) {
     content = (
       <div className="flex flex-col items-center justify-center p-12 text-center h-full">
-        <div className="w-24 h-24 bg-zinc-100 rounded-full flex items-center justify-center text-zinc-400 mb-6">
+        <div className="w-24 h-24 bg-cream rounded-full flex items-center justify-center text-muted mb-6">
           <ShoppingBag size={48} />
         </div>
-        <h2 className="text-2xl font-display font-bold text-[#0A192F] mb-2">Your Cart is Empty</h2>
-        <p className="text-zinc-500 max-w-sm mb-8">Browse the Discover feed to find your perfect itinerary.</p>
+        <h2 className="text-2xl font-display font-bold text-ink mb-2">Your Cart is Empty</h2>
+        <p className="text-body max-w-sm mb-8">Browse the Discover feed to find your perfect itinerary.</p>
         <button onClick={onClose} className="px-8 py-4 bg-orange-500 text-white font-bold rounded-2xl hover:bg-orange-600 transition-colors shadow-lg">
           Start Exploring
         </button>
@@ -204,7 +204,7 @@ export default function CheckoutModal({ isOpen, onClose }: CheckoutModalProps) {
           <div className="max-w-2xl mx-auto space-y-12 pb-24">
             
             {processedSpots.length > 0 && (
-              <div className="space-y-8 pb-8 border-b-2 border-zinc-100 border-dashed">
+              <div className="space-y-8 pb-8 border-b-2 border-hairline border-dashed">
                 <div className="bg-orange-500/10 border-2 border-orange-500 rounded-[2rem] p-6 flex flex-col items-start relative overflow-hidden group">
                   <div className="absolute top-0 right-0 p-8 text-orange-500 opacity-20 transform -translate-y-4 right-0 group-hover:scale-110 transition-transform"><CheckSquare size={120} /></div>
                   <h3 className="text-2xl font-display font-bold text-orange-500 mb-1 z-10">Remixed Journey</h3>
@@ -221,17 +221,17 @@ export default function CheckoutModal({ isOpen, onClose }: CheckoutModalProps) {
                   {/* Clever Human Planner Overstuffing Alert Container */}
                   {!isSplitDays && totalDuration > 9 && (
                     <div className="mt-6 w-full animate-in fade-in slide-in-from-bottom-2 duration-300">
-                      <div className="bg-white border-2 border-[#0A192F] p-4 flex flex-col md:flex-row items-center justify-between gap-4 z-10 shadow-lg relative" style={{ borderRadius: '0' }}>
+                      <div className="bg-white border-2 border-ink p-4 flex flex-col md:flex-row items-center justify-between gap-4 z-10 shadow-lg relative" style={{ borderRadius: '0' }}>
                         <div className="absolute top-0 left-0 w-1.5 h-full bg-orange-500"></div>
                         <div className="flex-1 px-4">
                           <h4 className="font-bold text-orange-600 uppercase tracking-widest text-xs flex items-center gap-1 mb-1">
                             <Clock size={12} className="text-orange-500" /> Clever Tip: Overstuffing Detected
                           </h4>
-                          <p className="text-[#0A192F] text-sm font-bold">This day is getting packed ({totalDuration} hrs estimated). Want to push the excess buffer to Day 2?</p>
+                          <p className="text-ink text-sm font-bold">This day is getting packed ({totalDuration} hrs estimated). Want to push the excess buffer to Day 2?</p>
                         </div>
                         <button 
                           onClick={() => setIsSplitDays(true)}
-                          className="bg-[#0A192F] text-white px-6 py-3 font-bold text-sm hover:bg-black transition-colors whitespace-nowrap shadow-md border border-transparent"
+                          className="bg-ink text-white px-6 py-3 font-bold text-sm hover:bg-black transition-colors whitespace-nowrap shadow-md border border-transparent"
                           style={{ borderRadius: '0' }}
                         >
                           Split into Core Days
@@ -242,7 +242,7 @@ export default function CheckoutModal({ isOpen, onClose }: CheckoutModalProps) {
                 </div>
 
                 {/* Google Maps Visual Routing Component */}
-                <div className="relative w-full h-[250px] rounded-[2rem] overflow-hidden border border-zinc-200 shadow-inner bg-zinc-100 flex items-center justify-center group">
+                <div className="relative w-full h-[250px] rounded-[2rem] overflow-hidden border border-hairline shadow-inner bg-cream flex items-center justify-center group">
                   <iframe 
                     title="Google Maps Route Placeholder"
                     width="100%" 
@@ -255,7 +255,7 @@ export default function CheckoutModal({ isOpen, onClose }: CheckoutModalProps) {
                     className="absolute inset-0 opacity-80 mix-blend-multiply filter grayscale contrast-125"
                   />
                   <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-white to-transparent pointer-events-none" />
-                  <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-md px-4 py-2 rounded-xl text-xs font-bold text-[#0A192F] shadow-md flex items-center gap-2 border border-zinc-200">
+                  <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-md px-4 py-2 rounded-xl text-xs font-bold text-ink shadow-md flex items-center gap-2 border border-hairline">
                     <MapPin size={14} className="text-orange-500" />
                     <span>Real-time Haversine Map Routing Active</span>
                   </div>
@@ -264,7 +264,7 @@ export default function CheckoutModal({ isOpen, onClose }: CheckoutModalProps) {
                 <div className="space-y-12">
                   {dayMapping.map((daySpots, dayIndex) => (
                     <div key={dayIndex} className="space-y-4">
-                      <div className="flex items-center gap-2 text-[#0A192F] ml-2">
+                      <div className="flex items-center gap-2 text-ink ml-2">
                         <CheckSquare size={20} className="text-orange-500" />
                         <h4 className="font-bold text-lg">Proximity Sorted Travel Path {dayMapping.length > 1 ? `- Focus Day ${dayIndex + 1}` : ''}</h4>
                       </div>
@@ -278,7 +278,7 @@ export default function CheckoutModal({ isOpen, onClose }: CheckoutModalProps) {
                           <div key={idx} className="p-4 rounded-2xl border-2 border-orange-500 bg-orange-500/5 shadow-md relative overflow-hidden group z-10 w-48 shrink-0 hover:scale-[1.02] transition-transform bg-white">
                             <button 
                               onClick={(e) => { e.stopPropagation(); toggleCustomSpot(spot); }}
-                              className="absolute top-2 left-2 w-7 h-7 bg-white rounded-full flex items-center justify-center text-rose-500 hover:bg-rose-500 hover:text-white shadow-lg z-20 transition-all font-bold opacity-0 group-hover:opacity-100 border border-zinc-100"
+                              className="absolute top-2 left-2 w-7 h-7 bg-white rounded-full flex items-center justify-center text-rose-500 hover:bg-rose-500 hover:text-white shadow-lg z-20 transition-all font-bold opacity-0 group-hover:opacity-100 border border-hairline"
                             >
                               <X size={14} />
                             </button>
@@ -289,10 +289,10 @@ export default function CheckoutModal({ isOpen, onClose }: CheckoutModalProps) {
                               <img src={spot.url} className="w-full h-full object-cover rounded-t-xl" alt="Location" />
                               <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent"></div>
                             </div>
-                            <h5 className="font-bold text-sm mb-1 line-clamp-1 text-[#0A192F]">{spot.description}</h5>
+                            <h5 className="font-bold text-sm mb-1 line-clamp-1 text-ink">{spot.description}</h5>
                             <div className="flex items-center justify-between mt-1">
                               <span className="text-orange-500 font-bold text-sm">{formatPrice(150)}</span>
-                              {(spot as any).category && <span className="text-zinc-500 text-[9px] font-bold uppercase tracking-widest bg-zinc-100 px-1.5 py-0.5 rounded-md border border-zinc-200">{(spot as any).category}</span>}
+                              {(spot as any).category && <span className="text-body text-[9px] font-bold uppercase tracking-widest bg-cream px-1.5 py-0.5 rounded-md border border-hairline">{(spot as any).category}</span>}
                             </div>
                           </div>
                         ))}
@@ -306,42 +306,42 @@ export default function CheckoutModal({ isOpen, onClose }: CheckoutModalProps) {
             {cartItems.map((item) => (
               <div key={item.id} className="space-y-8">
                 {/* Trip Card */}
-                <div className="bg-white border-2 border-zinc-100 rounded-[2rem] p-6 flex flex-col md:flex-row gap-6 items-center md:items-start group">
-                  <div className="w-full md:w-32 h-32 rounded-2xl overflow-hidden shrink-0 relative bg-zinc-100">
+                <div className="bg-white border-2 border-hairline rounded-[2rem] p-6 flex flex-col md:flex-row gap-6 items-center md:items-start group">
+                  <div className="w-full md:w-32 h-32 rounded-2xl overflow-hidden shrink-0 relative bg-cream">
                     <img src={item.images?.[0]?.url || item.avatar} alt="Trip" className="w-full h-full object-cover" />
                   </div>
                   <div className="flex-1 text-center md:text-left">
                     <div className="flex items-start justify-between">
                       <div>
-                        <h3 className="text-xl font-display font-bold text-[#0A192F]">{item.location} Itinerary</h3>
-                        <p className="text-sm text-zinc-500 mb-2">Curated by {item.user}</p>
+                        <h3 className="text-xl font-display font-bold text-ink">{item.location} Itinerary</h3>
+                        <p className="text-sm text-body mb-2">Curated by {item.user}</p>
                         
                         {/* 4 Active Core Categories strictly enforced natively by visual logic */}
                         <div className="flex flex-wrap gap-2">
-                          <span className="flex items-center gap-1 border border-zinc-200 bg-white text-[10px] font-bold uppercase tracking-widest text-[#0A192F] px-2 py-0.5 rounded-md"><Bed size={10} className="text-orange-500"/> Hotel</span>
-                          <span className="flex items-center gap-1 border border-zinc-200 bg-white text-[10px] font-bold uppercase tracking-widest text-[#0A192F] px-2 py-0.5 rounded-md"><Utensils size={10} className="text-orange-500"/> Restaurant</span>
-                          <span className="flex items-center gap-1 border border-zinc-200 bg-white text-[10px] font-bold uppercase tracking-widest text-[#0A192F] px-2 py-0.5 rounded-md"><Plane size={10} className="text-orange-500"/> Transport</span>
-                          <span className="flex items-center gap-1 border border-zinc-200 bg-white text-[10px] font-bold uppercase tracking-widest text-[#0A192F] px-2 py-0.5 rounded-md"><Camera size={10} className="text-orange-500"/> Activity</span>
+                          <span className="flex items-center gap-1 border border-hairline bg-white text-[10px] font-bold uppercase tracking-widest text-ink px-2 py-0.5 rounded-md"><Bed size={10} className="text-orange-500"/> Hotel</span>
+                          <span className="flex items-center gap-1 border border-hairline bg-white text-[10px] font-bold uppercase tracking-widest text-ink px-2 py-0.5 rounded-md"><Utensils size={10} className="text-orange-500"/> Restaurant</span>
+                          <span className="flex items-center gap-1 border border-hairline bg-white text-[10px] font-bold uppercase tracking-widest text-ink px-2 py-0.5 rounded-md"><Plane size={10} className="text-orange-500"/> Transport</span>
+                          <span className="flex items-center gap-1 border border-hairline bg-white text-[10px] font-bold uppercase tracking-widest text-ink px-2 py-0.5 rounded-md"><Camera size={10} className="text-orange-500"/> Activity</span>
                         </div>
                       </div>
                       <div className="text-right hidden md:block">
-                        <span className="font-bold text-xl text-[#0A192F]">{formatPrice(item.price)} <span className="text-sm text-zinc-500 font-medium">/ person</span></span>
+                        <span className="font-bold text-xl text-ink">{formatPrice(item.price)} <span className="text-sm text-body font-medium">/ person</span></span>
                       </div>
                     </div>
                     <div className="mt-4 flex flex-wrap items-center justify-center md:justify-start gap-4 mb-4">
-                      <div className="flex items-center gap-2 bg-zinc-100 rounded-full p-1 border border-zinc-200">
+                      <div className="flex items-center gap-2 bg-cream rounded-full p-1 border border-hairline">
                         <button 
                           onClick={() => setTravelersMap(prev => ({ ...prev, [item.id]: Math.max(1, (prev[item.id] || 1) - 1) }))}
-                          className="w-8 h-8 rounded-full bg-white flex items-center justify-center text-zinc-500 hover:text-orange-500 font-bold shadow-sm"
+                          className="w-8 h-8 rounded-full bg-white flex items-center justify-center text-body hover:text-orange-500 font-bold shadow-sm"
                         >-</button>
                         <span className="font-bold text-sm w-16 text-center">{travelersMap[item.id] || 1} Traveler{(travelersMap[item.id] || 1) !== 1 ? 's' : ''}</span>
                         <button 
                           onClick={() => setTravelersMap(prev => ({ ...prev, [item.id]: (prev[item.id] || 1) + 1 }))}
-                          className="w-8 h-8 rounded-full bg-white flex items-center justify-center text-zinc-500 hover:text-orange-500 font-bold shadow-sm"
+                          className="w-8 h-8 rounded-full bg-white flex items-center justify-center text-body hover:text-orange-500 font-bold shadow-sm"
                         >+</button>
                       </div>
                       <span className="text-sm font-bold text-orange-500 bg-orange-500/10 px-3 py-1 rounded-full">Base Trip Cost</span>
-                      <button onClick={() => removeFromCart(item.id)} className="text-zinc-400 hover:text-rose-500 flex items-center gap-1 text-sm font-medium transition-colors">
+                      <button onClick={() => removeFromCart(item.id)} className="text-muted hover:text-rose-500 flex items-center gap-1 text-sm font-medium transition-colors">
                         <Trash2 size={16} /> Remove Trip
                       </button>
                     </div>
@@ -350,10 +350,10 @@ export default function CheckoutModal({ isOpen, onClose }: CheckoutModalProps) {
 
                 {/* Locations (Days) Selection */}
                 <div className="space-y-4">
-                  <div className="flex items-center gap-2 text-[#0A192F] ml-2">
+                  <div className="flex items-center gap-2 text-ink ml-2">
                     <CheckSquare size={20} className="text-orange-500" />
                     <h4 className="font-bold text-lg">Included Locations</h4>
-                    <span className="text-xs font-bold text-zinc-400 ml-2 uppercase tracking-widest">(Deselect to Exclude)</span>
+                    <span className="text-xs font-bold text-muted ml-2 uppercase tracking-widest">(Deselect to Exclude)</span>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                     {(item.images || []).map((img, idx) => {
@@ -367,7 +367,7 @@ export default function CheckoutModal({ isOpen, onClose }: CheckoutModalProps) {
                         <button
                           key={incId}
                           onClick={() => handleInclusionToggle(item.id, incId)}
-                          className={`p-4 rounded-2xl border-2 text-left transition-all relative overflow-hidden ${!isDeselected ? 'border-orange-500 bg-orange-500/5 shadow-md scale-[1.02]' : 'border-zinc-100 hover:border-zinc-300 bg-white opacity-60'}`}
+                          className={`p-4 rounded-2xl border-2 text-left transition-all relative overflow-hidden ${!isDeselected ? 'border-orange-500 bg-orange-500/5 shadow-md scale-[1.02]' : 'border-hairline hover:border-zinc-300 bg-white opacity-60'}`}
                         >
                           {!isDeselected ? (
                             <div className="absolute top-2 right-2 text-orange-500 z-10 bg-white rounded-full">
@@ -381,10 +381,10 @@ export default function CheckoutModal({ isOpen, onClose }: CheckoutModalProps) {
                           <div className="h-20 mb-3 -mx-2 -mt-2">
                             <img src={img.url} className="w-full h-full object-cover rounded-t-xl" alt="Location" />
                           </div>
-                          <h5 className={`font-bold mb-1 line-clamp-1 ${isDeselected ? 'text-zinc-400 line-through' : 'text-[#0A192F]'}`}>
+                          <h5 className={`font-bold mb-1 line-clamp-1 ${isDeselected ? 'text-muted line-through' : 'text-ink'}`}>
                             {locName}
                           </h5>
-                          <span className={`${isDeselected ? 'text-zinc-400' : 'text-orange-500'} font-bold`}>{formatPrice(locPrice)}</span>
+                          <span className={`${isDeselected ? 'text-muted' : 'text-orange-500'} font-bold`}>{formatPrice(locPrice)}</span>
                         </button>
                       );
                     })}
@@ -394,10 +394,10 @@ export default function CheckoutModal({ isOpen, onClose }: CheckoutModalProps) {
                 {/* Activities Selection */}
                 {item.activities && item.activities.length > 0 && (
                   <div className="space-y-4">
-                    <div className="flex items-center gap-2 text-[#0A192F] ml-2">
+                    <div className="flex items-center gap-2 text-ink ml-2">
                       <CheckSquare size={20} className="text-orange-500" />
                       <h4 className="font-bold text-lg">Included Activities</h4>
-                      <span className="text-xs font-bold text-zinc-400 ml-2 uppercase tracking-widest">(Deselect to Exclude)</span>
+                      <span className="text-xs font-bold text-muted ml-2 uppercase tracking-widest">(Deselect to Exclude)</span>
                     </div>
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                       {item.activities.map((activity, idx) => {
@@ -409,12 +409,12 @@ export default function CheckoutModal({ isOpen, onClose }: CheckoutModalProps) {
                           <button
                             key={incId}
                             onClick={() => handleInclusionToggle(item.id, incId)}
-                            className={`p-3 rounded-xl border-2 text-center transition-all ${!isDeselected ? 'border-orange-500 bg-orange-500/5 shadow-md' : 'border-zinc-100 hover:border-zinc-300 bg-white opacity-60'}`}
+                            className={`p-3 rounded-xl border-2 text-center transition-all ${!isDeselected ? 'border-orange-500 bg-orange-500/5 shadow-md' : 'border-hairline hover:border-zinc-300 bg-white opacity-60'}`}
                           >
-                            <h5 className={`font-bold text-sm mb-1 ${isDeselected ? 'text-zinc-400 line-through' : 'text-[#0A192F]'}`}>
+                            <h5 className={`font-bold text-sm mb-1 ${isDeselected ? 'text-muted line-through' : 'text-ink'}`}>
                               {activity}
                             </h5>
-                            <span className={`${isDeselected ? 'text-zinc-400' : 'text-orange-500'} font-bold text-xs`}>{formatPrice(actPrice)}</span>
+                            <span className={`${isDeselected ? 'text-muted' : 'text-orange-500'} font-bold text-xs`}>{formatPrice(actPrice)}</span>
                             <div className="mt-2 flex justify-center">
                               {!isDeselected ? <CheckCircle2 size={14} className="text-orange-500" /> : <Square size={14} className="text-zinc-300" />}
                             </div>
@@ -427,7 +427,7 @@ export default function CheckoutModal({ isOpen, onClose }: CheckoutModalProps) {
 
                 {/* Flights Selection */}
                 <div className="space-y-4">
-                  <div className="flex items-center gap-2 text-[#0A192F] ml-2">
+                  <div className="flex items-center gap-2 text-ink ml-2">
                     <Plane size={20} className="text-orange-500" />
                     <h4 className="font-bold text-lg">Add Flights</h4>
                   </div>
@@ -438,16 +438,16 @@ export default function CheckoutModal({ isOpen, onClose }: CheckoutModalProps) {
                         <button
                           key={flight.id}
                           onClick={() => handleFlightSelect(item.id, flight.id)}
-                          className={`p-4 rounded-2xl border-2 text-left transition-all ${isSelected ? 'border-orange-500 bg-orange-500/5 shadow-md scale-[1.02]' : 'border-zinc-100 hover:border-zinc-300 bg-white'}`}
+                          className={`p-4 rounded-2xl border-2 text-left transition-all ${isSelected ? 'border-orange-500 bg-orange-500/5 shadow-md scale-[1.02]' : 'border-hairline hover:border-zinc-300 bg-white'}`}
                         >
                           <div className="flex items-center justify-between mb-2">
-                            <span className="text-xs font-bold uppercase tracking-widest text-zinc-400">{flight.airline}</span>
+                            <span className="text-xs font-bold uppercase tracking-widest text-muted">{flight.airline}</span>
                             {isSelected && <CheckCircle2 size={16} className="text-orange-500" />}
                           </div>
-                          <h5 className="font-bold text-[#0A192F] mb-1">{flight.class}</h5>
+                          <h5 className="font-bold text-ink mb-1">{flight.class}</h5>
                           <div className="flex items-end justify-between">
                             <span className="text-orange-500 font-bold">{formatPrice(flight.price)}</span>
-                            <span className="text-xs text-zinc-500">{flight.duration}</span>
+                            <span className="text-xs text-body">{flight.duration}</span>
                           </div>
                         </button>
                       );
@@ -457,7 +457,7 @@ export default function CheckoutModal({ isOpen, onClose }: CheckoutModalProps) {
 
                 {/* Car Rental Selection */}
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between text-[#0A192F] ml-2">
+                  <div className="flex items-center justify-between text-ink ml-2">
                     <div className="flex items-center gap-2">
                       <Car size={20} className="text-orange-500" />
                       <h4 className="font-bold text-lg">Add Rental Car (4 Days)</h4>
@@ -475,7 +475,7 @@ export default function CheckoutModal({ isOpen, onClose }: CheckoutModalProps) {
                         <button
                           key={car.id}
                           onClick={() => handleCarSelect(item.id, car.id)}
-                          className={`p-4 rounded-2xl border-2 text-left transition-all relative overflow-hidden ${isSelected ? 'border-orange-500 bg-orange-500/5 shadow-md scale-[1.02]' : 'border-zinc-100 hover:border-zinc-300 bg-white'}`}
+                          className={`p-4 rounded-2xl border-2 text-left transition-all relative overflow-hidden ${isSelected ? 'border-orange-500 bg-orange-500/5 shadow-md scale-[1.02]' : 'border-hairline hover:border-zinc-300 bg-white'}`}
                         >
                           {isSelected && (
                             <div className="absolute top-2 right-2 text-orange-500 z-10">
@@ -485,9 +485,9 @@ export default function CheckoutModal({ isOpen, onClose }: CheckoutModalProps) {
                           <div className="h-16 mb-2 -mx-2 -mt-2 opacity-80 mix-blend-multiply">
                             <img src={car.image} className="w-full h-full object-cover rounded-t-xl" alt="Car" />
                           </div>
-                          <span className="text-xs font-bold uppercase tracking-widest text-zinc-400">{car.company}</span>
-                          <h5 className="font-bold text-[#0A192F] mb-1">{car.type}</h5>
-                          <p className="text-orange-500 font-bold">{formatPrice(car.pricePerDay)} <span className="text-xs font-medium text-zinc-500">/day</span></p>
+                          <span className="text-xs font-bold uppercase tracking-widest text-muted">{car.company}</span>
+                          <h5 className="font-bold text-ink mb-1">{car.type}</h5>
+                          <p className="text-orange-500 font-bold">{formatPrice(car.pricePerDay)} <span className="text-xs font-medium text-body">/day</span></p>
                         </button>
                       );
                     })}
@@ -499,8 +499,8 @@ export default function CheckoutModal({ isOpen, onClose }: CheckoutModalProps) {
         </div>
 
         {/* Right: Order Summary Sidebar */}
-        <div className="w-full md:w-96 bg-zinc-50 border-t md:border-t-0 md:border-l border-zinc-200 p-6 md:p-8 flex flex-col shadow-[-10px_0_30px_-15px_rgba(0,0,0,0.1)] z-10">
-          <h3 className="text-2xl font-display font-bold text-[#0A192F] mb-8">Order Summary</h3>
+        <div className="w-full md:w-96 bg-tint border-t md:border-t-0 md:border-l border-hairline p-6 md:p-8 flex flex-col shadow-[-10px_0_30px_-15px_rgba(0,0,0,0.1)] z-10">
+          <h3 className="text-2xl font-display font-bold text-ink mb-8">Order Summary</h3>
           
           <div className="flex-1 space-y-6">
             {cartItems.map(item => {
@@ -530,20 +530,20 @@ export default function CheckoutModal({ isOpen, onClose }: CheckoutModalProps) {
               const totalCarCost = car ? (car.pricePerDay * 4) : 0;
 
               return (
-                <div key={`summary-${item.id}`} className="space-y-4 pb-6 border-b border-zinc-200 last:border-0 p-4 bg-white rounded-2xl shadow-sm">
+                <div key={`summary-${item.id}`} className="space-y-4 pb-6 border-b border-hairline last:border-0 p-4 bg-white rounded-2xl shadow-sm">
                   <div className="flex justify-between items-start">
-                    <span className="font-bold text-[#0A192F] text-sm leading-tight pr-4">{item.location} Trip (x{flightsCount})</span>
-                    <span className="font-bold text-zinc-500 shrink-0">{formatPrice(totalTripCost)}</span>
+                    <span className="font-bold text-ink text-sm leading-tight pr-4">{item.location} Trip (x{flightsCount})</span>
+                    <span className="font-bold text-body shrink-0">{formatPrice(totalTripCost)}</span>
                   </div>
                   {flight && (
                     <div className="flex justify-between items-center text-sm">
-                      <span className="text-zinc-500 flex items-center gap-1.5"><Plane size={14}/> Flight (x{flightsCount})</span>
+                      <span className="text-body flex items-center gap-1.5"><Plane size={14}/> Flight (x{flightsCount})</span>
                       <span className="font-bold text-zinc-700">{formatPrice(flight.price * flightsCount)}</span>
                     </div>
                   )}
                   {car && (
                     <div className="flex justify-between items-center text-sm">
-                      <span className="text-zinc-500 flex items-center gap-1.5"><Car size={14}/> Car (4 days)</span>
+                      <span className="text-body flex items-center gap-1.5"><Car size={14}/> Car (4 days)</span>
                       <span className="font-bold text-zinc-700">{formatPrice(totalCarCost)}</span>
                     </div>
                   )}
@@ -553,30 +553,30 @@ export default function CheckoutModal({ isOpen, onClose }: CheckoutModalProps) {
 
             {/* Custom Trip Summary Addition */}
             {processedSpots.length > 0 && (
-              <div className="space-y-4 pb-6 border-b border-zinc-200 p-4 bg-orange-50/50 rounded-2xl border border-orange-200 shadow-sm">
+              <div className="space-y-4 pb-6 border-b border-hairline p-4 bg-orange-50/50 rounded-2xl border border-orange-200 shadow-sm">
                 <div className="flex justify-between items-start">
                   <span className="font-bold text-orange-600 text-sm leading-tight pr-4">Custom Remixed Journey (x{travelersMap['custom-trip'] || 1})</span>
                   <span className="font-bold text-orange-600 shrink-0">{formatPrice(processedSpots.length * 150 * (travelersMap['custom-trip'] || 1))}</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <div className="text-[10px] font-bold text-orange-600/70 uppercase tracking-widest">{processedSpots.length} Checkpoints</div>
-                  <div className="text-[10px] font-bold text-[#0A192F] uppercase tracking-widest">{dayMapping.length} Days Assigned</div>
+                  <div className="text-[10px] font-bold text-ink uppercase tracking-widest">{dayMapping.length} Days Assigned</div>
                 </div>
               </div>
             )}
 
           </div>
 
-          <div className="mt-8 pt-6 border-t-2 border-zinc-200 space-y-6">
+          <div className="mt-8 pt-6 border-t-2 border-hairline space-y-6">
             <div className="flex justify-between items-end">
-              <span className="text-zinc-500 font-bold uppercase tracking-widest text-xs">Total Due</span>
-              <span className="text-4xl font-display font-bold text-[#0A192F]">{formatPrice(totalCost)}</span>
+              <span className="text-body font-bold uppercase tracking-widest text-xs">Total Due</span>
+              <span className="text-4xl font-display font-bold text-ink">{formatPrice(totalCost)}</span>
             </div>
             
             <button 
               onClick={handleCheckout}
               disabled={isProcessing}
-              className="w-full bg-[#0A192F] text-white font-bold py-5 rounded-2xl hover:bg-black transition-all flex items-center justify-center gap-2 group shadow-xl shadow-black/10 disabled:opacity-70 disabled:cursor-wait"
+              className="w-full bg-ink text-white font-bold py-5 rounded-2xl hover:bg-black transition-all flex items-center justify-center gap-2 group shadow-xl shadow-black/10 disabled:opacity-70 disabled:cursor-wait"
             >
               {isProcessing ? (
                 <span>Processing...</span>
@@ -588,7 +588,7 @@ export default function CheckoutModal({ isOpen, onClose }: CheckoutModalProps) {
                 </>
               )}
             </button>
-            <div className="text-center text-xs text-zinc-400 font-medium flex items-center justify-center gap-1">
+            <div className="text-center text-xs text-muted font-medium flex items-center justify-center gap-1">
               <CheckCircle2 size={12} /> Secure encrypted checkout
             </div>
           </div>
@@ -605,7 +605,7 @@ export default function CheckoutModal({ isOpen, onClose }: CheckoutModalProps) {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           onClick={onClose}
-          className="absolute inset-0 bg-[#0A192F]/60 backdrop-blur-md"
+          className="absolute inset-0 bg-ink/60 backdrop-blur-md"
         />
 
         <motion.div
@@ -618,7 +618,7 @@ export default function CheckoutModal({ isOpen, onClose }: CheckoutModalProps) {
           <div className="absolute top-4 sm:top-6 right-4 sm:right-6 z-50">
              <button 
               onClick={onClose}
-              className="p-3 bg-white/80 backdrop-blur-md rounded-full shadow-lg border border-zinc-100 text-zinc-500 hover:text-rose-500 hover:bg-rose-50 transition-all font-bold"
+              className="p-3 bg-white/80 backdrop-blur-md rounded-full shadow-lg border border-hairline text-body hover:text-rose-500 hover:bg-rose-50 transition-all font-bold"
             >
               <X size={20} />
             </button>
@@ -628,14 +628,14 @@ export default function CheckoutModal({ isOpen, onClose }: CheckoutModalProps) {
              <div className="w-10 h-10 bg-orange-500 rounded-xl flex items-center justify-center text-white shadow-lg shadow-orange-500/20">
                <ShoppingBag size={20} />
              </div>
-             <h1 className="text-xl font-display font-bold text-[#0A192F]">Checkout</h1>
+             <h1 className="text-xl font-display font-bold text-ink">Checkout</h1>
           </div>
 
           {/* Spacer for header on mobile */}
-          <div className="h-20 sm:h-24 shrink-0 border-b border-zinc-100 flex items-center px-6 sm:hidden">
+          <div className="h-20 sm:h-24 shrink-0 border-b border-hairline flex items-center px-6 sm:hidden">
             <div className="flex items-center gap-2">
                <ShoppingBag size={20} className="text-orange-500" />
-               <h1 className="text-xl font-display font-bold text-[#0A192F]">Checkout</h1>
+               <h1 className="text-xl font-display font-bold text-ink">Checkout</h1>
             </div>
           </div>
 

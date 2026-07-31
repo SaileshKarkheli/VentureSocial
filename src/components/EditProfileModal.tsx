@@ -98,7 +98,7 @@ export default function EditProfileModal({ isOpen, onClose, currentProfile, onPr
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         onClick={onClose}
-        className="absolute inset-0 bg-[#0A192F]/60 backdrop-blur-sm"
+        className="absolute inset-0 bg-ink/60 backdrop-blur-sm"
       />
 
       <motion.div
@@ -107,11 +107,11 @@ export default function EditProfileModal({ isOpen, onClose, currentProfile, onPr
         exit={{ opacity: 0, scale: 0.95, y: 20 }}
         className="relative w-full max-w-2xl bg-white rounded-[2rem] shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
       >
-        <div className="p-6 md:p-8 flex items-center justify-between border-b border-zinc-100 bg-white sticky top-0 z-10">
-          <h2 className="text-2xl font-display font-bold text-[#0A192F]">Edit Profile Settings</h2>
+        <div className="p-6 md:p-8 flex items-center justify-between border-b border-hairline bg-white sticky top-0 z-10">
+          <h2 className="text-2xl font-display font-bold text-ink">Edit Profile Settings</h2>
           <button 
             onClick={onClose}
-            className="p-2 rounded-full bg-zinc-100 text-zinc-400 hover:bg-rose-500 hover:text-white transition-colors"
+            className="p-2 rounded-full bg-cream text-muted hover:bg-rose-500 hover:text-white transition-colors"
           >
             <X size={20} />
           </button>
@@ -122,49 +122,49 @@ export default function EditProfileModal({ isOpen, onClose, currentProfile, onPr
             
             {/* General Info */}
             <div className="space-y-6">
-              <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-widest border-b border-zinc-100 pb-2">Personal Information</h3>
+              <h3 className="text-xs font-bold text-muted uppercase tracking-widest border-b border-hairline pb-2">Personal Information</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-[#0A192F]">Full Name</label>
+                  <label className="text-xs font-bold text-ink">Full Name</label>
                   <input 
                     type="text" 
                     name="full_name"
                     value={formData.full_name}
                     onChange={handleChange}
                     required
-                    className="w-full bg-zinc-50 border border-zinc-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-orange-500/50 outline-none"
+                    className="w-full bg-tint border border-hairline rounded-xl p-3 text-sm focus:ring-2 focus:ring-orange-500/50 outline-none"
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-[#0A192F]">Location (City, Country)</label>
+                  <label className="text-xs font-bold text-ink">Location (City, Country)</label>
                   <input 
                     type="text" 
                     name="location"
                     value={formData.location}
                     onChange={handleChange}
                     placeholder="e.g. Paris, France"
-                    className="w-full bg-zinc-50 border border-zinc-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-orange-500/50 outline-none"
+                    className="w-full bg-tint border border-hairline rounded-xl p-3 text-sm focus:ring-2 focus:ring-orange-500/50 outline-none"
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-[#0A192F]">Date of Birth</label>
+                  <label className="text-xs font-bold text-ink">Date of Birth</label>
                   <input 
                     type="date" 
                     name="dob"
                     value={formData.dob}
                     onChange={handleChange}
-                    className="w-full bg-zinc-50 border border-zinc-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-orange-500/50 outline-none"
+                    className="w-full bg-tint border border-hairline rounded-xl p-3 text-sm focus:ring-2 focus:ring-orange-500/50 outline-none"
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-[#0A192F]">Education / University</label>
+                  <label className="text-xs font-bold text-ink">Education / University</label>
                   <input 
                     type="text" 
                     name="education"
                     value={formData.education}
                     onChange={handleChange}
                     placeholder="e.g. Master's in English"
-                    className="w-full bg-zinc-50 border border-zinc-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-orange-500/50 outline-none"
+                    className="w-full bg-tint border border-hairline rounded-xl p-3 text-sm focus:ring-2 focus:ring-orange-500/50 outline-none"
                   />
                 </div>
               </div>
@@ -172,52 +172,52 @@ export default function EditProfileModal({ isOpen, onClose, currentProfile, onPr
 
             {/* Bio */}
             <div className="space-y-6">
-              <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-widest border-b border-zinc-100 pb-2">About Section</h3>
+              <h3 className="text-xs font-bold text-muted uppercase tracking-widest border-b border-hairline pb-2">About Section</h3>
               <div className="space-y-2">
-                <label className="text-xs font-bold text-[#0A192F]">Short Biography</label>
+                <label className="text-xs font-bold text-ink">Short Biography</label>
                 <textarea 
                   name="bio"
                   value={formData.bio}
                   onChange={handleChange}
                   rows={4}
                   placeholder="Introduce yourself to the global travel community..."
-                  className="w-full bg-zinc-50 border border-zinc-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-orange-500/50 outline-none resize-none"
+                  className="w-full bg-tint border border-hairline rounded-xl p-3 text-sm focus:ring-2 focus:ring-orange-500/50 outline-none resize-none"
                 />
               </div>
             </div>
 
             {/* Social Links */}
             <div className="space-y-6">
-              <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-widest border-b border-zinc-100 pb-2">Social Links</h3>
+              <h3 className="text-xs font-bold text-muted uppercase tracking-widest border-b border-hairline pb-2">Social Links</h3>
               <div className="grid grid-cols-1 gap-4">
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-[#0A192F]">Instagram</label>
+                  <label className="text-xs font-bold text-ink">Instagram</label>
                   <input 
                     type="url" 
                     value={formData.social_links.instagram}
                     onChange={(e) => handleSocialChange('instagram', e.target.value)}
                     placeholder="https://instagram.com/yourhandle"
-                    className="w-full bg-zinc-50 border border-zinc-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-orange-500/50 outline-none"
+                    className="w-full bg-tint border border-hairline rounded-xl p-3 text-sm focus:ring-2 focus:ring-orange-500/50 outline-none"
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-[#0A192F]">Twitter / X</label>
+                  <label className="text-xs font-bold text-ink">Twitter / X</label>
                   <input 
                     type="url" 
                     value={formData.social_links.twitter}
                     onChange={(e) => handleSocialChange('twitter', e.target.value)}
                     placeholder="https://x.com/yourhandle"
-                    className="w-full bg-zinc-50 border border-zinc-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-orange-500/50 outline-none"
+                    className="w-full bg-tint border border-hairline rounded-xl p-3 text-sm focus:ring-2 focus:ring-orange-500/50 outline-none"
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-[#0A192F]">Personal Website</label>
+                  <label className="text-xs font-bold text-ink">Personal Website</label>
                   <input 
                     type="url" 
                     value={formData.social_links.website}
                     onChange={(e) => handleSocialChange('website', e.target.value)}
                     placeholder="https://yourwebsite.com"
-                    className="w-full bg-zinc-50 border border-zinc-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-orange-500/50 outline-none"
+                    className="w-full bg-tint border border-hairline rounded-xl p-3 text-sm focus:ring-2 focus:ring-orange-500/50 outline-none"
                   />
                 </div>
               </div>
@@ -227,12 +227,12 @@ export default function EditProfileModal({ isOpen, onClose, currentProfile, onPr
         </div>
 
         {/* Footer */}
-        <div className="p-6 md:p-8 border-t border-zinc-100 bg-zinc-50">
+        <div className="p-6 md:p-8 border-t border-hairline bg-tint">
           <div className="flex gap-4">
             <button 
               type="button"
               onClick={onClose}
-              className="flex-1 bg-white border border-zinc-200 text-zinc-600 font-bold py-4 rounded-xl hover:bg-zinc-100 transition-colors"
+              className="flex-1 bg-white border border-hairline text-zinc-600 font-bold py-4 rounded-xl hover:bg-cream transition-colors"
             >
               Cancel
             </button>

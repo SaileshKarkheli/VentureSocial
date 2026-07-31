@@ -285,30 +285,30 @@ export default function Search() {
     });
 
   return (
-    <div className="space-y-6 text-zinc-900 pb-20">
-      <div className="flex bg-zinc-100 p-1 rounded-full w-64 mx-auto border border-zinc-200 shadow-inner">
+    <div className="space-y-6 text-ink pb-20">
+      <div className="flex bg-cream p-1 rounded-full w-64 mx-auto border border-hairline shadow-inner">
          <button 
            onClick={() => setSearchTab('itineraries')}
-           className={`flex-1 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest transition-all ${searchTab === 'itineraries' ? 'bg-[#0A192F] text-white shadow-md' : 'text-zinc-500 hover:text-zinc-800'}`}
+           className={`flex-1 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest transition-all ${searchTab === 'itineraries' ? 'bg-ink text-white shadow-md' : 'text-body hover:text-ink'}`}
          >
            Trips
          </button>
          <button 
            onClick={() => setSearchTab('users')}
-           className={`flex-1 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest transition-all ${searchTab === 'users' ? 'bg-[#0A192F] text-white shadow-md' : 'text-zinc-500 hover:text-zinc-800'}`}
+           className={`flex-1 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest transition-all ${searchTab === 'users' ? 'bg-ink text-white shadow-md' : 'text-body hover:text-ink'}`}
          >
            Users
          </button>
       </div>
 
       <div className="relative max-w-2xl mx-auto">
-        <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none text-zinc-400">
+        <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none text-muted">
           <SearchIcon size={20} />
         </div>
         <input
           type="text"
           placeholder={searchTab === 'itineraries' ? "Search locations to Remix a trip... (e.g. Italy, Bali)" : "Find global travelers automatically..."}
-          className="w-full bg-white border border-zinc-200 rounded-2xl py-4 pl-12 pr-4 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent shadow-sm transition-all text-[#0A192F] placeholder:text-zinc-400"
+          className="w-full bg-white border border-hairline rounded-2xl py-4 pl-12 pr-4 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent shadow-sm transition-all text-ink placeholder:text-muted"
           value={searchQuery}
           onChange={(e) => {
             setSearchQuery(e.target.value);
@@ -318,8 +318,8 @@ export default function Search() {
       </div>
 
       {searchTab === 'itineraries' && (
-        <div className="bg-white rounded-3xl p-4 shadow-sm border border-zinc-100 max-w-3xl mx-auto">
-          <React.Suspense fallback={<div className="h-12 w-full bg-zinc-50 animate-pulse rounded-2xl" />}>
+        <div className="bg-white rounded-3xl p-4 shadow-sm border border-hairline max-w-3xl mx-auto">
+          <React.Suspense fallback={<div className="h-12 w-full bg-tint animate-pulse rounded-2xl" />}>
             <FilterBar />
           </React.Suspense>
         </div>
@@ -330,19 +330,19 @@ export default function Search() {
         {searchTab === 'itineraries' ? (
           <>
             {/* Left Pane: Best Viewed Itineraries List */}
-        <div className={`flex-1 flex flex-col h-full bg-white rounded-3xl border border-zinc-200 shadow-sm overflow-hidden ${selectedPost ? 'hidden lg:flex lg:w-1/3' : 'w-full'}`}>
-          <div className="p-6 border-b border-zinc-100 bg-zinc-50 shrink-0">
-            <h2 className="text-xl font-display font-bold text-[#0A192F]">
+        <div className={`flex-1 flex flex-col h-full bg-white rounded-3xl border border-hairline shadow-sm overflow-hidden ${selectedPost ? 'hidden lg:flex lg:w-1/3' : 'w-full'}`}>
+          <div className="p-6 border-b border-hairline bg-tint shrink-0">
+            <h2 className="text-xl font-display font-bold text-ink">
               {proximityActive ? `Trips near "${searchQuery.trim()}"` : 'Top Creator Itineraries'}
             </h2>
-            <p className="text-sm text-zinc-500">
+            <p className="text-sm text-body">
               {proximityActive ? 'Closest first. Select to view and remix.' : 'Sorted by engagement. Select to view and remix.'}
             </p>
           </div>
           
           <div className="flex-1 overflow-y-auto p-4 space-y-4">
             {filteredPosts.length === 0 ? (
-              <div className="text-center py-10 text-zinc-400">No trips match your search.</div>
+              <div className="text-center py-10 text-muted">No trips match your search.</div>
             ) : (
               filteredPosts.map((post) => (
                 <motion.div
@@ -351,31 +351,31 @@ export default function Search() {
                   className={`p-4 rounded-2xl border cursor-pointer transition-all ${
                     selectedPost?.id === post.id 
                       ? 'border-orange-500 bg-orange-50/50 shadow-md' 
-                      : 'border-zinc-100 bg-white hover:border-zinc-300 hover:shadow-sm'
+                      : 'border-hairline bg-white hover:border-zinc-300 hover:shadow-sm'
                   }`}
                 >
                   <div className="flex items-center gap-4 mb-3">
-                    <img src={post.avatar} alt={post.user} className="w-12 h-12 rounded-full object-cover border border-zinc-200 shrink-0" />
+                    <img src={post.avatar} alt={post.user} className="w-12 h-12 rounded-full object-cover border border-hairline shrink-0" />
                     <div>
-                      <h3 className="font-bold text-[#0A192F]">{post.user}</h3>
+                      <h3 className="font-bold text-ink">{post.user}</h3>
                       <div className="flex items-center gap-1 text-xs text-orange-500 font-bold uppercase tracking-wider">
                         <MapPin size={12} /> {post.location}
                         {post.distanceKm != null && (
-                          <span className="ml-2 text-zinc-400 normal-case font-semibold tracking-normal">· {formatDistanceMi(post.distanceKm)}</span>
+                          <span className="ml-2 text-muted normal-case font-semibold tracking-normal">· {formatDistanceMi(post.distanceKm)}</span>
                         )}
                       </div>
                     </div>
                   </div>
                   <div className="flex items-center gap-4 mt-1">
-                    <div className="flex items-center gap-1 text-sm text-zinc-500 font-medium"><Heart size={14}/> {typeof post.likes === 'number' ? post.likes : (post as any).likes?.[0]?.count || 0}</div>
-                    <div className="flex items-center gap-1 text-sm text-zinc-500 font-medium"><MessageCircle size={14}/> {typeof post.comments === 'number' ? post.comments : (post as any).comments?.[0]?.count || 0}</div>
+                    <div className="flex items-center gap-1 text-sm text-body font-medium"><Heart size={14}/> {typeof post.likes === 'number' ? post.likes : (post as any).likes?.[0]?.count || 0}</div>
+                    <div className="flex items-center gap-1 text-sm text-body font-medium"><MessageCircle size={14}/> {typeof post.comments === 'number' ? post.comments : (post as any).comments?.[0]?.count || 0}</div>
                     
                     {/* Executive Social Proof Badges natively hooked to Supabase Arrays */}
                     <div className="flex items-center gap-2 ml-auto">
                       <span className="flex items-center gap-1 px-2.5 py-0.5 bg-orange-500 text-white rounded-md text-xs font-bold shadow-sm">
                         <Star size={12} className="fill-white" /> {post.rating || 5}.0
                       </span>
-                      <span className="flex items-center gap-1 px-2.5 py-0.5 bg-[#0A192F] text-orange-500 rounded-md text-xs font-bold shadow-sm border border-[#0A192F]">
+                      <span className="flex items-center gap-1 px-2.5 py-0.5 bg-ink text-orange-500 rounded-md text-xs font-bold shadow-sm border border-ink">
                         {(post as any).remix_stats?.[0]?.count || (post as any).remixes || 0} Remixes
                       </span>
                     </div>
@@ -394,7 +394,7 @@ export default function Search() {
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: 20 }}
-              className="flex-[2] h-full bg-white rounded-3xl border border-zinc-200 shadow-xl overflow-hidden flex flex-col"
+              className="flex-[2] h-full bg-white rounded-3xl border border-hairline shadow-xl overflow-hidden flex flex-col"
             >
               <div className="relative h-64 shrink-0 bg-black">
                 <img src={selectedPost.images?.[0]?.url} alt="Cover" className="w-full h-full object-cover opacity-70" />
@@ -413,9 +413,9 @@ export default function Search() {
                 </div>
               </div>
 
-              <div className="flex-1 overflow-y-auto p-6 md:p-8 bg-zinc-50 custom-scrollbar relative">
+              <div className="flex-1 overflow-y-auto p-6 md:p-8 bg-tint custom-scrollbar relative">
                 <div className="flex items-center justify-between mb-8">
-                  <h3 className="text-2xl font-display font-bold text-[#0A192F]">A La Carte Itinerary</h3>
+                  <h3 className="text-2xl font-display font-bold text-ink">A La Carte Itinerary</h3>
                   <div className="px-4 py-2 bg-orange-500/10 text-orange-500 rounded-xl font-bold text-sm">
                     {tripSpots.length} Spots Available
                   </div>
@@ -427,7 +427,7 @@ export default function Search() {
                       <div className="animate-spin text-orange-500"><LayoutGrid size={40} /></div>
                     </div>
                   ) : tripSpots.length === 0 ? (
-                    <div className="text-center py-20 text-zinc-400 font-bold uppercase tracking-widest text-lg">
+                    <div className="text-center py-20 text-muted font-bold uppercase tracking-widest text-lg">
                       No spots found for this trip.
                     </div>
                   ) : (() => {
@@ -455,7 +455,7 @@ export default function Search() {
                       return (
                         <div
                           key={`day-${dayNum}`}
-                          className={`bg-white rounded-[2rem] border transition-all duration-500 overflow-hidden ${expandedDay === dayNum ? 'border-orange-500 shadow-xl' : 'border-zinc-200 shadow-sm hover:border-zinc-300'}`}
+                          className={`bg-white rounded-[2rem] border transition-all duration-500 overflow-hidden ${expandedDay === dayNum ? 'border-orange-500 shadow-xl' : 'border-hairline shadow-sm hover:border-zinc-300'}`}
                         >
                           <div className="w-full text-left group">
                             <div className="p-6 md:p-8 space-y-6">
@@ -464,15 +464,15 @@ export default function Search() {
                                 className="w-full flex items-center justify-between cursor-pointer group"
                               >
                                 <div className="flex items-center gap-6">
-                                  <div className="flex flex-col items-center justify-center w-16 h-16 rounded-2xl bg-zinc-50 border border-zinc-100 group-hover:bg-orange-500/10 group-hover:border-orange-500/20 transition-colors">
-                                    <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Day</span>
-                                    <span className="text-2xl font-display font-bold text-[#0A192F]">{dayNum}</span>
+                                  <div className="flex flex-col items-center justify-center w-16 h-16 rounded-2xl bg-tint border border-hairline group-hover:bg-orange-500/10 group-hover:border-orange-500/20 transition-colors">
+                                    <span className="text-[10px] font-bold text-muted uppercase tracking-widest">Day</span>
+                                    <span className="text-2xl font-display font-bold text-ink">{dayNum}</span>
                                   </div>
                                   <div>
-                                    <h3 className="text-2xl font-display font-bold text-[#0A192F] group-hover:text-orange-500 transition-colors">
+                                    <h3 className="text-2xl font-display font-bold text-ink group-hover:text-orange-500 transition-colors">
                                       Day {dayNum}
                                     </h3>
-                                    <div className="flex items-center gap-2 text-zinc-400 text-sm mt-1">
+                                    <div className="flex items-center gap-2 text-muted text-sm mt-1">
                                       <MapPin size={14} />
                                       <span>{selectedPost?.location}</span>
                                     </div>
@@ -480,7 +480,7 @@ export default function Search() {
                                   </div>
                                 </div>
                                 <div className="flex items-center gap-4">
-                                  <div className={`p-3 rounded-full text-[#0A192F] transition-transform duration-500 ${expandedDay === dayNum ? 'rotate-180 bg-orange-500 text-white shadow-lg' : 'bg-zinc-50'}`}>
+                                  <div className={`p-3 rounded-full text-ink transition-transform duration-500 ${expandedDay === dayNum ? 'rotate-180 bg-orange-500 text-white shadow-lg' : 'bg-tint'}`}>
                                     <ChevronDown size={24} />
                                   </div>
                                 </div>
@@ -488,7 +488,7 @@ export default function Search() {
                               
                               <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
                                 <div className="space-y-2">
-                                  <p className="text-zinc-500 text-sm leading-relaxed italic">
+                                  <p className="text-body text-sm leading-relaxed italic">
                                     "{transport?.description || 'No specific transport details'}"
                                   </p>
                                 </div>
@@ -515,12 +515,12 @@ export default function Search() {
                                       isExpanded={expandedPillar === `${dayNum}-transport`}
                                       onToggle={() => setExpandedPillar(expandedPillar === `${dayNum}-transport` ? null : `${dayNum}-transport`)}
                                     >
-                                      <div className="flex items-start gap-6 p-6 bg-zinc-50 rounded-2xl border border-zinc-100 relative">
+                                      <div className="flex items-start gap-6 p-6 bg-tint rounded-2xl border border-hairline relative">
                                         <div className="p-4 rounded-xl bg-white shadow-sm text-orange-500">
                                           <Car size={24} />
                                         </div>
                                         <div className="space-y-2">
-                                          <h4 className="font-bold text-[#0A192F] text-lg">{transport.title}</h4>
+                                          <h4 className="font-bold text-ink text-lg">{transport.title}</h4>
                                           <p className="text-zinc-600 leading-relaxed italic">"{transport.description}"</p>
                                         </div>
                                         <button
@@ -540,14 +540,14 @@ export default function Search() {
                                       isExpanded={expandedPillar === `${dayNum}-stay`}
                                       onToggle={() => setExpandedPillar(expandedPillar === `${dayNum}-stay` ? null : `${dayNum}-stay`)}
                                     >
-                                      <div className="bg-zinc-50 rounded-2xl p-6 border border-zinc-100 space-y-6 relative">
+                                      <div className="bg-tint rounded-2xl p-6 border border-hairline space-y-6 relative">
                                         <div className="flex flex-col md:flex-row gap-6 items-start">
                                           <div className="w-full md:w-1/3 aspect-video rounded-xl overflow-hidden shadow-md">
                                             <SmartImage src={stay.image_url} alt={stay.title} locationName={stay.title} className="w-full h-full object-cover" />
                                           </div>
                                           <div className="flex-1 space-y-4">
                                             <div className="flex items-center justify-between">
-                                              <h4 className="text-2xl font-display font-bold text-[#0A192F] pr-12">{stay.title}</h4>
+                                              <h4 className="text-2xl font-display font-bold text-ink pr-12">{stay.title}</h4>
                                               <button
                                                 onClick={(e) => { e.stopPropagation(); setSpotToSave(stay.id); }}
                                                 className="absolute top-6 right-6 w-12 h-12 rounded-full bg-orange-500 text-white flex items-center justify-center shadow-lg hover:scale-110 transition-transform"
@@ -555,7 +555,7 @@ export default function Search() {
                                                 {remixedSpotIds.includes(stay.id) ? <Check size={24} /> : <Plus size={24} />}
                                               </button>
                                             </div>
-                                            <p className="text-zinc-500 text-sm leading-relaxed">{stay.description}</p>
+                                            <p className="text-body text-sm leading-relaxed">{stay.description}</p>
                                             {stay.link_url && (
                                               <a href={stay.link_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-orange-500 font-bold text-sm hover:underline">
                                                 Official Booking Site
@@ -574,14 +574,14 @@ export default function Search() {
                                       isExpanded={expandedPillar === `${dayNum}-dining`}
                                       onToggle={() => setExpandedPillar(expandedPillar === `${dayNum}-dining` ? null : `${dayNum}-dining`)}
                                     >
-                                      <div className="bg-zinc-50 rounded-2xl p-6 border border-zinc-100 space-y-6 relative">
+                                      <div className="bg-tint rounded-2xl p-6 border border-hairline space-y-6 relative">
                                         <div className="flex flex-col md:flex-row gap-6 items-start">
                                           <div className="w-full md:w-1/3 aspect-video rounded-xl overflow-hidden shadow-md">
                                             <SmartImage src={dining.image_url} alt={dining.title} locationName={dining.title} className="w-full h-full object-cover" />
                                           </div>
                                           <div className="flex-1 space-y-4">
                                             <div className="flex items-center justify-between">
-                                              <h4 className="text-2xl font-display font-bold text-[#0A192F] pr-12">{dining.title}</h4>
+                                              <h4 className="text-2xl font-display font-bold text-ink pr-12">{dining.title}</h4>
                                               <button
                                                 onClick={(e) => { e.stopPropagation(); setSpotToSave(dining.id); }}
                                                 className="absolute top-6 right-6 w-12 h-12 rounded-full bg-orange-500 text-white flex items-center justify-center shadow-lg hover:scale-110 transition-transform"
@@ -589,7 +589,7 @@ export default function Search() {
                                                 {remixedSpotIds.includes(dining.id) ? <Check size={24} /> : <Plus size={24} />}
                                               </button>
                                             </div>
-                                            <p className="text-zinc-500 text-sm leading-relaxed">{dining.description}</p>
+                                            <p className="text-body text-sm leading-relaxed">{dining.description}</p>
                                             {dining.link_url && (
                                               <a href={dining.link_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-orange-500 font-bold text-sm hover:underline">
                                                 View Menu
@@ -610,7 +610,7 @@ export default function Search() {
                                     >
                                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                         {activities.map((activity: any) => (
-                                          <div key={activity.id} className="bg-zinc-50 rounded-2xl overflow-hidden border border-zinc-100 flex flex-col">
+                                          <div key={activity.id} className="bg-tint rounded-2xl overflow-hidden border border-hairline flex flex-col">
                                             <div className="relative h-48">
                                               <SmartImage src={activity.image_url} alt={activity.title} locationName={activity.title} className="w-full h-full object-cover" />
                                               <button
@@ -621,8 +621,8 @@ export default function Search() {
                                               </button>
                                             </div>
                                             <div className="p-6 space-y-2">
-                                              <h4 className="font-bold text-[#0A192F] text-lg">{activity.title}</h4>
-                                              <p className="text-zinc-500 text-sm leading-relaxed">{activity.description}</p>
+                                              <h4 className="font-bold text-ink text-lg">{activity.title}</h4>
+                                              <p className="text-body text-sm leading-relaxed">{activity.description}</p>
                                             </div>
                                           </div>
                                         ))}
@@ -646,49 +646,49 @@ export default function Search() {
             </motion.div>
           )}
           {!selectedPost && (
-            <div className="hidden lg:flex flex-[2] h-full bg-zinc-50 rounded-3xl border border-zinc-200 shadow-inner items-center justify-center text-center p-12">
+            <div className="hidden lg:flex flex-[2] h-full bg-tint rounded-3xl border border-hairline shadow-inner items-center justify-center text-center p-12">
               <div>
                 <div className="w-24 h-24 bg-white rounded-full flex items-center justify-center shadow-sm mx-auto mb-6 text-orange-500">
                   <LayoutGrid size={40} />
                 </div>
-                <h3 className="text-2xl font-bold text-[#0A192F] mb-3">Select a Trip to Remix</h3>
-                <p className="text-zinc-500 max-w-sm mx-auto text-lg">Browse the top-rated creators on the left and cherry-pick the absolute best spots for your custom itinerary.</p>
+                <h3 className="text-2xl font-bold text-ink mb-3">Select a Trip to Remix</h3>
+                <p className="text-body max-w-sm mx-auto text-lg">Browse the top-rated creators on the left and cherry-pick the absolute best spots for your custom itinerary.</p>
               </div>
             </div>
           )}
         </AnimatePresence>
           </>
         ) : (
-          <div className="w-full flex flex-col h-full bg-white rounded-3xl border border-zinc-200 shadow-sm overflow-hidden p-6 gap-6">
-             <div className="pb-4 border-b border-zinc-100 shrink-0">
-               <h2 className="text-xl font-display font-bold text-[#0A192F]">Global User Directory</h2>
-               <p className="text-sm text-zinc-500 font-medium mt-1">Discover travelers and browse their public portfolios.</p>
+          <div className="w-full flex flex-col h-full bg-white rounded-3xl border border-hairline shadow-sm overflow-hidden p-6 gap-6">
+             <div className="pb-4 border-b border-hairline shrink-0">
+               <h2 className="text-xl font-display font-bold text-ink">Global User Directory</h2>
+               <p className="text-sm text-body font-medium mt-1">Discover travelers and browse their public portfolios.</p>
              </div>
              <div className="p-2 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 overflow-y-auto custom-scrollbar content-start">
                 {isSearchingUsers ? (
-                   <div className="col-span-full py-12 text-center text-zinc-400 font-bold uppercase tracking-widest text-xs">Scanning Matrix...</div>
+                   <div className="col-span-full py-12 text-center text-muted font-bold uppercase tracking-widest text-xs">Scanning Matrix...</div>
                 ) : searchedUsers.length === 0 ? (
-                   <div className="col-span-full py-12 text-center text-zinc-400 font-bold uppercase tracking-widest text-xs">No users match query</div>
+                   <div className="col-span-full py-12 text-center text-muted font-bold uppercase tracking-widest text-xs">No users match query</div>
                 ) : (
                    searchedUsers.map(u => (
                       <div 
                         key={u.id} 
                         onClick={() => navigate(`/user/${u.username || u.id}`)}
-                        className="flex items-center gap-4 p-4 border-2 border-zinc-100 hover:border-orange-500 rounded-3xl transition-all cursor-pointer group shadow-sm hover:shadow-xl bg-white hover:-translate-y-1"
+                        className="flex items-center gap-4 p-4 border-2 border-hairline hover:border-orange-500 rounded-3xl transition-all cursor-pointer group shadow-sm hover:shadow-xl bg-white hover:-translate-y-1"
                       >
-                         <div className="w-16 h-16 bg-zinc-100 border border-zinc-200 rounded-full shrink-0 overflow-hidden relative">
+                         <div className="w-16 h-16 bg-cream border border-hairline rounded-full shrink-0 overflow-hidden relative">
                            {u.avatar_url ? (
                              <img src={u.avatar_url} alt={u.username} className="w-full h-full object-cover filter contrast-125 saturate-150" />
                            ) : (
-                             <div className="w-full h-full flex items-center justify-center text-zinc-400 bg-zinc-50">
+                             <div className="w-full h-full flex items-center justify-center text-muted bg-tint">
                                <Users size={24} />
                              </div>
                            )}
                          </div>
                          <div className="flex flex-col">
-                           <h3 className="font-bold text-[#0A192F] text-lg leading-tight group-hover:text-orange-500 transition-colors truncate max-w-[180px]">{u.full_name || u.username || 'Anonymous'}</h3>
+                           <h3 className="font-bold text-ink text-lg leading-tight group-hover:text-orange-500 transition-colors truncate max-w-[180px]">{u.full_name || u.username || 'Anonymous'}</h3>
                            {u.username && <span className="text-orange-500 font-mono text-xs font-bold mt-0.5 truncate max-w-[180px]">@{u.username}</span>}
-                           <span className="text-zinc-400 text-[9px] uppercase tracking-widest mt-1.5 font-bold truncate">
+                           <span className="text-muted text-[9px] uppercase tracking-widest mt-1.5 font-bold truncate">
                              {u.created_at ? `Member since ${new Date(u.created_at).getFullYear()}` : 'Plan your first trip'}
                            </span>
                          </div>

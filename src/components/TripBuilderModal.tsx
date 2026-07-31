@@ -846,7 +846,7 @@ export default function TripBuilderModal({ isOpen, onClose, onSaved, editTrip }:
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="absolute inset-0 bg-[#0A192F]/60 backdrop-blur-sm"
+            className="absolute inset-0 bg-ink/60 backdrop-blur-sm"
           />
 
           <motion.div
@@ -860,7 +860,7 @@ export default function TripBuilderModal({ isOpen, onClose, onSaved, editTrip }:
               <div className="flex items-center justify-between">
                 <div className="space-y-4 w-full mr-8">
                   <div className="flex items-center gap-3">
-                    <h2 className="text-3xl font-display font-bold text-[#0A192F]">Trip Builder</h2>
+                    <h2 className="text-3xl font-display font-bold text-ink">Trip Builder</h2>
                     <button
                       onClick={handleRemix}
                       className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-orange-500/10 text-orange-600 text-[10px] font-bold uppercase tracking-wider hover:bg-orange-500/20 transition-all border border-orange-500/20"
@@ -869,7 +869,7 @@ export default function TripBuilderModal({ isOpen, onClose, onSaved, editTrip }:
                       Remix Expert Itinerary
                     </button>
                   </div>
-                  <div className="flex items-center gap-2 text-zinc-400">
+                  <div className="flex items-center gap-2 text-muted">
                     <MapPin size={16} />
                     <input
                       ref={destinationInputRef}
@@ -877,7 +877,7 @@ export default function TripBuilderModal({ isOpen, onClose, onSaved, editTrip }:
                       placeholder="Enter Destination (e.g. Venice, Italy)"
                       value={destination}
                       onChange={(e) => setDestination(e.target.value)}
-                      className="bg-transparent border-none focus:ring-0 p-0 text-sm font-medium text-[#0A192F] placeholder:text-zinc-300 w-64 md:w-96 places-autocomplete-input"
+                      className="bg-transparent border-none focus:ring-0 p-0 text-sm font-medium text-ink placeholder:text-zinc-300 w-64 md:w-96 places-autocomplete-input"
                     />
                   </div>
 
@@ -895,7 +895,7 @@ export default function TripBuilderModal({ isOpen, onClose, onSaved, editTrip }:
                           } ${
                             idx === currentDayIndex
                               ? 'bg-orange-500 text-white border-orange-500'
-                              : 'bg-white text-zinc-400 border-zinc-200 hover:border-orange-500 hover:text-orange-500'
+                              : 'bg-white text-muted border-hairline hover:border-orange-500 hover:text-orange-500'
                           }`}
                         >
                           {day.title}
@@ -909,7 +909,7 @@ export default function TripBuilderModal({ isOpen, onClose, onSaved, editTrip }:
                             className={`absolute right-2.5 p-0.5 rounded-md text-[10px] font-extrabold transition-all hover:scale-110 flex items-center justify-center ${
                               idx === currentDayIndex
                                 ? 'text-white/80 hover:text-white hover:bg-white/10'
-                                : 'text-zinc-400 hover:text-rose-500 hover:bg-rose-50'
+                                : 'text-muted hover:text-rose-500 hover:bg-rose-50'
                             }`}
                             style={{ width: '16px', height: '16px' }}
                             title="Delete Day"
@@ -932,21 +932,21 @@ export default function TripBuilderModal({ isOpen, onClose, onSaved, editTrip }:
                   </div>
 
                   {/* Day Cost Estimate Input */}
-                  <div className="flex items-center gap-4 bg-zinc-50 border border-zinc-200 p-4 rounded-2xl w-full max-w-md mt-4">
+                  <div className="flex items-center gap-4 bg-tint border border-hairline p-4 rounded-2xl w-full max-w-md mt-4">
                     <div className="flex-1">
-                      <h4 className="text-xs font-bold text-[#0A192F] uppercase tracking-wider">
+                      <h4 className="text-xs font-bold text-ink uppercase tracking-wider">
                         {activeDay.title} Cost Estimate
                       </h4>
-                      <p className="text-[10px] text-zinc-400">Enter the budget or spent amount for this day</p>
+                      <p className="text-[10px] text-muted">Enter the budget or spent amount for this day</p>
                     </div>
-                    <div className="flex items-center gap-1 bg-white border border-zinc-200 rounded-xl px-3 py-1.5 shadow-sm focus-within:border-orange-500 transition-all">
-                      <span className="text-zinc-400 font-bold font-mono text-sm">$</span>
+                    <div className="flex items-center gap-1 bg-white border border-hairline rounded-xl px-3 py-1.5 shadow-sm focus-within:border-orange-500 transition-all">
+                      <span className="text-muted font-bold font-mono text-sm">$</span>
                       <input
                         type="number"
                         placeholder="0"
                         value={activeDay.budget || ''}
                         onChange={(e) => updateActiveDay(prev => ({ ...prev, budget: parseFloat(e.target.value) || 0 }))}
-                        className="w-24 bg-transparent border-0 focus:ring-0 p-0 text-right font-mono text-sm font-bold text-[#0A192F]"
+                        className="w-24 bg-transparent border-0 focus:ring-0 p-0 text-right font-mono text-sm font-bold text-ink"
                       />
                     </div>
                   </div>
@@ -958,7 +958,7 @@ export default function TripBuilderModal({ isOpen, onClose, onSaved, editTrip }:
                 </div>
                 <button
                   onClick={onClose}
-                  className="p-3 rounded-full bg-zinc-100 text-zinc-400 hover:bg-rose-500/10 hover:text-rose-500 transition-all self-start"
+                  className="p-3 rounded-full bg-cream text-muted hover:bg-rose-500/10 hover:text-rose-500 transition-all self-start"
                 >
                   <X size={24} />
                 </button>
@@ -972,7 +972,7 @@ export default function TripBuilderModal({ isOpen, onClose, onSaved, editTrip }:
                     {(activeDay.categoryImages?.['transport'] || []).length > 0 && (
                       <div className="flex gap-2 flex-wrap">
                         {(activeDay.categoryImages!['transport']).map((imgUrl, imgIdx) => (
-                          <div key={imgIdx} className="relative w-20 h-20 border-2 border-[#0A192F] overflow-hidden group shadow-md flex-shrink-0" style={{ borderRadius: '6px' }}>
+                          <div key={imgIdx} className="relative w-20 h-20 border-2 border-ink overflow-hidden group shadow-md flex-shrink-0" style={{ borderRadius: '6px' }}>
                             <img src={imgUrl} alt="Transport" className="w-full h-full object-cover" />
                             <button
                               onClick={() => removeCategoryImage('transport', imgIdx)}
@@ -985,33 +985,33 @@ export default function TripBuilderModal({ isOpen, onClose, onSaved, editTrip }:
                       </div>
                     )}
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3 text-[#0A192F]">
+                      <div className="flex items-center gap-3 text-ink">
                         <div className="p-2.5 rounded-xl bg-orange-500/10 text-orange-500 shadow-sm">
                           <Navigation size={20} />
                         </div>
                         <h3 className="font-bold uppercase tracking-widest text-[11px]">Transport Mode</h3>
                       </div>
                       <div className="flex flex-row items-center gap-2 sm:gap-3">
-                        <div className="flex items-center gap-0.5 border-b-2 border-zinc-200 focus-within:border-[#0A192F] transition-all pb-0.5">
-                          <span className="text-zinc-400 font-mono text-[10px]">$</span>
+                        <div className="flex items-center gap-0.5 border-b-2 border-hairline focus-within:border-ink transition-all pb-0.5">
+                          <span className="text-muted font-mono text-[10px]">$</span>
                           <input
                             type="number"
                             placeholder="0"
                             value={activeDay.categoryCosts?.['transport'] || ''}
                             onChange={(e) => handleCostChange('transport', e.target.value)}
-                            className="w-12 bg-transparent border-0 focus:ring-0 text-right font-mono text-xs font-bold text-[#0A192F] p-0"
+                            className="w-12 bg-transparent border-0 focus:ring-0 text-right font-mono text-xs font-bold text-ink p-0"
                           />
                         </div>
                         <button
                             onClick={() => { setUploadCategory('transport'); contextFileInputRef.current?.click(); }}
-                            className="flex items-center gap-1.5 px-3 py-1.5 bg-white border-2 border-[#0A192F] text-[#0A192F] hover:bg-[#0A192F] hover:text-white transition-colors text-[9px] uppercase tracking-widest font-bold shadow-sm"
+                            className="flex items-center gap-1.5 px-3 py-1.5 bg-white border-2 border-ink text-ink hover:bg-ink hover:text-white transition-colors text-[9px] uppercase tracking-widest font-bold shadow-sm"
                             style={{ borderRadius: '2px' }}
                           >
                             <ImagePlus size={12} /> {(activeDay.categoryImages?.['transport'] || []).length > 0 ? '+ More Photos' : 'Add Photos'}
                           </button>
                         <button
                           onClick={() => setShowManualEntry(showManualEntry === 'transport' ? null : 'transport')}
-                          className="text-[10px] font-bold text-zinc-400 hover:text-orange-500 transition-colors uppercase tracking-widest"
+                          className="text-[10px] font-bold text-muted hover:text-orange-500 transition-colors uppercase tracking-widest"
                         >
                           {showManualEntry === 'transport' ? 'Cancel' : 'Add Manually'}
                         </button>
@@ -1038,8 +1038,8 @@ export default function TripBuilderModal({ isOpen, onClose, onSaved, editTrip }:
                             key={mode.id}
                             onClick={() => updateActiveDay(prev => ({ ...prev, transportMode: mode.id as TransportMode }))}
                             className={`flex items-center justify-center gap-3 px-6 py-4 rounded-2xl font-bold transition-all border ${activeDay.transportMode === mode.id
-                                ? 'bg-[#0A192F] text-white border-[#0A192F] shadow-lg'
-                                : 'bg-white border-zinc-200 text-zinc-500 hover:border-orange-500'
+                                ? 'bg-ink text-white border-ink shadow-lg'
+                                : 'bg-white border-hairline text-body hover:border-orange-500'
                               }`}
                           >
                             <mode.icon size={20} />
@@ -1053,9 +1053,9 @@ export default function TripBuilderModal({ isOpen, onClose, onSaved, editTrip }:
                           placeholder={`Enter ${activeDay.transportMode === 'Rental' ? 'Rental Car' : activeDay.transportMode === 'Flights' ? 'Flight' : 'Own Vehicle'} details, pickup notes, etc...`}
                           value={activeDay.transportDetails}
                           onChange={(e) => updateActiveDay(prev => ({ ...prev, transportDetails: e.target.value }))}
-                          className="w-full pl-6 pr-4 py-4 rounded-2xl bg-zinc-100 border border-zinc-300 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all outline-none text-zinc-800 placeholder:text-zinc-400"
+                          className="w-full pl-6 pr-4 py-4 rounded-2xl bg-cream border border-zinc-300 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all outline-none text-ink placeholder:text-muted"
                         />
-                        <p className="text-[9px] text-zinc-400 mt-1 ml-2">These details will be auto-saved with your trip — no need to click Add.</p>
+                        <p className="text-[9px] text-muted mt-1 ml-2">These details will be auto-saved with your trip — no need to click Add.</p>
                       </div>
                     </>
                   )}
@@ -1067,7 +1067,7 @@ export default function TripBuilderModal({ isOpen, onClose, onSaved, editTrip }:
                     {(activeDay.categoryImages?.['hotel'] || []).length > 0 && (
                       <div className="flex gap-2 flex-wrap">
                         {(activeDay.categoryImages!['hotel']).map((imgUrl, imgIdx) => (
-                          <div key={imgIdx} className="relative w-24 h-24 border-2 border-[#0A192F] overflow-hidden group shadow-md flex-shrink-0" style={{ borderRadius: '6px' }}>
+                          <div key={imgIdx} className="relative w-24 h-24 border-2 border-ink overflow-hidden group shadow-md flex-shrink-0" style={{ borderRadius: '6px' }}>
                             <img src={imgUrl} alt="Stay" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
                             <button
                               onClick={() => removeCategoryImage('hotel', imgIdx)}
@@ -1080,33 +1080,33 @@ export default function TripBuilderModal({ isOpen, onClose, onSaved, editTrip }:
                       </div>
                     )}
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3 text-[#0A192F]">
+                      <div className="flex items-center gap-3 text-ink">
                         <div className="p-2.5 rounded-xl bg-orange-500/10 text-orange-500 shadow-sm">
                           <Bed size={20} />
                         </div>
                         <h3 className="font-bold uppercase tracking-widest text-[11px]">Stay Details</h3>
                       </div>
                       <div className="flex flex-row items-center gap-2 sm:gap-3">
-                        <div className="flex items-center gap-0.5 border-b-2 border-zinc-200 focus-within:border-[#0A192F] transition-all pb-0.5">
-                          <span className="text-zinc-400 font-mono text-[10px]">$</span>
+                        <div className="flex items-center gap-0.5 border-b-2 border-hairline focus-within:border-ink transition-all pb-0.5">
+                          <span className="text-muted font-mono text-[10px]">$</span>
                           <input
                             type="number"
                             placeholder="0"
                             value={activeDay.categoryCosts?.['hotel'] || ''}
                             onChange={(e) => handleCostChange('hotel', e.target.value)}
-                            className="w-12 bg-transparent border-0 focus:ring-0 text-right font-mono text-xs font-bold text-[#0A192F] p-0"
+                            className="w-12 bg-transparent border-0 focus:ring-0 text-right font-mono text-xs font-bold text-ink p-0"
                           />
                         </div>
                         <button
                             onClick={() => { setUploadCategory('hotel'); contextFileInputRef.current?.click(); }}
-                            className="flex items-center gap-1.5 px-3 py-1.5 bg-white border-2 border-[#0A192F] text-[#0A192F] hover:bg-[#0A192F] hover:text-white transition-colors text-[9px] uppercase tracking-widest font-bold shadow-sm"
+                            className="flex items-center gap-1.5 px-3 py-1.5 bg-white border-2 border-ink text-ink hover:bg-ink hover:text-white transition-colors text-[9px] uppercase tracking-widest font-bold shadow-sm"
                             style={{ borderRadius: '2px' }}
                           >
                             <ImagePlus size={12} /> {(activeDay.categoryImages?.['hotel'] || []).length > 0 ? '+ More Photos' : 'Add Photos'}
                           </button>
                         <button
                           onClick={() => setShowManualEntry(showManualEntry === 'hotel' ? null : 'hotel')}
-                          className="text-[10px] font-bold text-zinc-400 hover:text-orange-500 transition-colors uppercase tracking-widest"
+                          className="text-[10px] font-bold text-muted hover:text-orange-500 transition-colors uppercase tracking-widest"
                         >
                           {showManualEntry === 'hotel' ? 'Cancel' : 'Add Manually'}
                         </button>
@@ -1130,7 +1130,7 @@ export default function TripBuilderModal({ isOpen, onClose, onSaved, editTrip }:
                             onClick={() => updateActiveDay(prev => ({ ...prev, stayCategory: cat as any }))}
                             className={`px-4 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider border transition-all ${(activeDay.stayCategory || 'Hotel') === cat
                                 ? 'bg-orange-500 border-orange-500 text-white shadow-lg shadow-orange-500/20'
-                                : 'bg-zinc-50 border-zinc-100 text-zinc-400 hover:border-orange-500/30'
+                                : 'bg-tint border-hairline text-muted hover:border-orange-500/30'
                               }`}
                           >
                             {cat}s
@@ -1146,7 +1146,7 @@ export default function TripBuilderModal({ isOpen, onClose, onSaved, editTrip }:
                       />
                       <div className="flex flex-wrap gap-2">
                         {['Luxury', 'Boutique', 'Budget', 'Beachfront', 'Mountain'].map((tag) => (
-                          <span key={tag} className="text-[9px] font-medium text-zinc-400 bg-zinc-100 px-2 py-1 rounded-md">
+                          <span key={tag} className="text-[9px] font-medium text-muted bg-cream px-2 py-1 rounded-md">
                             #{tag}
                           </span>
                         ))}
@@ -1161,7 +1161,7 @@ export default function TripBuilderModal({ isOpen, onClose, onSaved, editTrip }:
                     {(activeDay.categoryImages?.['dining'] || []).length > 0 && (
                       <div className="flex gap-2 flex-wrap">
                         {(activeDay.categoryImages!['dining']).map((imgUrl, imgIdx) => (
-                          <div key={imgIdx} className="relative w-24 h-24 border-2 border-[#0A192F] overflow-hidden group shadow-md flex-shrink-0" style={{ borderRadius: '6px' }}>
+                          <div key={imgIdx} className="relative w-24 h-24 border-2 border-ink overflow-hidden group shadow-md flex-shrink-0" style={{ borderRadius: '6px' }}>
                             <img src={imgUrl} alt="Dining" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
                             <button
                               onClick={() => removeCategoryImage('dining', imgIdx)}
@@ -1174,33 +1174,33 @@ export default function TripBuilderModal({ isOpen, onClose, onSaved, editTrip }:
                       </div>
                     )}
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3 text-[#0A192F]">
+                      <div className="flex items-center gap-3 text-ink">
                         <div className="p-2.5 rounded-xl bg-orange-500/10 text-orange-500 shadow-sm">
                           <Utensils size={20} />
                         </div>
                         <h3 className="font-bold uppercase tracking-widest text-[11px]">Dining</h3>
                       </div>
                       <div className="flex flex-row items-center gap-2 sm:gap-3">
-                        <div className="flex items-center gap-0.5 border-b-2 border-zinc-200 focus-within:border-[#0A192F] transition-all pb-0.5">
-                          <span className="text-zinc-400 font-mono text-[10px]">$</span>
+                        <div className="flex items-center gap-0.5 border-b-2 border-hairline focus-within:border-ink transition-all pb-0.5">
+                          <span className="text-muted font-mono text-[10px]">$</span>
                           <input
                             type="number"
                             placeholder="0"
                             value={activeDay.categoryCosts?.['dining'] || ''}
                             onChange={(e) => handleCostChange('dining', e.target.value)}
-                            className="w-12 bg-transparent border-0 focus:ring-0 text-right font-mono text-xs font-bold text-[#0A192F] p-0"
+                            className="w-12 bg-transparent border-0 focus:ring-0 text-right font-mono text-xs font-bold text-ink p-0"
                           />
                         </div>
                         <button
                             onClick={() => { setUploadCategory('dining'); contextFileInputRef.current?.click(); }}
-                            className="flex items-center gap-1.5 px-3 py-1.5 bg-white border-2 border-[#0A192F] text-[#0A192F] hover:bg-[#0A192F] hover:text-white transition-colors text-[9px] uppercase tracking-widest font-bold shadow-sm"
+                            className="flex items-center gap-1.5 px-3 py-1.5 bg-white border-2 border-ink text-ink hover:bg-ink hover:text-white transition-colors text-[9px] uppercase tracking-widest font-bold shadow-sm"
                             style={{ borderRadius: '2px' }}
                           >
                             <ImagePlus size={12} /> {(activeDay.categoryImages?.['dining'] || []).length > 0 ? '+ More Photos' : 'Add Photos'}
                           </button>
                         <button
                           onClick={() => setShowManualEntry(showManualEntry === 'dining' ? null : 'dining')}
-                          className="text-[10px] font-bold text-zinc-400 hover:text-orange-500 transition-colors uppercase tracking-widest"
+                          className="text-[10px] font-bold text-muted hover:text-orange-500 transition-colors uppercase tracking-widest"
                         >
                           {showManualEntry === 'dining' ? 'Cancel' : 'Add Manually'}
                         </button>
@@ -1224,7 +1224,7 @@ export default function TripBuilderModal({ isOpen, onClose, onSaved, editTrip }:
                       />
                       <div className="flex flex-wrap gap-2">
                         {['Fine Dining', 'Street Food', 'Vegan', 'Seafood', 'Rooftop'].map((tag) => (
-                          <span key={tag} className="text-[9px] font-medium text-zinc-400 bg-zinc-100 px-2 py-1 rounded-md">
+                          <span key={tag} className="text-[9px] font-medium text-muted bg-cream px-2 py-1 rounded-md">
                             #{tag}
                           </span>
                         ))}
@@ -1239,7 +1239,7 @@ export default function TripBuilderModal({ isOpen, onClose, onSaved, editTrip }:
                     {(activeDay.categoryImages?.['activity'] || []).length > 0 && (
                       <div className="flex gap-2 flex-wrap">
                         {(activeDay.categoryImages!['activity']).map((imgUrl, imgIdx) => (
-                          <div key={imgIdx} className="relative w-24 h-24 border-2 border-[#0A192F] overflow-hidden group shadow-md flex-shrink-0" style={{ borderRadius: '6px' }}>
+                          <div key={imgIdx} className="relative w-24 h-24 border-2 border-ink overflow-hidden group shadow-md flex-shrink-0" style={{ borderRadius: '6px' }}>
                             <img src={imgUrl} alt="Activity" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
                             <button
                               onClick={() => removeCategoryImage('activity', imgIdx)}
@@ -1252,33 +1252,33 @@ export default function TripBuilderModal({ isOpen, onClose, onSaved, editTrip }:
                       </div>
                     )}
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3 text-[#0A192F]">
+                      <div className="flex items-center gap-3 text-ink">
                         <div className="p-2.5 rounded-xl bg-orange-500/10 text-orange-500 shadow-sm">
                           <Camera size={20} />
                         </div>
                         <h3 className="font-bold uppercase tracking-widest text-[11px]">Activities</h3>
                       </div>
                       <div className="flex flex-row items-center gap-2 sm:gap-3">
-                        <div className="flex items-center gap-0.5 border-b-2 border-zinc-200 focus-within:border-[#0A192F] transition-all pb-0.5">
-                          <span className="text-zinc-400 font-mono text-[10px]">$</span>
+                        <div className="flex items-center gap-0.5 border-b-2 border-hairline focus-within:border-ink transition-all pb-0.5">
+                          <span className="text-muted font-mono text-[10px]">$</span>
                           <input
                             type="number"
                             placeholder="0"
                             value={activeDay.categoryCosts?.['activity'] || ''}
                             onChange={(e) => handleCostChange('activity', e.target.value)}
-                            className="w-12 bg-transparent border-0 focus:ring-0 text-right font-mono text-xs font-bold text-[#0A192F] p-0"
+                            className="w-12 bg-transparent border-0 focus:ring-0 text-right font-mono text-xs font-bold text-ink p-0"
                           />
                         </div>
                         <button
                             onClick={() => { setUploadCategory('activity'); contextFileInputRef.current?.click(); }}
-                            className="flex items-center gap-1.5 px-3 py-1.5 bg-white border-2 border-[#0A192F] text-[#0A192F] hover:bg-[#0A192F] hover:text-white transition-colors text-[9px] uppercase tracking-widest font-bold shadow-sm"
+                            className="flex items-center gap-1.5 px-3 py-1.5 bg-white border-2 border-ink text-ink hover:bg-ink hover:text-white transition-colors text-[9px] uppercase tracking-widest font-bold shadow-sm"
                             style={{ borderRadius: '2px' }}
                           >
                             <ImagePlus size={12} /> {(activeDay.categoryImages?.['activity'] || []).length > 0 ? '+ More Photos' : 'Add Photos'}
                           </button>
                         <button
                           onClick={() => setShowManualEntry(showManualEntry === 'activity' ? null : 'activity')}
-                          className="text-[10px] font-bold text-zinc-400 hover:text-orange-500 transition-colors uppercase tracking-widest"
+                          className="text-[10px] font-bold text-muted hover:text-orange-500 transition-colors uppercase tracking-widest"
                         >
                           {showManualEntry === 'activity' ? 'Cancel' : 'Add Manually'}
                         </button>
@@ -1304,7 +1304,7 @@ export default function TripBuilderModal({ isOpen, onClose, onSaved, editTrip }:
                       />
                       <div className="flex flex-wrap gap-2">
                         {['Museums', 'Hiking', 'Nightlife', 'Shopping', 'Workshops'].map((tag) => (
-                          <span key={tag} className="text-[9px] font-medium text-zinc-400 bg-zinc-100 px-2 py-1 rounded-md">
+                          <span key={tag} className="text-[9px] font-medium text-muted bg-cream px-2 py-1 rounded-md">
                             #{tag}
                           </span>
                         ))}
@@ -1331,15 +1331,15 @@ export default function TripBuilderModal({ isOpen, onClose, onSaved, editTrip }:
                 </div>
               )}
 
-              <div className="pt-10 flex flex-col sm:flex-row items-center justify-between border-t border-zinc-100 gap-4">
+              <div className="pt-10 flex flex-col sm:flex-row items-center justify-between border-t border-hairline gap-4">
                 <div className="flex flex-col sm:flex-row sm:items-center gap-6">
-                  <div className="flex flex-col items-start pr-6 sm:border-r sm:border-zinc-200">
-                    <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">{activeDay.title} Total: <span className="font-mono text-xs font-bold text-[#0A192F]">${getDayCost(activeDay).toFixed(2)}</span></span>
+                  <div className="flex flex-col items-start pr-6 sm:border-r sm:border-hairline">
+                    <span className="text-[10px] font-bold text-muted uppercase tracking-widest">{activeDay.title} Total: <span className="font-mono text-xs font-bold text-ink">${getDayCost(activeDay).toFixed(2)}</span></span>
                     <span className="text-[10px] font-bold text-orange-500 uppercase tracking-widest mt-1">Grand Total: <span className="font-mono text-lg font-extrabold text-orange-600">${totalBudget.toFixed(2)}</span></span>
                   </div>
                   {totalBudget > 0 && (
                     <label className="flex items-center gap-3 cursor-pointer group">
-                      <div className={`w-8 h-4 border-2 transition-colors relative flex items-center shrink-0 ${isBudgetPublic ? 'bg-[#0A192F] border-[#0A192F]' : 'bg-transparent border-zinc-300'}`} style={{ borderRadius: '2px' }}>
+                      <div className={`w-8 h-4 border-2 transition-colors relative flex items-center shrink-0 ${isBudgetPublic ? 'bg-ink border-ink' : 'bg-transparent border-zinc-300'}`} style={{ borderRadius: '2px' }}>
                         <div className={`absolute w-2 h-2 transition-all ${isBudgetPublic ? 'bg-orange-500 left-[18px]' : 'bg-zinc-400 left-0.5'}`} style={{ borderRadius: '0px' }} />
                       </div>
                       <input
@@ -1348,7 +1348,7 @@ export default function TripBuilderModal({ isOpen, onClose, onSaved, editTrip }:
                         checked={isBudgetPublic}
                         onChange={(e) => setIsBudgetPublic(e.target.checked)}
                       />
-                      <span className="text-[10px] font-bold uppercase tracking-widest text-[#0A192F]">Publicize Budget</span>
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-ink">Publicize Budget</span>
                     </label>
                   )}
                 </div>
@@ -1361,7 +1361,7 @@ export default function TripBuilderModal({ isOpen, onClose, onSaved, editTrip }:
                       }
                       changeDayIndex(nextIndex);
                     }}
-                    className="bg-zinc-100 text-[#0A192F] font-bold px-6 py-4 rounded-xl hover:bg-zinc-200 transition-all flex items-center gap-2 group whitespace-nowrap"
+                    className="bg-cream text-ink font-bold px-6 py-4 rounded-xl hover:bg-zinc-200 transition-all flex items-center gap-2 group whitespace-nowrap"
                   >
                     {currentDayIndex === days.length - 1 ? 'Save & Add Next Day' : 'Next Day'}
                     <ChevronRight size={18} className="group-hover:translate-x-1 transition-transform" />
@@ -1380,17 +1380,17 @@ export default function TripBuilderModal({ isOpen, onClose, onSaved, editTrip }:
             </div>
 
             {/* Right Side: Map & Summary (1/3) */}
-            <div className="w-full md:w-[400px] bg-zinc-50 relative group overflow-hidden border-l border-zinc-100 flex-shrink-0">
+            <div className="w-full md:w-[400px] bg-tint relative group overflow-hidden border-l border-hairline flex-shrink-0">
               <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1524661135-423995f22d0b?auto=format&fit=crop&w=800&q=80')] bg-cover bg-center opacity-10 grayscale group-hover:grayscale-0 transition-all duration-1000" />
 
               <div className="relative z-10 h-full flex flex-col p-8">
-                <div className="flex items-center gap-3 bg-white p-4 rounded-2xl shadow-xl border border-zinc-100 mb-8">
+                <div className="flex items-center gap-3 bg-white p-4 rounded-2xl shadow-xl border border-hairline mb-8">
                   <div className="p-2 rounded-lg bg-orange-500/10 text-orange-500">
                     <MapIcon size={20} />
                   </div>
                   <div>
-                    <h4 className="font-bold text-[#0A192F] text-sm">Trip Map</h4>
-                    <p className="text-[10px] text-zinc-400">Visualizing route in {destination || 'Selected Location'}</p>
+                    <h4 className="font-bold text-ink text-sm">Trip Map</h4>
+                    <p className="text-[10px] text-muted">Visualizing route in {destination || 'Selected Location'}</p>
                   </div>
                 </div>
 
@@ -1415,7 +1415,7 @@ export default function TripBuilderModal({ isOpen, onClose, onSaved, editTrip }:
                             return (
                               <g key={item.id}>
                                 <circle cx={x} cy={y} r="5" fill={i === 0 ? '#F97316' : '#CBD5E1'} stroke="#fff" strokeWidth="2" />
-                                <text x={x + 8} y={y + 3} fontSize="8" fill="#0A192F" fontWeight="bold">{item.title.length > 15 ? item.title.substring(0, 15) + '...' : item.title}</text>
+                                <text x={x + 8} y={y + 3} fontSize="8" fill="#241E1A" fontWeight="bold">{item.title.length > 15 ? item.title.substring(0, 15) + '...' : item.title}</text>
                               </g>
                             );
                           })}
@@ -1450,7 +1450,7 @@ export default function TripBuilderModal({ isOpen, onClose, onSaved, editTrip }:
                       <div
                         key={item.id}
                         style={{ top: `${40 + (i * 40)}px`, left: `${80 + (i * 10)}px` }}
-                        className="absolute px-2 py-1 bg-white/90 backdrop-blur-md rounded-lg shadow-lg border border-zinc-100 text-[9px] font-bold text-[#0A192F] max-w-[120px] truncate"
+                        className="absolute px-2 py-1 bg-white/90 backdrop-blur-md rounded-lg shadow-lg border border-hairline text-[9px] font-bold text-ink max-w-[120px] truncate"
                       >
                         {item.title}
                       </div>
@@ -1458,43 +1458,43 @@ export default function TripBuilderModal({ isOpen, onClose, onSaved, editTrip }:
                   </div>
                 </div>
 
-                <div className="bg-white p-6 rounded-[2.5rem] shadow-xl border border-zinc-100 flex flex-col flex-1 min-h-0">
-                  <h5 className="font-bold text-[#0A192F] text-[10px] uppercase tracking-widest opacity-60 mb-4 shrink-0">Complete Route Summary</h5>
+                <div className="bg-white p-6 rounded-[2.5rem] shadow-xl border border-hairline flex flex-col flex-1 min-h-0">
+                  <h5 className="font-bold text-ink text-[10px] uppercase tracking-widest opacity-60 mb-4 shrink-0">Complete Route Summary</h5>
                   <div className="overflow-y-auto custom-scrollbar pr-2 flex-1">
                     {days.map((day, dIdx) => (
                       <div key={day.id} className="mb-6 last:mb-2">
                         <div className="flex items-center justify-between mb-3">
                           <h6 className="font-bold text-orange-500 text-xs uppercase tracking-widest">{day.title}</h6>
-                          <span className="text-[10px] font-bold text-zinc-400">${getDayCost(day)}</span>
+                          <span className="text-[10px] font-bold text-muted">${getDayCost(day)}</span>
                         </div>
 
                         {day.routeSummary.length === 0 ? (
-                          <p className="text-[10px] text-zinc-400 italic py-2 pl-2 border-l-2 border-zinc-100">No items added to {day.title} yet.</p>
+                          <p className="text-[10px] text-muted italic py-2 pl-2 border-l-2 border-hairline">No items added to {day.title} yet.</p>
                         ) : (
                           <div className="space-y-3">
                             {day.routeSummary.map((item, idx) => (
                               <div key={item.id} className="flex items-start justify-between group/item">
                                 <div className="flex gap-3">
                                   <div className="flex flex-col items-center">
-                                    <div className={`w-2 h-2 rounded-full border-2 mt-1 ${item.type === 'hotel' ? 'border-orange-500 bg-orange-500' :
-                                        item.type === 'transport' ? 'border-blue-400 bg-blue-400' :
-                                          item.type === 'dining' ? 'border-yellow-400 bg-yellow-400' :
-                                            'border-emerald-400 bg-emerald-400'
+                                    <div className={`w-2 h-2 rounded-full border-2 mt-1 ${item.type === 'hotel' ? 'border-stay bg-stay' :
+                                        item.type === 'transport' ? 'border-transport bg-transport' :
+                                          item.type === 'dining' ? 'border-dining bg-dining' :
+                                            'border-activity bg-activity'
                                       }`} />
                                     {idx !== day.routeSummary.length - 1 && (
-                                      <div className="w-0.5 h-6 bg-zinc-100 my-0.5" />
+                                      <div className="w-0.5 h-6 bg-cream my-0.5" />
                                     )}
                                   </div>
                                   <div className="flex flex-col">
-                                    <span className="text-xs text-[#0A192F] font-bold line-clamp-1 leading-none mb-1">{item.title}</span>
-                                    <span className="text-[9px] text-zinc-400 uppercase tracking-tighter">{item.type}</span>
+                                    <span className="text-xs text-ink font-bold line-clamp-1 leading-none mb-1">{item.title}</span>
+                                    <span className="text-[9px] text-muted uppercase tracking-tighter">{item.type}</span>
                                   </div>
                                 </div>
                                 <div className="flex items-center gap-2 opacity-100 md:opacity-0 md:group-hover/item:opacity-100 transition-opacity">
-                                  <a href={item.link} target="_blank" rel="noopener noreferrer" className="text-zinc-400 hover:text-orange-500">
+                                  <a href={item.link} target="_blank" rel="noopener noreferrer" className="text-muted hover:text-orange-500">
                                     <ExternalLink size={12} />
                                   </a>
-                                  <button onClick={() => removeRouteItem(dIdx, item.id)} className="text-zinc-400 hover:text-rose-500">
+                                  <button onClick={() => removeRouteItem(dIdx, item.id)} className="text-muted hover:text-rose-500">
                                     <Trash2 size={12} />
                                   </button>
                                 </div>
@@ -1526,33 +1526,33 @@ function ManualEntryForm({ value, onChange, onAdd, placeholder }: {
     <motion.div
       initial={{ opacity: 0, y: -10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="p-6 bg-zinc-50 rounded-2xl border border-zinc-100 space-y-4"
+      className="p-6 bg-tint rounded-2xl border border-hairline space-y-4"
     >
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-1">
-          <label className="text-[9px] font-bold text-zinc-400 uppercase tracking-widest ml-1">Name / Title</label>
+          <label className="text-[9px] font-bold text-muted uppercase tracking-widest ml-1">Name / Title</label>
           <input
             type="text"
             placeholder={placeholder}
             value={value.title}
             onChange={(e) => onChange({ ...value, title: e.target.value })}
-            className="w-full bg-white border-zinc-200 rounded-xl py-3 px-4 text-sm font-medium focus:ring-2 focus:ring-orange-500 transition-all"
+            className="w-full bg-white border-hairline rounded-xl py-3 px-4 text-sm font-medium focus:ring-2 focus:ring-orange-500 transition-all"
           />
         </div>
         <div className="space-y-1">
-          <label className="text-[9px] font-bold text-zinc-400 uppercase tracking-widest ml-1">Website Link (Optional)</label>
+          <label className="text-[9px] font-bold text-muted uppercase tracking-widest ml-1">Website Link (Optional)</label>
           <input
             type="text"
             placeholder="https://..."
             value={value.link}
             onChange={(e) => onChange({ ...value, link: e.target.value })}
-            className="w-full bg-white border-zinc-200 rounded-xl py-3 px-4 text-sm font-medium focus:ring-2 focus:ring-orange-500 transition-all"
+            className="w-full bg-white border-hairline rounded-xl py-3 px-4 text-sm font-medium focus:ring-2 focus:ring-orange-500 transition-all"
           />
         </div>
       </div>
       <button
         onClick={onAdd}
-        className="w-full bg-[#0A192F] text-white font-bold py-3 rounded-xl hover:bg-navy/90 transition-all text-xs uppercase tracking-widest"
+        className="w-full bg-ink text-white font-bold py-3 rounded-xl hover:bg-ink/90 transition-all text-xs uppercase tracking-widest"
       >
         Add to Itinerary
       </button>

@@ -67,15 +67,15 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
         opacity: isCollapsed ? 0 : 1
       }}
       transition={{ duration: 0.3, ease: 'easeInOut' }}
-      className="h-screen bg-white border-r border-zinc-200 flex flex-col sticky top-0 z-40 overflow-hidden"
+      className="h-screen bg-white border-r border-hairline flex flex-col sticky top-0 z-40 overflow-hidden"
     >
       <div className="p-6 flex items-center justify-between">
-        <h1 className="text-2xl font-display font-bold text-[#0A192F] tracking-tight whitespace-nowrap">
+        <h1 className="text-2xl font-display font-bold text-ink tracking-tight whitespace-nowrap">
           Venture<span className="text-orange-500">Social</span>
         </h1>
         <button 
           onClick={onToggle}
-          className="p-2 rounded-xl text-zinc-400 hover:bg-zinc-50 hover:text-[#0A192F] transition-all"
+          className="p-2 rounded-xl text-muted hover:bg-tint hover:text-ink transition-all"
         >
           <X size={20} />
         </button>
@@ -90,7 +90,7 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
               flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 whitespace-nowrap
               ${isActive 
                 ? 'bg-orange-500 text-white font-bold shadow-lg shadow-orange-500/20' 
-                : 'text-zinc-500 hover:bg-zinc-50 hover:text-[#0A192F]'}
+                : 'text-body hover:bg-tint hover:text-ink'}
             `}
           >
             <item.icon size={20} />
@@ -105,7 +105,7 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
               flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 whitespace-nowrap
               ${isActive 
                 ? 'bg-orange-500 text-white font-bold shadow-lg shadow-orange-500/20' 
-                : 'text-zinc-500 hover:bg-zinc-50 hover:text-[#0A192F]'}
+                : 'text-body hover:bg-tint hover:text-ink'}
             `}
           >
             <Briefcase size={20} />
@@ -114,7 +114,7 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
         </div>
       </nav>
 
-      <div className="p-4 border-t border-zinc-100">
+      <div className="p-4 border-t border-hairline">
         <div className="flex items-center gap-3 px-4 py-3 whitespace-nowrap">
           {isAuthenticated ? (
             <>
@@ -126,14 +126,14 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
                 />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-[#0A192F] truncate">{displayName}</p>
+                <p className="text-sm font-medium text-ink truncate">{displayName}</p>
                 <button onClick={handleAuthAction} className="text-xs text-orange-500 hover:text-orange-600 truncate font-bold">Log Out</button>
               </div>
             </>
           ) : (
             <button 
               onClick={handleAuthAction}
-              className="w-full py-2 bg-zinc-900 border border-zinc-200 text-white font-bold rounded-lg text-sm hover:bg-black transition-colors"
+              className="w-full py-2 bg-zinc-900 border border-hairline text-white font-bold rounded-lg text-sm hover:bg-black transition-colors"
             >
               Sign In / Sign Up
             </button>

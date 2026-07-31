@@ -23,7 +23,7 @@ export function DayHighlightCarousel({ day }: { day: any }) {
   };
 
   return (
-    <div className="relative rounded-2xl overflow-hidden h-[240px] group/carousel shadow-md bg-zinc-100">
+    <div className="relative rounded-2xl overflow-hidden h-[240px] group/carousel shadow-md bg-cream">
       <AnimatePresence mode="wait">
         <motion.div
           key={currentIndex}
@@ -39,7 +39,7 @@ export function DayHighlightCarousel({ day }: { day: any }) {
             locationName={images[currentIndex].name}
             className="w-full h-full object-cover"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#0A192F]/60 via-transparent to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-ink/60 via-transparent to-transparent" />
         </motion.div>
       </AnimatePresence>
 
@@ -48,7 +48,7 @@ export function DayHighlightCarousel({ day }: { day: any }) {
           key={images[currentIndex].type}
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="px-3 py-1 rounded-full bg-white/90 backdrop-blur-sm text-[10px] font-bold text-[#0A192F] uppercase tracking-widest shadow-sm border border-zinc-100"
+          className="px-3 py-1 rounded-full bg-white/90 backdrop-blur-sm text-[10px] font-bold text-ink uppercase tracking-widest shadow-sm border border-hairline"
         >
           {images[currentIndex].type}
         </motion.div>
@@ -97,18 +97,18 @@ export function PillarSection({ title, icon: Icon, children, isExpanded, onToggl
   onToggle: () => void
 }) {
   return (
-    <div className="border border-zinc-100 rounded-2xl overflow-hidden bg-white">
+    <div className="border border-hairline rounded-2xl overflow-hidden bg-white">
       <button
         onClick={onToggle}
-        className="w-full flex items-center justify-between p-6 text-left hover:bg-zinc-50 transition-colors"
+        className="w-full flex items-center justify-between p-6 text-left hover:bg-tint transition-colors"
       >
         <div className="flex items-center gap-4">
-          <div className="p-2 rounded-lg bg-zinc-50 text-orange-500">
+          <div className="p-2 rounded-lg bg-tint text-orange-500">
             <Icon size={20} />
           </div>
-          <span className="font-bold text-[#0A192F] uppercase tracking-widest text-xs">{title}</span>
+          <span className="font-bold text-ink uppercase tracking-widest text-xs">{title}</span>
         </div>
-        <ChevronDown size={18} className={`text-zinc-400 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`} />
+        <ChevronDown size={18} className={`text-muted transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`} />
       </button>
       <AnimatePresence>
         {isExpanded && (

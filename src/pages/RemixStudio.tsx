@@ -50,9 +50,9 @@ export default function RemixStudio() {
   };
 
   return (
-    <div className="max-w-6xl mx-auto space-y-10 pb-20 text-zinc-900">
+    <div className="max-w-6xl mx-auto space-y-10 pb-20 text-ink">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 p-8 bg-[#0A192F] text-white rounded-[2rem] shadow-2xl relative overflow-hidden">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 p-8 bg-ink text-white rounded-[2rem] shadow-2xl relative overflow-hidden">
         <div className="absolute top-0 right-0 w-96 h-96 bg-orange-500/10 rounded-full blur-[100px] -mr-48 -mt-48 pointer-events-none" />
         
         <div className="relative z-10 space-y-2">
@@ -60,8 +60,8 @@ export default function RemixStudio() {
             <Wand2 size={24} />
             <span className="font-bold uppercase tracking-widest text-sm">The Remix Studio</span>
           </div>
-          <h1 className="text-4xl font-display font-bold">Your A La Carte Workspace</h1>
-          <p className="text-zinc-400 font-medium max-w-lg">
+          <h1 className="text-4xl font-display font-bold text-ink">Your A La Carte Workspace</h1>
+          <p className="text-muted font-medium max-w-lg">
             Every component you've cloned across the platform lives here. Drill into a folder and reassign spots to sequence your perfect trip.
           </p>
         </div>
@@ -76,14 +76,14 @@ export default function RemixStudio() {
         // The Hub View (Polaroids)
         <div className="space-y-6">
           {isLoading ? (
-            <div className="text-center py-20 text-zinc-400 font-bold uppercase tracking-widest">Loading studio...</div>
+            <div className="text-center py-20 text-muted font-bold uppercase tracking-widest">Loading studio...</div>
           ) : !session ? (
-            <div className="bg-white rounded-[2rem] p-16 text-center border border-zinc-200 shadow-sm flex flex-col items-center">
+            <div className="bg-white rounded-[2rem] p-16 text-center border border-hairline shadow-sm flex flex-col items-center">
               <div className="w-20 h-20 bg-orange-500/10 text-orange-500 rounded-full flex items-center justify-center mb-6">
                 <FolderOpen size={40} />
               </div>
-              <h3 className="text-2xl font-bold text-[#0A192F] mb-4">Start Remixing Itineraries</h3>
-              <p className="text-zinc-500 max-w-md mx-auto mb-8">
+              <h3 className="text-2xl font-bold text-ink mb-4">Start Remixing Itineraries</h3>
+              <p className="text-body max-w-md mx-auto mb-8">
                 Create a free account to unlock your personal Remix Workspace. Cherry-pick trip spots, sort them into custom folders, and plan your perfect journey.
               </p>
               <button 
@@ -94,17 +94,17 @@ export default function RemixStudio() {
               </button>
             </div>
           ) : folders.length === 0 ? (
-            <div className="bg-white rounded-[2rem] p-16 text-center border border-zinc-200 shadow-sm flex flex-col items-center">
+            <div className="bg-white rounded-[2rem] p-16 text-center border border-hairline shadow-sm flex flex-col items-center">
               <div className="w-20 h-20 bg-orange-500/10 text-orange-500 rounded-full flex items-center justify-center mb-6">
                 <FolderOpen size={40} />
               </div>
-              <h3 className="text-2xl font-bold text-[#0A192F] mb-4">No trips remixed yet. Start exploring!</h3>
-              <p className="text-zinc-500 max-w-md mx-auto mb-8">
+              <h3 className="text-2xl font-bold text-ink mb-4">No trips remixed yet. Start exploring!</h3>
+              <p className="text-body max-w-md mx-auto mb-8">
                 Explore the discover feed or search for destinations. When you find an itinerary you love, click the + button to start building your custom trip here.
               </p>
               <button 
                 onClick={() => navigate('/search')}
-                className="bg-[#0A192F] text-white font-bold px-8 py-4 rounded-xl hover:bg-black transition-colors shadow-xl"
+                className="bg-ink text-white font-bold px-8 py-4 rounded-xl hover:bg-black transition-colors shadow-xl"
               >
                 Discover Itineraries
               </button>
@@ -116,7 +116,7 @@ export default function RemixStudio() {
                   key={folder.id}
                   whileHover={{ y: -5 }}
                   onClick={() => setActiveFolder(folder)}
-                  className="bg-white rounded-3xl p-4 border border-zinc-200 shadow-xl cursor-pointer group hover:border-orange-500 transition-all relative"
+                  className="bg-white rounded-3xl p-4 border border-hairline shadow-xl cursor-pointer group hover:border-orange-500 transition-all relative"
                 >
                   <button 
                     onClick={(e) => handleDeleteFolder(e, folder.id)}
@@ -124,7 +124,7 @@ export default function RemixStudio() {
                   >
                     <Trash2 size={16} />
                   </button>
-                  <div className="relative aspect-square rounded-2xl overflow-hidden mb-6 bg-zinc-100">
+                  <div className="relative aspect-square rounded-2xl overflow-hidden mb-6 bg-cream">
                     <SmartImage 
                       src={folder.cover_url} 
                       alt={folder.name}
@@ -353,16 +353,16 @@ function WorkspaceView({ folder, onClose }: { folder: any, onClose: () => void }
       <button
         onClick={() => handleReassignDay(savedSpotId, currentDay - 1)}
         disabled={currentDay <= 1}
-        className="p-1.5 rounded-lg bg-zinc-100 text-zinc-500 hover:bg-orange-500 hover:text-white transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+        className="p-1.5 rounded-lg bg-cream text-body hover:bg-orange-500 hover:text-white transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
         title="Move to previous day"
       >
         <ArrowUp size={14} />
       </button>
-      <span className="text-[10px] font-bold text-zinc-400 min-w-[36px] text-center">Day {currentDay}</span>
+      <span className="text-[10px] font-bold text-muted min-w-[36px] text-center">Day {currentDay}</span>
       <button
         onClick={() => handleReassignDay(savedSpotId, currentDay + 1)}
         disabled={currentDay >= maxDay}
-        className="p-1.5 rounded-lg bg-zinc-100 text-zinc-500 hover:bg-orange-500 hover:text-white transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+        className="p-1.5 rounded-lg bg-cream text-body hover:bg-orange-500 hover:text-white transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
         title="Move to next day"
       >
         <ArrowDown size={14} />
@@ -374,7 +374,7 @@ function WorkspaceView({ folder, onClose }: { folder: any, onClose: () => void }
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-white rounded-[2rem] border border-zinc-200 shadow-2xl p-8 relative"
+      className="bg-white rounded-[2rem] border border-hairline shadow-2xl p-8 relative"
     >
       <AnimatePresence>
         {notification && (
@@ -382,7 +382,7 @@ function WorkspaceView({ folder, onClose }: { folder: any, onClose: () => void }
             initial={{ opacity: 0, y: -20, x: '-50%' }}
             animate={{ opacity: 1, y: 0, x: '-50%' }}
             exit={{ opacity: 0, y: -20, x: '-50%' }}
-            className="absolute top-8 left-1/2 z-50 bg-[#0A192F] text-white px-6 py-3 rounded-2xl shadow-2xl flex items-center gap-3"
+            className="absolute top-8 left-1/2 z-50 bg-ink text-white px-6 py-3 rounded-2xl shadow-2xl flex items-center gap-3"
           >
             <CheckCircle2 className="text-orange-500" />
             <span className="font-bold">{notification}</span>
@@ -393,7 +393,7 @@ function WorkspaceView({ folder, onClose }: { folder: any, onClose: () => void }
       <div className="flex items-center justify-between mb-8">
         <button 
           onClick={onClose}
-          className="flex items-center gap-2 text-zinc-500 font-bold hover:text-[#0A192F] transition-colors"
+          className="flex items-center gap-2 text-body font-bold hover:text-ink transition-colors"
         >
           <ArrowRight className="rotate-180" size={18} />
           Back to Hub
@@ -410,15 +410,15 @@ function WorkspaceView({ folder, onClose }: { folder: any, onClose: () => void }
 
       <div className="mb-8 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
         <div>
-          <h2 className="text-3xl font-display font-bold text-[#0A192F]">{folder.name}</h2>
-          <p className="text-zinc-500 font-medium mt-1">Reassign spots to build your custom itinerary.</p>
+          <h2 className="text-3xl font-display font-bold text-ink">{folder.name}</h2>
+          <p className="text-body font-medium mt-1">Reassign spots to build your custom itinerary.</p>
         </div>
-        <div className="flex items-center gap-1 bg-zinc-100 p-1 rounded-full border border-zinc-200 shrink-0">
+        <div className="flex items-center gap-1 bg-cream p-1 rounded-full border border-hairline shrink-0">
           {(['DRIVING', 'TRANSIT', 'WALKING'] as TravelMode[]).map((m) => (
             <button
               key={m}
               onClick={() => setTravelMode(m)}
-              className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all ${travelMode === m ? 'bg-[#0A192F] text-white shadow' : 'text-zinc-500 hover:text-[#0A192F]'}`}
+              className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all ${travelMode === m ? 'bg-ink text-white shadow' : 'text-body hover:text-ink'}`}
               title={`Recompute travel times for ${m.toLowerCase()}`}
             >
               {m === 'DRIVING' ? 'Drive' : m === 'TRANSIT' ? 'Transit' : 'Walk'}
@@ -429,9 +429,9 @@ function WorkspaceView({ folder, onClose }: { folder: any, onClose: () => void }
 
       <div className="space-y-6" style={{ zoom: 0.9 } as any}>
         {isLoading ? (
-           <div className="py-20 text-center text-zinc-400 font-bold uppercase tracking-widest text-lg">Loading spots...</div>
+           <div className="py-20 text-center text-muted font-bold uppercase tracking-widest text-lg">Loading spots...</div>
         ) : spots.length === 0 ? (
-           <div className="py-20 text-center text-zinc-400 font-bold uppercase tracking-widest text-lg">This folder is empty.</div>
+           <div className="py-20 text-center text-muted font-bold uppercase tracking-widest text-lg">This folder is empty.</div>
         ) : (
           sortedDays.map((dayNum) => {
             const daySpots = spotsByDay[dayNum];
@@ -457,7 +457,7 @@ function WorkspaceView({ folder, onClose }: { folder: any, onClose: () => void }
             return (
               <div
                 key={`day-${dayNum}`}
-                className={`bg-zinc-50 rounded-[2rem] border transition-all duration-500 overflow-hidden ${expandedDay === dayNum ? 'border-orange-500 shadow-xl' : 'border-zinc-200 shadow-sm hover:border-zinc-300'}`}
+                className={`bg-tint rounded-[2rem] border transition-all duration-500 overflow-hidden ${expandedDay === dayNum ? 'border-orange-500 shadow-xl' : 'border-hairline shadow-sm hover:border-zinc-300'}`}
               >
                 <div className="w-full text-left group bg-white">
                   <div className="p-6 md:p-8 space-y-6">
@@ -466,19 +466,19 @@ function WorkspaceView({ folder, onClose }: { folder: any, onClose: () => void }
                       className="w-full flex items-center justify-between cursor-pointer group"
                     >
                       <div className="flex items-center gap-6">
-                        <div className="flex flex-col items-center justify-center w-16 h-16 rounded-2xl bg-zinc-50 border border-zinc-100 group-hover:bg-orange-500/10 group-hover:border-orange-500/20 transition-colors">
-                          <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Day</span>
-                          <span className="text-2xl font-display font-bold text-[#0A192F]">{dayNum}</span>
+                        <div className="flex flex-col items-center justify-center w-16 h-16 rounded-2xl bg-tint border border-hairline group-hover:bg-orange-500/10 group-hover:border-orange-500/20 transition-colors">
+                          <span className="text-[10px] font-bold text-muted uppercase tracking-widest">Day</span>
+                          <span className="text-2xl font-display font-bold text-ink">{dayNum}</span>
                         </div>
                         <div>
-                          <h3 className="text-2xl font-display font-bold text-[#0A192F] group-hover:text-orange-500 transition-colors">
+                          <h3 className="text-2xl font-display font-bold text-ink group-hover:text-orange-500 transition-colors">
                             Day {dayNum}
                           </h3>
                           <DayTravelSummary spots={daySpots.map((s: any) => s.trip_spots)} mode={travelMode} className="mt-1.5" />
                         </div>
                       </div>
                       <div className="flex items-center gap-4">
-                        <div className={`p-3 rounded-full text-[#0A192F] transition-transform duration-500 ${expandedDay === dayNum ? 'rotate-180 bg-orange-500 text-white shadow-lg' : 'bg-zinc-50'}`}>
+                        <div className={`p-3 rounded-full text-ink transition-transform duration-500 ${expandedDay === dayNum ? 'rotate-180 bg-orange-500 text-white shadow-lg' : 'bg-tint'}`}>
                           <ChevronDown size={24} />
                         </div>
                       </div>
@@ -486,7 +486,7 @@ function WorkspaceView({ folder, onClose }: { folder: any, onClose: () => void }
                     
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
                       <div className="space-y-2">
-                        <p className="text-zinc-500 text-sm leading-relaxed italic">
+                        <p className="text-body text-sm leading-relaxed italic">
                           {transport ? `"${transport.description}"` : "No transport assigned for this day."}
                         </p>
                       </div>
@@ -512,12 +512,12 @@ function WorkspaceView({ folder, onClose }: { folder: any, onClose: () => void }
                             isExpanded={expandedPillar === `${dayNum}-transport`}
                             onToggle={() => setExpandedPillar(expandedPillar === `${dayNum}-transport` ? null : `${dayNum}-transport`)}
                           >
-                            <div className="flex items-start gap-6 p-6 bg-white rounded-2xl border border-zinc-100 relative">
-                              <div className="p-4 rounded-xl bg-zinc-50 shadow-sm text-orange-500">
+                            <div className="flex items-start gap-6 p-6 bg-white rounded-2xl border border-hairline relative">
+                              <div className="p-4 rounded-xl bg-tint shadow-sm text-orange-500">
                                 <Car size={24} />
                               </div>
                               <div className="space-y-2">
-                                <h4 className="font-bold text-[#0A192F] text-lg">{transport.title}</h4>
+                                <h4 className="font-bold text-ink text-lg">{transport.title}</h4>
                                 <p className="text-zinc-600 leading-relaxed italic">"{transport.description}"</p>
                               </div>
                               <DayMoveButtons savedSpotId={transportSp.id} currentDay={dayNum} />
@@ -538,7 +538,7 @@ function WorkspaceView({ folder, onClose }: { folder: any, onClose: () => void }
                             isExpanded={expandedPillar === `${dayNum}-stay`}
                             onToggle={() => setExpandedPillar(expandedPillar === `${dayNum}-stay` ? null : `${dayNum}-stay`)}
                           >
-                            <div className="bg-white rounded-2xl p-6 border border-zinc-100 space-y-6 relative">
+                            <div className="bg-white rounded-2xl p-6 border border-hairline space-y-6 relative">
                               <DayMoveButtons savedSpotId={staySp.id} currentDay={dayNum} />
                               <button
                                 onClick={(e) => { e.stopPropagation(); handleRemoveSpot(staySp.id); }}
@@ -552,9 +552,9 @@ function WorkspaceView({ folder, onClose }: { folder: any, onClose: () => void }
                                 </div>
                                 <div className="flex-1 space-y-4">
                                   <div className="flex items-center justify-between">
-                                    <h4 className="text-2xl font-display font-bold text-[#0A192F] pr-12">{stay.title}</h4>
+                                    <h4 className="text-2xl font-display font-bold text-ink pr-12">{stay.title}</h4>
                                   </div>
-                                  <p className="text-zinc-500 text-sm leading-relaxed">{stay.description}</p>
+                                  <p className="text-body text-sm leading-relaxed">{stay.description}</p>
                                 </div>
                               </div>
                             </div>
@@ -568,7 +568,7 @@ function WorkspaceView({ folder, onClose }: { folder: any, onClose: () => void }
                             isExpanded={expandedPillar === `${dayNum}-dining`}
                             onToggle={() => setExpandedPillar(expandedPillar === `${dayNum}-dining` ? null : `${dayNum}-dining`)}
                           >
-                            <div className="bg-white rounded-2xl p-6 border border-zinc-100 space-y-6 relative">
+                            <div className="bg-white rounded-2xl p-6 border border-hairline space-y-6 relative">
                               <DayMoveButtons savedSpotId={diningSp.id} currentDay={dayNum} />
                               <button
                                 onClick={(e) => { e.stopPropagation(); handleRemoveSpot(diningSp.id); }}
@@ -582,9 +582,9 @@ function WorkspaceView({ folder, onClose }: { folder: any, onClose: () => void }
                                 </div>
                                 <div className="flex-1 space-y-4">
                                   <div className="flex items-center justify-between">
-                                    <h4 className="text-2xl font-display font-bold text-[#0A192F] pr-12">{dining.title}</h4>
+                                    <h4 className="text-2xl font-display font-bold text-ink pr-12">{dining.title}</h4>
                                   </div>
-                                  <p className="text-zinc-500 text-sm leading-relaxed">{dining.description}</p>
+                                  <p className="text-body text-sm leading-relaxed">{dining.description}</p>
                                 </div>
                               </div>
                             </div>
@@ -602,7 +602,7 @@ function WorkspaceView({ folder, onClose }: { folder: any, onClose: () => void }
                               {activitiesSp.map((activitySp: any) => {
                                 const activity = activitySp.trip_spots;
                                 return (
-                                  <div key={activitySp.id} className="bg-white rounded-2xl overflow-hidden border border-zinc-100 flex flex-col relative group">
+                                  <div key={activitySp.id} className="bg-white rounded-2xl overflow-hidden border border-hairline flex flex-col relative group">
                                     <div className="absolute top-4 right-14 z-20 transition-opacity bg-white/90 backdrop-blur-sm rounded-lg p-1 shadow-sm">
                                       <DayMoveButtons savedSpotId={activitySp.id} currentDay={dayNum} />
                                     </div>
@@ -616,8 +616,8 @@ function WorkspaceView({ folder, onClose }: { folder: any, onClose: () => void }
                                       <SmartImage src={activity.image_url} alt={activity.title} locationName={activity.title} className="w-full h-full object-cover" />
                                     </div>
                                     <div className="p-6 space-y-2">
-                                      <h4 className="font-bold text-[#0A192F] text-lg">{activity.title}</h4>
-                                      <p className="text-zinc-500 text-sm leading-relaxed">{activity.description}</p>
+                                      <h4 className="font-bold text-ink text-lg">{activity.title}</h4>
+                                      <p className="text-body text-sm leading-relaxed">{activity.description}</p>
                                     </div>
                                   </div>
                                 );
@@ -646,20 +646,20 @@ function PillarSection({ title, icon: Icon, isExpanded, onToggle, children }: {
   children: React.ReactNode;
 }) {
   return (
-    <div className="rounded-2xl border border-zinc-200 bg-white overflow-hidden">
+    <div className="rounded-2xl border border-hairline bg-white overflow-hidden">
       <button
         onClick={onToggle}
-        className="w-full flex items-center justify-between p-5 hover:bg-zinc-50 transition-colors"
+        className="w-full flex items-center justify-between p-5 hover:bg-tint transition-colors"
       >
         <div className="flex items-center gap-3">
           <Icon size={18} className="text-orange-500" />
-          <span className="font-bold text-sm text-[#0A192F]">{title}</span>
+          <span className="font-bold text-sm text-ink">{title}</span>
         </div>
         <motion.div
           animate={{ rotate: isExpanded ? 180 : 0 }}
           transition={{ duration: 0.2 }}
         >
-          <ChevronDown size={18} className="text-zinc-400" />
+          <ChevronDown size={18} className="text-muted" />
         </motion.div>
       </button>
       <AnimatePresence>
@@ -689,7 +689,7 @@ function DayHighlightCarousel({ day }: { day: any }) {
   ];
 
   return (
-    <div className="relative rounded-2xl overflow-hidden shadow-lg bg-zinc-100 aspect-[16/9]">
+    <div className="relative rounded-2xl overflow-hidden shadow-lg bg-cream aspect-[16/9]">
       <AnimatePresence mode="wait">
         <motion.div
           key={activeIdx}

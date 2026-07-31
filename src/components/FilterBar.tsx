@@ -49,20 +49,20 @@ export default function FilterBar() {
     (filters.location ? 1 : 0);
 
   return (
-    <div className="w-full space-y-4 py-2 text-zinc-900">
+    <div className="w-full space-y-4 py-2 text-ink">
       <div className="flex items-center gap-4 overflow-x-auto no-scrollbar px-2">
         {/* Sort Dropdown */}
         <div className="relative group">
-          <button className="flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-zinc-200 text-sm font-bold text-[#0A192F] hover:border-orange-500 transition-all whitespace-nowrap">
+          <button className="flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-hairline text-sm font-bold text-ink hover:border-orange-500 transition-all whitespace-nowrap">
             Sort: {sortBy}
             <ChevronDown size={16} />
           </button>
-          <div className="absolute top-full left-0 mt-2 w-48 bg-white rounded-2xl shadow-xl border border-zinc-100 py-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
+          <div className="absolute top-full left-0 mt-2 w-48 bg-white rounded-2xl shadow-xl border border-hairline py-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
             {['Most Liked', 'Highest Rated', 'Price: Low to High'].map(option => (
               <button
                 key={option}
                 onClick={() => setSortBy(option)}
-                className={`w-full text-left px-4 py-2 text-sm hover:bg-zinc-50 transition-colors ${sortBy === option ? 'text-orange-500 font-bold' : 'text-zinc-600'}`}
+                className={`w-full text-left px-4 py-2 text-sm hover:bg-tint transition-colors ${sortBy === option ? 'text-orange-500 font-bold' : 'text-zinc-600'}`}
               >
                 {option}
               </button>
@@ -72,14 +72,14 @@ export default function FilterBar() {
 
         {/* Stars Filter */}
         <div className="relative group">
-          <button className="flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-zinc-200 text-sm font-bold text-[#0A192F] hover:border-orange-500 transition-all whitespace-nowrap">
+          <button className="flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-hairline text-sm font-bold text-ink hover:border-orange-500 transition-all whitespace-nowrap">
             Rating
             <Star size={16} className={filters.minStars > 0 ? 'fill-orange-500 text-orange-500' : ''} />
           </button>
-          <div className="absolute top-full left-0 mt-2 w-48 bg-white rounded-2xl shadow-xl border border-zinc-100 py-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
+          <div className="absolute top-full left-0 mt-2 w-48 bg-white rounded-2xl shadow-xl border border-hairline py-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
             <button
               onClick={() => setFilters(prev => ({ ...prev, minStars: 0 }))}
-              className="w-full text-left px-4 py-2 text-sm hover:bg-zinc-50 text-zinc-600"
+              className="w-full text-left px-4 py-2 text-sm hover:bg-tint text-zinc-600"
             >
               All Ratings
             </button>
@@ -87,7 +87,7 @@ export default function FilterBar() {
               <button
                 key={star}
                 onClick={() => setFilters(prev => ({ ...prev, minStars: star }))}
-                className={`w-full text-left px-4 py-2 text-sm hover:bg-zinc-50 flex items-center gap-2 ${filters.minStars === star ? 'text-orange-500 font-bold' : 'text-zinc-600'}`}
+                className={`w-full text-left px-4 py-2 text-sm hover:bg-tint flex items-center gap-2 ${filters.minStars === star ? 'text-orange-500 font-bold' : 'text-zinc-600'}`}
               >
                 {star} Stars & Up
                 <div className="flex">
@@ -102,16 +102,16 @@ export default function FilterBar() {
 
         {/* Duration Filter */}
         <div className="relative group">
-          <button className="flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-zinc-200 text-sm font-bold text-[#0A192F] hover:border-orange-500 transition-all whitespace-nowrap">
+          <button className="flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-hairline text-sm font-bold text-ink hover:border-orange-500 transition-all whitespace-nowrap">
             Duration
             <Clock size={16} className={filters.duration ? 'text-orange-500' : ''} />
           </button>
-          <div className="absolute top-full left-0 mt-2 w-48 bg-white rounded-2xl shadow-xl border border-zinc-100 py-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
+          <div className="absolute top-full left-0 mt-2 w-48 bg-white rounded-2xl shadow-xl border border-hairline py-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
             {DURATIONS.map(d => (
               <button
                 key={d}
                 onClick={() => setFilters(prev => ({ ...prev, duration: d }))}
-                className={`w-full text-left px-4 py-2 text-sm hover:bg-zinc-50 transition-colors ${filters.duration === d ? 'text-orange-500 font-bold' : 'text-zinc-600'}`}
+                className={`w-full text-left px-4 py-2 text-sm hover:bg-tint transition-colors ${filters.duration === d ? 'text-orange-500 font-bold' : 'text-zinc-600'}`}
               >
                 {d}
               </button>
@@ -121,16 +121,16 @@ export default function FilterBar() {
 
         {/* Location Filter */}
         <div className="relative group">
-          <button className="flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-zinc-200 text-sm font-bold text-[#0A192F] hover:border-orange-500 transition-all whitespace-nowrap">
+          <button className="flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-hairline text-sm font-bold text-ink hover:border-orange-500 transition-all whitespace-nowrap">
             City/Local
             <MapPin size={16} className={filters.location ? 'text-orange-500' : ''} />
           </button>
-          <div className="absolute top-full left-0 mt-2 w-48 bg-white rounded-2xl shadow-xl border border-zinc-100 py-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
+          <div className="absolute top-full left-0 mt-2 w-48 bg-white rounded-2xl shadow-xl border border-hairline py-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
             {LOCATIONS.map(l => (
               <button
                 key={l}
                 onClick={() => setFilters(prev => ({ ...prev, location: l }))}
-                className={`w-full text-left px-4 py-2 text-sm hover:bg-zinc-50 transition-colors ${filters.location === l ? 'text-orange-500 font-bold' : 'text-zinc-600'}`}
+                className={`w-full text-left px-4 py-2 text-sm hover:bg-tint transition-colors ${filters.location === l ? 'text-orange-500 font-bold' : 'text-zinc-600'}`}
               >
                 {l}
               </button>
@@ -141,15 +141,15 @@ export default function FilterBar() {
         {/* Hotel Type Removed - Rolled into Global Categories */}
 
         {/* Price Range Filter */}
-        <div className="flex items-center gap-3 bg-white border border-zinc-200 rounded-full px-4 py-1.5 whitespace-nowrap">
-          <span className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Price</span>
+        <div className="flex items-center gap-3 bg-white border border-hairline rounded-full px-4 py-1.5 whitespace-nowrap">
+          <span className="text-xs font-bold text-muted uppercase tracking-widest">Price</span>
           <div className="flex items-center gap-2">
             <input
               type="number"
               placeholder="Min"
               value={filters.priceRange[0] || ''}
               onChange={(e) => handlePriceChange(0, e.target.value)}
-              className="w-12 bg-transparent border-none text-sm font-bold text-[#0A192F] focus:ring-0 p-0"
+              className="w-12 bg-transparent border-none text-sm font-bold text-ink focus:ring-0 p-0"
             />
             <span className="text-zinc-300">-</span>
             <input
@@ -157,7 +157,7 @@ export default function FilterBar() {
               placeholder="Max"
               value={filters.priceRange[1] || ''}
               onChange={(e) => handlePriceChange(1, e.target.value)}
-              className="w-12 bg-transparent border-none text-sm font-bold text-[#0A192F] focus:ring-0 p-0"
+              className="w-12 bg-transparent border-none text-sm font-bold text-ink focus:ring-0 p-0"
             />
           </div>
         </div>
@@ -206,21 +206,21 @@ export default function FilterBar() {
 
       {/* Absolute Categories Enforced */}
       <div className="flex flex-wrap gap-2 px-2 pb-2">
-        <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest self-center mr-2">Module Categories:</span>
+        <span className="text-[10px] font-bold text-muted uppercase tracking-widest self-center mr-2">Module Categories:</span>
         {CATEGORIES.map(category => (
           <button
             key={category}
             onClick={() => toggleCategory(category)}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all border ${
               filters.activities.includes(category)
-                ? 'bg-[#0A192F] border-[#0A192F] text-orange-500 shadow-md scale-[1.02]'
-                : 'bg-white border-zinc-200 text-[#0A192F] hover:border-orange-500 shadow-sm'
+                ? 'bg-ink border-ink text-orange-500 shadow-md scale-[1.02]'
+                : 'bg-white border-hairline text-ink hover:border-orange-500 shadow-sm'
             }`}
           >
-            {category === 'Hotel' && <Bed size={14} className={filters.activities.includes(category) ? 'text-orange-500' : 'text-zinc-400'}/>}
-            {category === 'Restaurant' && <Utensils size={14} className={filters.activities.includes(category) ? 'text-orange-500' : 'text-zinc-400'}/>}
-            {category === 'Transport' && <Plane size={14} className={filters.activities.includes(category) ? 'text-orange-500' : 'text-zinc-400'}/>}
-            {category === 'Activity' && <Camera size={14} className={filters.activities.includes(category) ? 'text-orange-500' : 'text-zinc-400'}/>}
+            {category === 'Hotel' && <Bed size={14} className={filters.activities.includes(category) ? 'text-orange-500' : 'text-muted'}/>}
+            {category === 'Restaurant' && <Utensils size={14} className={filters.activities.includes(category) ? 'text-orange-500' : 'text-muted'}/>}
+            {category === 'Transport' && <Plane size={14} className={filters.activities.includes(category) ? 'text-orange-500' : 'text-muted'}/>}
+            {category === 'Activity' && <Camera size={14} className={filters.activities.includes(category) ? 'text-orange-500' : 'text-muted'}/>}
             {category}
           </button>
         ))}
@@ -238,7 +238,7 @@ function FilterChip({ label, onRemove }: { label: string; onRemove: () => void; 
       className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-orange-500/10 border border-orange-500/20 text-orange-500 text-xs font-bold"
     >
       {label}
-      <button onClick={onRemove} className="hover:text-[#0A192F] transition-colors">
+      <button onClick={onRemove} className="hover:text-ink transition-colors">
         <X size={14} />
       </button>
     </motion.div>

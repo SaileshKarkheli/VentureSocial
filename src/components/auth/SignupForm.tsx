@@ -104,19 +104,19 @@ export const SignupForm: React.FC<SignupModalProps> = ({ isOpen, onClose }) => {
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
           transition={{ type: "spring", duration: 0.5, bounce: 0.3 }}
-          className="relative bg-white p-8 rounded-3xl shadow-2xl border border-zinc-100 w-full max-w-md z-10"
+          className="relative bg-white p-8 rounded-3xl shadow-2xl border border-hairline w-full max-w-md z-10"
         >
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 p-2 text-zinc-400 hover:text-[#0A192F] hover:bg-zinc-100 rounded-full transition-colors"
+            className="absolute top-4 right-4 p-2 text-muted hover:text-ink hover:bg-cream rounded-full transition-colors"
           >
             <X size={20} />
           </button>
 
-          <h2 className="text-3xl font-display font-bold text-[#0A192F] mb-2 text-center">
+          <h2 className="text-3xl font-display font-bold text-ink mb-2 text-center">
             Sign Up
           </h2>
-          <p className="text-zinc-500 text-center text-sm mb-6">
+          <p className="text-body text-center text-sm mb-6">
             It's quick and easy.
           </p>
 
@@ -131,7 +131,7 @@ export const SignupForm: React.FC<SignupModalProps> = ({ isOpen, onClose }) => {
             type="button"
             onClick={handleGoogleLogin}
             disabled={loading}
-            className="w-full py-3 px-4 bg-white border border-zinc-200 text-zinc-700 font-bold rounded-xl shadow-sm hover:bg-zinc-50 hover:shadow transition-all disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-3 mb-6"
+            className="w-full py-3 px-4 bg-white border border-hairline text-zinc-700 font-bold rounded-xl shadow-sm hover:bg-tint hover:shadow transition-all disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-3 mb-6"
           >
             <svg viewBox="0 0 24 24" className="w-5 h-5" xmlns="http://www.w3.org/2000/svg">
               <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
@@ -144,9 +144,9 @@ export const SignupForm: React.FC<SignupModalProps> = ({ isOpen, onClose }) => {
           </button>
 
           <div className="flex items-center justify-between mb-6">
-            <span className="border-b border-zinc-200 w-1/5 lg:w-1/4"></span>
-            <span className="text-xs text-center text-zinc-400 font-bold uppercase tracking-widest">or sign up with email</span>
-            <span className="border-b border-zinc-200 w-1/5 lg:w-1/4"></span>
+            <span className="border-b border-hairline w-1/5 lg:w-1/4"></span>
+            <span className="text-xs text-center text-muted font-bold uppercase tracking-widest">or sign up with email</span>
+            <span className="border-b border-hairline w-1/5 lg:w-1/4"></span>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -157,7 +157,7 @@ export const SignupForm: React.FC<SignupModalProps> = ({ isOpen, onClose }) => {
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
                   required
-                  className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#3B82F6] focus:border-transparent transition-all placeholder:text-zinc-400"
+                  className="w-full px-4 py-3 bg-tint border border-hairline rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all placeholder:text-muted"
                   placeholder="First name"
                   disabled={loading}
                 />
@@ -168,7 +168,7 @@ export const SignupForm: React.FC<SignupModalProps> = ({ isOpen, onClose }) => {
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
                   required
-                  className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#3B82F6] focus:border-transparent transition-all placeholder:text-zinc-400"
+                  className="w-full px-4 py-3 bg-tint border border-hairline rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all placeholder:text-muted"
                   placeholder="Last name"
                   disabled={loading}
                 />
@@ -181,7 +181,7 @@ export const SignupForm: React.FC<SignupModalProps> = ({ isOpen, onClose }) => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#3B82F6] focus:border-transparent transition-all placeholder:text-zinc-400"
+                className="w-full px-4 py-3 bg-tint border border-hairline rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all placeholder:text-muted"
                 placeholder="Email address"
                 disabled={loading}
               />
@@ -194,14 +194,14 @@ export const SignupForm: React.FC<SignupModalProps> = ({ isOpen, onClose }) => {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 minLength={6}
-                className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#3B82F6] focus:border-transparent transition-all placeholder:text-zinc-400"
+                className="w-full px-4 py-3 bg-tint border border-hairline rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all placeholder:text-muted"
                 placeholder="New password"
                 disabled={loading}
               />
-              <p className="text-[10px] text-zinc-400 mt-1 pl-1">Must be at least 6 characters.</p>
+              <p className="text-[10px] text-muted mt-1 pl-1">Must be at least 6 characters.</p>
             </div>
 
-            <p className="text-[10px] text-zinc-500 mt-4 leading-tight">
+            <p className="text-[10px] text-body mt-4 leading-tight">
               By clicking Sign Up, you agree to our Terms, Privacy Policy and Cookies Policy.
             </p>
 

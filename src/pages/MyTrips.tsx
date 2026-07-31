@@ -248,11 +248,11 @@ export default function MyTrips() {
   }, [session?.user?.id, refreshKey]);
 
   return (
-    <div className="max-w-7xl mx-auto space-y-12 pb-20 px-4 text-zinc-900">
+    <div className="max-w-7xl mx-auto space-y-12 pb-20 px-4 text-ink">
       <header className="flex items-center justify-between">
         <div>
-          <h2 className="text-4xl font-display font-bold text-[#0A192F]">My Travel History</h2>
-          <p className="text-zinc-500">A chronological journey through the places you've explored.</p>
+          <h2 className="text-4xl font-display font-bold text-ink">My Travel History</h2>
+          <p className="text-body">A chronological journey through the places you've explored.</p>
         </div>
         <button
           id="add-trip-button"
@@ -267,16 +267,16 @@ export default function MyTrips() {
       {/* LinkedIn-style Stats Bar */}
       <div className="flex gap-16 py-4">
         <div>
-          <div className="text-3xl font-display font-bold text-[#0A192F]">{stats.totalTrips}</div>
-          <div className="text-xs text-zinc-500 font-semibold uppercase tracking-wider mt-1">Total Trips</div>
+          <div className="text-3xl font-display font-bold text-ink">{stats.totalTrips}</div>
+          <div className="text-xs text-body font-semibold uppercase tracking-wider mt-1">Total Trips</div>
         </div>
         <div>
-          <div className="text-3xl font-display font-bold text-[#0A192F]">{stats.uniqueCountries}</div>
-          <div className="text-xs text-zinc-500 font-semibold uppercase tracking-wider mt-1">Countries Visited</div>
+          <div className="text-3xl font-display font-bold text-ink">{stats.uniqueCountries}</div>
+          <div className="text-xs text-body font-semibold uppercase tracking-wider mt-1">Countries Visited</div>
         </div>
         <div>
-          <div className="text-3xl font-display font-bold text-[#0A192F]">{stats.totalDays}</div>
-          <div className="text-xs text-zinc-500 font-semibold uppercase tracking-wider mt-1">Total Days Traveled</div>
+          <div className="text-3xl font-display font-bold text-ink">{stats.totalDays}</div>
+          <div className="text-xs text-body font-semibold uppercase tracking-wider mt-1">Total Days Traveled</div>
         </div>
       </div>
 
@@ -298,17 +298,17 @@ export default function MyTrips() {
           <TripGridSkeleton />
         </div>
       ) : myTrips.length === 0 ? (
-        <div className="flex flex-col items-center justify-center text-center p-16 bg-white rounded-[2rem] border border-zinc-200 shadow-sm mt-12">
+        <div className="flex flex-col items-center justify-center text-center p-16 bg-white rounded-[2rem] border border-hairline shadow-sm mt-12">
           <div className="w-20 h-20 bg-orange-500/10 text-orange-500 rounded-full flex items-center justify-center mb-6">
             <Plus size={40} />
           </div>
-          <h3 className="text-2xl font-bold text-[#0A192F] mb-4">No trips found</h3>
-          <p className="text-zinc-500 max-w-md mx-auto mb-8">
+          <h3 className="text-2xl font-bold text-ink mb-4">No trips found</h3>
+          <p className="text-body max-w-md mx-auto mb-8">
             You haven't recorded any adventures in your travel history yet. Start exploring or map your first destination to build your travel map!
           </p>
           <button
             onClick={() => setIsBuilderOpen(true)}
-            className="bg-[#0A192F] text-white font-bold px-8 py-4 rounded-xl hover:bg-black transition-colors shadow-xl"
+            className="bg-ink text-white font-bold px-8 py-4 rounded-xl hover:bg-black transition-colors shadow-xl"
           >
             Add Your First Trip
           </button>
@@ -320,7 +320,7 @@ export default function MyTrips() {
               <motion.div
                 whileHover={{ scale: 1.05, y: -5 }}
                 onClick={() => navigate(`/trip/${trip.id}`)}
-                className="w-full aspect-square rounded-3xl overflow-hidden cursor-pointer shadow-2xl border-4 border-white relative z-10 group bg-zinc-100"
+                className="w-full aspect-square rounded-3xl overflow-hidden cursor-pointer shadow-2xl border-4 border-white relative z-10 group bg-cream"
               >
                 <div
                   className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-110 opacity-80 group-hover:opacity-100"
@@ -345,7 +345,7 @@ export default function MyTrips() {
                     e.stopPropagation();
                     handleEditTrip(trip);
                   }}
-                  className="absolute top-3 left-1/2 -translate-x-1/2 p-2 bg-white/20 backdrop-blur-md text-white rounded-xl opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all hover:bg-blue-600 hover:text-white z-20"
+                  className="absolute top-3 left-1/2 -translate-x-1/2 p-2 bg-white/20 backdrop-blur-md text-white rounded-xl opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all hover:bg-orange-500 hover:text-white z-20"
                   title="Edit trip"
                 >
                   <Pencil size={16} />

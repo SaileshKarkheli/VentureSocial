@@ -66,11 +66,11 @@ export default function BlogList() {
   };
 
   return (
-    <div className="space-y-12 pb-20 text-zinc-900">
+    <div className="space-y-12 pb-20 text-ink">
       <div className="flex items-center justify-between">
         <header>
-          <h2 className="text-3xl font-display font-bold text-[#0A192F]">My Travel Blogs</h2>
-          <p className="text-zinc-500">Long-form stories from adventures around the globe.</p>
+          <h2 className="text-3xl font-display font-bold text-ink">My Travel Blogs</h2>
+          <p className="text-body">Long-form stories from adventures around the globe.</p>
         </header>
         <button
           onClick={() => navigate('/blogs/new')}
@@ -86,10 +86,10 @@ export default function BlogList() {
           <Loader2 className="animate-spin text-orange-500" size={32} />
         </div>
       ) : blogs.length === 0 ? (
-        <div className="bg-white rounded-3xl p-16 text-center border border-zinc-200 shadow-sm">
+        <div className="bg-white rounded-3xl p-16 text-center border border-hairline shadow-sm">
           <BookOpen size={48} className="mx-auto text-zinc-300 mb-4" />
-          <h3 className="text-xl font-bold text-[#0A192F] mb-2">No blogs yet</h3>
-          <p className="text-zinc-500 mb-6">Start writing about your travel experiences.</p>
+          <h3 className="text-xl font-bold text-ink mb-2">No blogs yet</h3>
+          <p className="text-body mb-6">Start writing about your travel experiences.</p>
           <button
             onClick={() => navigate('/blogs/new')}
             className="bg-orange-500 text-white font-bold px-6 py-3 rounded-xl hover:bg-orange-600 transition-colors"
@@ -104,7 +104,7 @@ export default function BlogList() {
               key={blog.id}
               whileHover={{ y: -5 }}
               onClick={() => navigate(`/blog/${blog.id}`)}
-              className="bg-white rounded-3xl overflow-hidden shadow-sm border border-zinc-100 cursor-pointer group hover:shadow-xl transition-all duration-300"
+              className="bg-white rounded-3xl overflow-hidden shadow-sm border border-hairline cursor-pointer group hover:shadow-xl transition-all duration-300"
             >
               <div className="aspect-video relative overflow-hidden">
                 <img 
@@ -113,7 +113,7 @@ export default function BlogList() {
                   className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                   referrerPolicy="no-referrer"
                 />
-                <div className="absolute inset-0 bg-zinc-100/20 group-hover:bg-zinc-100/10 transition-colors" />
+                <div className="absolute inset-0 bg-cream/20 group-hover:bg-cream/10 transition-colors" />
               </div>
               <div className="p-8 space-y-4">
                 <div className="flex items-center gap-4 text-xs font-bold text-orange-500 uppercase tracking-widest">
@@ -126,13 +126,13 @@ export default function BlogList() {
                     {blog.location_name}
                   </span>
                 </div>
-                <h3 className="text-2xl font-display font-bold text-[#0A192F] group-hover:text-orange-500 transition-colors">
+                <h3 className="text-2xl font-display font-bold text-ink group-hover:text-orange-500 transition-colors">
                   {blog.title}
                 </h3>
-                <p className="text-zinc-500 line-clamp-2 font-serif italic">
+                <p className="text-body line-clamp-2 font-serif italic">
                   "{getExcerpt(blog.content)}"
                 </p>
-                <div className="pt-4 flex items-center gap-2 text-[#0A192F] font-bold text-sm group-hover:gap-4 transition-all">
+                <div className="pt-4 flex items-center gap-2 text-ink font-bold text-sm group-hover:gap-4 transition-all">
                   <span>Read Story</span>
                   <ArrowRight size={18} className="text-orange-500" />
                 </div>

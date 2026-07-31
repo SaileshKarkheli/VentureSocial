@@ -181,7 +181,7 @@ export default function PublishModal({ isOpen, onClose, preselectedTripId, onPub
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           onClick={onClose}
-          className="absolute inset-0 bg-[#0A192F]/80 backdrop-blur-sm"
+          className="absolute inset-0 bg-ink/80 backdrop-blur-sm"
         />
 
         <motion.div
@@ -191,19 +191,19 @@ export default function PublishModal({ isOpen, onClose, preselectedTripId, onPub
           className="relative w-full max-w-2xl bg-white rounded-[2rem] shadow-2xl overflow-hidden flex flex-col"
         >
           {/* Header */}
-          <div className="flex items-center justify-between p-6 md:p-8 border-b border-zinc-100">
-            <div className="flex items-center gap-3 text-[#0A192F]">
+          <div className="flex items-center justify-between p-6 md:p-8 border-b border-hairline">
+            <div className="flex items-center gap-3 text-ink">
               <div className="p-2.5 rounded-xl bg-orange-500/10 text-orange-500 shadow-sm">
                 <Globe2 size={24} />
               </div>
               <div>
-                <h2 className="text-2xl font-display font-bold">Share to Feed</h2>
-                <p className="text-zinc-500 text-xs">Publish your itinerary to the community</p>
+                <h2 className="text-2xl font-display font-bold text-ink">Share to Feed</h2>
+                <p className="text-body text-xs">Publish your itinerary to the community</p>
               </div>
             </div>
             <button 
               onClick={onClose}
-              className="p-3 rounded-full bg-zinc-100 text-zinc-400 hover:bg-rose-500/10 hover:text-rose-500 transition-all"
+              className="p-3 rounded-full bg-cream text-muted hover:bg-rose-500/10 hover:text-rose-500 transition-all"
             >
               <X size={20} />
             </button>
@@ -213,14 +213,14 @@ export default function PublishModal({ isOpen, onClose, preselectedTripId, onPub
             
             {/* Trip Selection */}
             <div className="space-y-3">
-              <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest ml-1">Select Trip to Share</label>
+              <label className="text-[10px] font-bold text-muted uppercase tracking-widest ml-1">Select Trip to Share</label>
               {preselectedTripId ? (
-                <div className="flex items-center gap-4 p-4 rounded-2xl bg-zinc-50 border border-zinc-100">
+                <div className="flex items-center gap-4 p-4 rounded-2xl bg-tint border border-hairline">
                   <div className="w-16 h-16 rounded-xl overflow-hidden shrink-0">
                     <img src={selectedTrip?.image} className="w-full h-full object-cover" alt="trip cover" />
                   </div>
                   <div>
-                    <h4 className="font-bold text-[#0A192F]">{selectedTrip?.country}</h4>
+                    <h4 className="font-bold text-ink">{selectedTrip?.country}</h4>
                     <span className="text-xs text-orange-500 font-bold bg-orange-500/10 px-2 py-1 rounded-md">{selectedTrip?.year}</span>
                   </div>
                 </div>
@@ -229,13 +229,13 @@ export default function PublishModal({ isOpen, onClose, preselectedTripId, onPub
                   <select 
                     value={selectedTripId}
                     onChange={(e) => setSelectedTripId(e.target.value)}
-                    className="w-full appearance-none bg-white border border-zinc-200 rounded-2xl py-4 px-5 pr-12 text-[#0A192F] font-bold focus:ring-2 focus:ring-orange-500 transition-all outline-none"
+                    className="w-full appearance-none bg-white border border-hairline rounded-2xl py-4 px-5 pr-12 text-ink font-bold focus:ring-2 focus:ring-orange-500 transition-all outline-none"
                   >
                     {myTrips.map(trip => (
                       <option key={trip.id} value={trip.id}>{trip.country} ({trip.year})</option>
                     ))}
                   </select>
-                  <div className="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none text-zinc-400">
+                  <div className="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none text-muted">
                     ▼
                   </div>
                 </div>
@@ -246,7 +246,7 @@ export default function PublishModal({ isOpen, onClose, preselectedTripId, onPub
             {selectedTrip?.availableImages && (
               <div className="space-y-3">
                 <div className="flex items-center justify-between ml-1">
-                  <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Select Layout Images</label>
+                  <label className="text-[10px] font-bold text-muted uppercase tracking-widest">Select Layout Images</label>
                   <span className="text-xs font-bold text-orange-500">{selectedImages.length} selected</span>
                 </div>
                 <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
@@ -274,7 +274,7 @@ export default function PublishModal({ isOpen, onClose, preselectedTripId, onPub
 
             {/* Rating Selector */}
             <div className="space-y-3">
-              <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest ml-1">Trip Rating (Optional)</label>
+              <label className="text-[10px] font-bold text-muted uppercase tracking-widest ml-1">Trip Rating (Optional)</label>
               <div className="flex items-center gap-1">
                 {[1, 2, 3, 4, 5].map((star) => (
                   <button
@@ -289,25 +289,25 @@ export default function PublishModal({ isOpen, onClose, preselectedTripId, onPub
                     />
                   </button>
                 ))}
-                <span className="text-xs text-zinc-500 ml-2">({userRating} out of 5 Stars)</span>
+                <span className="text-xs text-body ml-2">({userRating} out of 5 Stars)</span>
               </div>
             </div>
 
             {/* Caption Area */}
             <div className="space-y-3">
-              <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest ml-1">Write a Caption</label>
+              <label className="text-[10px] font-bold text-muted uppercase tracking-widest ml-1">Write a Caption</label>
               <textarea 
                 rows={3}
                 value={caption}
                 onChange={(e) => setCaption(e.target.value)}
                 placeholder="Tell the community about your epic journey! Add some #tags..."
-                className="w-full bg-zinc-50 border border-zinc-100 rounded-2xl p-5 text-sm font-medium focus:ring-2 focus:ring-orange-500 focus:bg-white transition-all resize-none outline-none custom-scrollbar"
+                className="w-full bg-tint border border-hairline rounded-2xl p-5 text-sm font-medium focus:ring-2 focus:ring-orange-500 focus:bg-white transition-all resize-none outline-none custom-scrollbar"
               />
             </div>
 
             {/* Preview Hint */}
-            <div className="flex items-start gap-3 p-4 rounded-xl bg-blue-50 text-blue-900 border border-blue-100">
-              <Sparkles size={20} className="shrink-0 text-blue-500 mt-0.5" />
+            <div className="flex items-start gap-3 p-4 rounded-xl bg-transport-tint text-ink border border-transport/20">
+              <Sparkles size={20} className="shrink-0 text-transport mt-0.5" />
               <p className="text-xs leading-relaxed">
                 <strong>Your itinerary data will be attached!</strong> 
                 <br/>When you publish, the community will be able to view your route, locations, and can easily 'Clone' your journey to their own planner.
@@ -315,11 +315,11 @@ export default function PublishModal({ isOpen, onClose, preselectedTripId, onPub
             </div>
           </div>
 
-          <div className="p-6 md:p-8 border-t border-zinc-100 flex justify-end gap-3 bg-zinc-50">
+          <div className="p-6 md:p-8 border-t border-hairline flex justify-end gap-3 bg-tint">
             <button 
               onClick={onClose}
               disabled={isPublishing}
-              className="px-6 py-3 rounded-xl font-bold text-zinc-500 hover:bg-zinc-200 transition-all"
+              className="px-6 py-3 rounded-xl font-bold text-body hover:bg-zinc-200 transition-all"
             >
               Cancel
             </button>

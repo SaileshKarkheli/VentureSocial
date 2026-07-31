@@ -63,7 +63,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onOpenSignup }) => {
   const isMockEnabled = import.meta.env.VITE_ENABLE_MOCK_MODE === 'true';
 
   return (
-    <div className="bg-white p-8 rounded-3xl shadow-xl border border-zinc-100 w-full max-w-md">
+    <div className="bg-white p-8 rounded-3xl shadow-xl border border-hairline w-full max-w-md">
       {error && (
         <div className="bg-red-50 text-red-600 p-3 rounded-xl mb-6 text-sm font-medium border border-red-100">
           {error}
@@ -76,7 +76,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onOpenSignup }) => {
           type="button"
           onClick={handleGoogleLogin}
           disabled={loading}
-          className="w-full py-3 px-4 bg-white border border-zinc-200 text-zinc-700 font-bold rounded-xl shadow-sm hover:bg-zinc-50 hover:shadow transition-all disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-3"
+          className="w-full py-3 px-4 bg-white border border-hairline text-zinc-700 font-bold rounded-xl shadow-sm hover:bg-tint hover:shadow transition-all disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-3"
         >
           <svg viewBox="0 0 24 24" className="w-5 h-5" xmlns="http://www.w3.org/2000/svg">
             <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
@@ -100,9 +100,9 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onOpenSignup }) => {
       </div>
 
       <div className="flex items-center justify-between mb-6">
-        <span className="border-b border-zinc-200 w-1/5 lg:w-1/4"></span>
-        <span className="text-xs text-center text-zinc-400 font-bold uppercase tracking-widest">or use email</span>
-        <span className="border-b border-zinc-200 w-1/5 lg:w-1/4"></span>
+        <span className="border-b border-hairline w-1/5 lg:w-1/4"></span>
+        <span className="text-xs text-center text-muted font-bold uppercase tracking-widest">or use email</span>
+        <span className="border-b border-hairline w-1/5 lg:w-1/4"></span>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -112,7 +112,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onOpenSignup }) => {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#3B82F6] focus:border-transparent transition-all placeholder:text-zinc-400"
+            className="w-full px-4 py-3 bg-tint border border-hairline rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all placeholder:text-muted"
             placeholder="Email address"
             disabled={loading}
           />
@@ -124,7 +124,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onOpenSignup }) => {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
-            className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#3B82F6] focus:border-transparent transition-all placeholder:text-zinc-400"
+            className="w-full px-4 py-3 bg-tint border border-hairline rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all placeholder:text-muted"
             placeholder="Password"
             disabled={loading}
           />
@@ -133,7 +133,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onOpenSignup }) => {
         <button
           type="submit"
           disabled={loading}
-          className="w-full mt-2 py-3 px-4 bg-[#0A192F] text-white font-bold rounded-xl shadow-lg shadow-blue-500/20 hover:bg-black transition-all disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-lg"
+          className="w-full mt-2 py-3 px-4 bg-ink text-white font-bold rounded-xl shadow-lg shadow-orange-500/20 hover:bg-black transition-all disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-lg"
         >
           {loading ? (
             <>
@@ -149,17 +149,17 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onOpenSignup }) => {
       <div className="mt-4 text-center">
         <Link
           to="/auth/forgot-password"
-          className="text-sm font-bold text-[#3B82F6] hover:text-blue-600 transition-colors hover:underline focus:outline-none"
+          className="text-sm font-bold text-orange-500 hover:text-orange-600 transition-colors hover:underline focus:outline-none"
         >
           Forgotten password?
         </Link>
       </div>
 
-      <div className="mt-6 pt-6 border-t border-zinc-200 flex justify-center">
+      <div className="mt-6 pt-6 border-t border-hairline flex justify-center">
         <button
           type="button"
           onClick={onOpenSignup}
-          className="py-3 px-8 bg-green-500 text-white font-bold rounded-xl shadow-lg shadow-green-500/20 hover:bg-green-600 transition-all text-base"
+          className="py-3 px-8 border-2 border-ink text-ink font-bold rounded-xl hover:bg-ink hover:text-white transition-all text-base"
         >
           Create new account
         </button>

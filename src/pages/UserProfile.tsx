@@ -179,7 +179,7 @@ export default function UserProfile() {
   if (!targetProfile) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[50vh]">
-        <h2 className="text-2xl font-bold text-[#0A192F] mb-4">User not found</h2>
+        <h2 className="text-2xl font-bold text-ink mb-4">User not found</h2>
         <button onClick={() => navigate(-1)} className="text-orange-500 font-bold hover:underline underline-offset-4">Go back to Safety</button>
       </div>
     );
@@ -203,16 +203,16 @@ export default function UserProfile() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8 pb-20 text-zinc-900">
+    <div className="max-w-4xl mx-auto space-y-8 pb-20 text-ink">
       <button 
         onClick={() => navigate(-1)}
-        className="flex items-center gap-2 text-zinc-500 hover:text-[#0A192F] transition-colors font-bold mb-4"
+        className="flex items-center gap-2 text-body hover:text-ink transition-colors font-bold mb-4"
       >
         <ArrowLeft size={20} /> Back
       </button>
 
       {/* Strict Read-Only Cover Frame */}
-      <div className="relative h-64 rounded-3xl overflow-hidden bg-zinc-200 border border-zinc-200">
+      <div className="relative h-64 rounded-3xl overflow-hidden bg-zinc-200 border border-hairline">
         {userData.cover ? (
           <img
             src={userData.cover}
@@ -221,7 +221,7 @@ export default function UserProfile() {
             onClick={() => setSelectedFullImage(userData.cover)}
           />
         ) : (
-          <div className="w-full h-full bg-gradient-to-tr from-[#0A192F]/5 to-[#0A192F]/10 flex items-center justify-center">
+          <div className="w-full h-full bg-gradient-to-tr from-ink/5 to-ink/10 flex items-center justify-center">
             {/* Native empty state without Camera overlays */}
           </div>
         )}
@@ -241,7 +241,7 @@ export default function UserProfile() {
                   onClick={() => setSelectedFullImage(userData.avatar)}
                 />
               ) : (
-                <div className="w-full h-full bg-zinc-100 rounded-2xl flex items-center justify-center">
+                <div className="w-full h-full bg-cream rounded-2xl flex items-center justify-center">
                   <UserIcon size={48} className="text-zinc-300" />
                 </div>
               )}
@@ -249,9 +249,9 @@ export default function UserProfile() {
           </div>
 
           <div className="flex-1 pb-4">
-            <h2 className="text-4xl font-display font-bold text-[#0A192F]">{userData.name}</h2>
+            <h2 className="text-4xl font-display font-bold text-ink">{userData.name}</h2>
             {userData.location && (
-              <div className="flex items-center gap-2 text-zinc-500 mt-1">
+              <div className="flex items-center gap-2 text-body mt-1">
                 <MapPin size={16} className="text-orange-500" />
                 <span>{userData.location}</span>
               </div>
@@ -275,8 +275,8 @@ export default function UserProfile() {
                   onClick={() => toggleFollow(targetProfile.id, false)}
                   className={`px-8 py-3 rounded-xl font-bold shadow-lg transition-colors ${
                     followedUsers.includes(targetProfile.id)
-                      ? 'bg-zinc-100 text-zinc-600 hover:bg-rose-50 hover:text-rose-500 border border-zinc-200 hover:border-rose-200'
-                      : 'bg-[#0A192F] text-white hover:bg-black'
+                      ? 'bg-cream text-zinc-600 hover:bg-rose-50 hover:text-rose-500 border border-hairline hover:border-rose-200'
+                      : 'bg-ink text-white hover:bg-black'
                   }`}
                 >
                   {followedUsers.includes(targetProfile.id) ? 'Following' : 'Follow'}
@@ -295,27 +295,27 @@ export default function UserProfile() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div className="md:col-span-2 space-y-8">
             {userData.education && (
-              <section className="bg-white p-6 rounded-2xl border border-zinc-100 shadow-sm">
-                <p className="text-xs text-zinc-400 uppercase font-bold tracking-wider mb-1">Education</p>
-                <p className="text-sm text-[#0A192F] font-medium">{userData.education}</p>
+              <section className="bg-white p-6 rounded-2xl border border-hairline shadow-sm">
+                <p className="text-xs text-muted uppercase font-bold tracking-wider mb-1">Education</p>
+                <p className="text-sm text-ink font-medium">{userData.education}</p>
               </section>
             )}
 
-            <section className="bg-white p-6 rounded-2xl border border-zinc-100 shadow-sm space-y-6">
-               <h3 className="text-xl font-bold font-display text-[#0A192F]">Public Trips</h3>
-               <div className="text-center py-12 bg-zinc-50 rounded-xl border border-dashed border-zinc-200">
-                  <p className="text-zinc-400 font-bold uppercase tracking-widest text-xs">No Public Trips Yet</p>
+            <section className="bg-white p-6 rounded-2xl border border-hairline shadow-sm space-y-6">
+               <h3 className="text-xl font-bold font-display text-ink">Public Trips</h3>
+               <div className="text-center py-12 bg-tint rounded-xl border border-dashed border-hairline">
+                  <p className="text-muted font-bold uppercase tracking-widest text-xs">No Public Trips Yet</p>
                </div>
             </section>
           </div>
 
           <div className="space-y-8">
-            <section className="bg-white p-6 rounded-2xl border border-zinc-100 shadow-sm">
+            <section className="bg-white p-6 rounded-2xl border border-hairline shadow-sm">
               <div className="grid grid-cols-3 gap-4 text-center">
                 {userData.stats.map((stat) => (
                   <div key={stat.label}>
-                    <p className="text-2xl font-display font-bold text-[#0A192F]">{stat.value}</p>
-                    <p className="text-[10px] text-zinc-400 uppercase font-bold tracking-wider">{stat.label}</p>
+                    <p className="text-2xl font-display font-bold text-ink">{stat.value}</p>
+                    <p className="text-[10px] text-muted uppercase font-bold tracking-wider">{stat.label}</p>
                   </div>
                 ))}
               </div>

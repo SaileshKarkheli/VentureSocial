@@ -14,7 +14,7 @@ export default function MainLayout() {
   const { cartItems, globalToast, hasConnectionTimeout } = useApp();
 
   return (
-    <div className="flex min-h-screen bg-zinc-50 relative overflow-x-hidden text-zinc-900">
+    <div className="flex min-h-screen bg-tint relative overflow-x-hidden text-ink">
       {/* Background Glow */}
       <div className="fixed inset-0 pointer-events-none z-0">
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1000px] h-[1000px] bg-orange-500/5 rounded-full blur-[150px]" />
@@ -23,7 +23,7 @@ export default function MainLayout() {
       {/* Sidebar Toggle Button (Floating when collapsed) */}
       <button
         onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-        className={`fixed top-6 left-6 z-50 p-3 rounded-2xl bg-white text-zinc-900 border border-zinc-200 shadow-xl hover:bg-zinc-50 transition-all duration-300 ${
+        className={`fixed top-6 left-6 z-50 p-3 rounded-2xl bg-white text-ink border border-hairline shadow-xl hover:bg-tint transition-all duration-300 ${
           isSidebarCollapsed ? 'translate-x-0' : 'translate-x-64 opacity-0 pointer-events-none'
         }`}
       >
@@ -37,7 +37,7 @@ export default function MainLayout() {
         {/* Global Shopping Cart Button - Temporarily Hidden
         <button
           onClick={() => setIsCheckoutOpen(true)}
-          className="relative p-4 rounded-2xl bg-[#0A192F] text-white shadow-2xl hover:bg-black transition-all group"
+          className="relative p-4 rounded-2xl bg-ink text-white shadow-2xl hover:bg-black transition-all group"
         >
           <ShoppingBag size={24} className="group-hover:scale-110 transition-transform" />
           {cartItems.length > 0 && (
@@ -84,7 +84,7 @@ export default function MainLayout() {
             initial={{ opacity: 0, y: -50, x: '-50%' }}
             animate={{ opacity: 1, y: 0, x: '-50%' }}
             exit={{ opacity: 0, y: -50, x: '-50%' }}
-            className="fixed top-10 left-1/2 z-[100] bg-white text-[#0A192F] px-6 py-4 rounded-full shadow-2xl flex items-center gap-3 border border-zinc-100"
+            className="fixed top-10 left-1/2 z-[100] bg-white text-ink px-6 py-4 rounded-full shadow-2xl flex items-center gap-3 border border-hairline"
           >
             <ShoppingBag className="text-orange-500" size={20} />
             <span className="font-bold text-sm">{globalToast}</span>

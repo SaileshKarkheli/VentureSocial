@@ -51,7 +51,7 @@ function SpotImage({ src, alt, className }: { src: string | null | undefined; al
 
   if (!src || hasError) {
     return (
-      <div className={`flex flex-col items-center justify-center gap-2 bg-zinc-100 text-zinc-300 ${className || ''}`}>
+      <div className={`flex flex-col items-center justify-center gap-2 bg-cream text-zinc-300 ${className || ''}`}>
         <ImageOff size={24} />
         <span className="text-[10px] uppercase tracking-widest font-bold">No Photo</span>
       </div>
@@ -92,7 +92,7 @@ function SpotGallery({ spot, alt }: { spot: any; alt: string }) {
   return (
     <div className="flex gap-3 overflow-x-auto pb-2 mb-4" style={{ scrollbarWidth: 'thin' }}>
       {images.map((url, i) => (
-        <div key={i} className="flex-shrink-0 w-48 h-32 rounded-xl overflow-hidden shadow-md border border-zinc-200">
+        <div key={i} className="flex-shrink-0 w-48 h-32 rounded-xl overflow-hidden shadow-md border border-hairline">
           <SpotImage src={url} alt={`${alt} ${i + 1}`} className="w-full h-full object-cover" />
         </div>
       ))}
@@ -164,7 +164,7 @@ export default function TripDetail() {
 
   if (!post) {
     return (
-      <div className="text-center py-20 text-zinc-400 font-bold uppercase tracking-widest text-lg">
+      <div className="text-center py-20 text-muted font-bold uppercase tracking-widest text-lg">
         Trip not found.
       </div>
     );
@@ -188,21 +188,21 @@ export default function TripDetail() {
     <div className="max-w-6xl mx-auto space-y-12 pb-20 px-4">
       <button
         onClick={() => navigate(-1)}
-        className="flex items-center gap-2 text-zinc-500 hover:text-orange-500 transition-colors font-medium"
+        className="flex items-center gap-2 text-body hover:text-orange-500 transition-colors font-medium"
       >
         <ArrowLeft size={20} />
         <span>Back</span>
       </button>
 
       {/* Trip Header */}
-      <section className="bg-white text-[#0A192F] rounded-[2rem] p-12 relative overflow-hidden shadow-2xl border border-zinc-100">
+      <section className="bg-white text-ink rounded-[2rem] p-12 relative overflow-hidden shadow-2xl border border-hairline">
         <div className="absolute top-0 right-0 w-96 h-96 bg-orange-500/5 rounded-full blur-[100px] -mr-48 -mt-48" />
         <div className="relative z-10 space-y-6">
-          <h1 className="text-5xl md:text-6xl font-display font-bold leading-tight max-w-3xl text-[#0A192F]">
+          <h1 className="text-5xl md:text-6xl font-display font-bold leading-tight max-w-3xl text-ink">
             {post.location_name}
           </h1>
           {post.caption && (
-            <p className="text-zinc-500 text-xl leading-relaxed max-w-2xl font-light">
+            <p className="text-body text-xl leading-relaxed max-w-2xl font-light">
               "{post.caption}"
             </p>
           )}
@@ -213,32 +213,32 @@ export default function TripDetail() {
             </div>
           )}
           <div className="flex flex-wrap items-center gap-4 mt-6">
-            <div className="flex items-center gap-2 text-[#0A192F] font-bold px-4 py-2 bg-zinc-100 rounded-xl">
+            <div className="flex items-center gap-2 text-ink font-bold px-4 py-2 bg-cream rounded-xl">
               <Users size={16} className="text-orange-500" />
               {post.profiles?.full_name || 'Anonymous'}
             </div>
             {totalDays > 0 && (
-              <div className="flex items-center gap-2 text-[#0A192F] font-bold px-4 py-2 bg-zinc-100 rounded-xl">
+              <div className="flex items-center gap-2 text-ink font-bold px-4 py-2 bg-cream rounded-xl">
                 <CalendarDays size={16} className="text-orange-500" />
                 {totalDays} {totalDays === 1 ? 'Day' : 'Days'}
               </div>
             )}
             {totalStops > 0 && (
-              <div className="flex items-center gap-2 text-[#0A192F] font-bold px-4 py-2 bg-zinc-100 rounded-xl">
+              <div className="flex items-center gap-2 text-ink font-bold px-4 py-2 bg-cream rounded-xl">
                 <MapPin size={16} className="text-orange-500" />
                 {totalStops} {totalStops === 1 ? 'Stop' : 'Stops'}
               </div>
             )}
             {post.base_price > 0 && (
-              <div className="flex items-center gap-2 px-4 py-2 bg-zinc-100 rounded-xl">
-                <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Total Spend</span>
-                <span className="font-mono text-sm font-bold text-[#0A192F]">${Number(post.base_price).toLocaleString()}</span>
+              <div className="flex items-center gap-2 px-4 py-2 bg-cream rounded-xl">
+                <span className="text-[10px] font-bold text-muted uppercase tracking-widest">Total Spend</span>
+                <span className="font-mono text-sm font-bold text-ink">${Number(post.base_price).toLocaleString()}</span>
               </div>
             )}
             {transportModes.length > 0 && (
-              <div className="flex items-center gap-2 px-4 py-2 bg-zinc-100 rounded-xl">
-                <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">How</span>
-                <div className="flex items-center gap-2 text-[#0A192F]">
+              <div className="flex items-center gap-2 px-4 py-2 bg-cream rounded-xl">
+                <span className="text-[10px] font-bold text-muted uppercase tracking-widest">How</span>
+                <div className="flex items-center gap-2 text-ink">
                   {transportModes.map(({ label, Icon }) => (
                     <span key={label} className="flex items-center gap-1 text-sm font-bold" title={label}>
                       <Icon size={16} className="text-orange-500" />
@@ -253,10 +253,10 @@ export default function TripDetail() {
 
       {/* Day-by-Day Itinerary */}
       <div className="space-y-6">
-        <h3 className="text-3xl font-display font-bold text-[#0A192F]">Day-by-Day Itinerary</h3>
+        <h3 className="text-3xl font-display font-bold text-ink">Day-by-Day Itinerary</h3>
 
         {tripSpots.length === 0 ? (
-          <div className="text-center py-20 text-zinc-400 font-bold uppercase tracking-widest text-lg bg-white rounded-3xl border border-zinc-100">
+          <div className="text-center py-20 text-muted font-bold uppercase tracking-widest text-lg bg-white rounded-3xl border border-hairline">
             No itinerary details recorded for this trip yet.
           </div>
         ) : (() => {
@@ -277,7 +277,7 @@ export default function TripDetail() {
             return (
               <div
                 key={`day-${dayNum}`}
-                className={`bg-white rounded-[2rem] border transition-all duration-500 overflow-hidden ${expandedDay === dayNum ? 'border-orange-500 shadow-xl' : 'border-zinc-200 shadow-sm hover:border-zinc-300'}`}
+                className={`bg-white rounded-[2rem] border transition-all duration-500 overflow-hidden ${expandedDay === dayNum ? 'border-orange-500 shadow-xl' : 'border-hairline shadow-sm hover:border-zinc-300'}`}
               >
                 {/* Day header — click to expand/collapse */}
                 <div
@@ -285,22 +285,22 @@ export default function TripDetail() {
                   className="p-6 md:p-8 flex items-center justify-between cursor-pointer group"
                 >
                   <div className="flex items-center gap-6">
-                    <div className="flex flex-col items-center justify-center w-16 h-16 rounded-2xl bg-zinc-50 border border-zinc-100 group-hover:bg-orange-500/10 group-hover:border-orange-500/20 transition-colors">
-                      <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Day</span>
-                      <span className="text-2xl font-display font-bold text-[#0A192F]">{dayNum}</span>
+                    <div className="flex flex-col items-center justify-center w-16 h-16 rounded-2xl bg-tint border border-hairline group-hover:bg-orange-500/10 group-hover:border-orange-500/20 transition-colors">
+                      <span className="text-[10px] font-bold text-muted uppercase tracking-widest">Day</span>
+                      <span className="text-2xl font-display font-bold text-ink">{dayNum}</span>
                     </div>
                     <div>
-                      <h3 className="text-2xl font-display font-bold text-[#0A192F] group-hover:text-orange-500 transition-colors">
+                      <h3 className="text-2xl font-display font-bold text-ink group-hover:text-orange-500 transition-colors">
                         Day {dayNum}
                       </h3>
-                      <div className="flex items-center gap-2 text-zinc-400 text-sm mt-1">
+                      <div className="flex items-center gap-2 text-muted text-sm mt-1">
                         <MapPin size={14} />
                         <span>{post.location_name}</span>
                       </div>
                       <DayTravelSummary spots={typedSpots} className="mt-1.5" />
                     </div>
                   </div>
-                  <div className={`p-3 rounded-full text-[#0A192F] transition-transform duration-500 ${expandedDay === dayNum ? 'rotate-180 bg-orange-500 text-white shadow-lg' : 'bg-zinc-50'}`}>
+                  <div className={`p-3 rounded-full text-ink transition-transform duration-500 ${expandedDay === dayNum ? 'rotate-180 bg-orange-500 text-white shadow-lg' : 'bg-tint'}`}>
                     <ChevronDown size={24} />
                   </div>
                 </div>
@@ -322,14 +322,14 @@ export default function TripDetail() {
                             isExpanded={expandedPillars.has(`${dayNum}-transport`)}
                             onToggle={() => togglePillar(`${dayNum}-transport`)}
                           >
-                            <div className="flex flex-col gap-4 p-6 bg-zinc-50 rounded-2xl border border-zinc-100 relative">
+                            <div className="flex flex-col gap-4 p-6 bg-tint rounded-2xl border border-hairline relative">
                               <SpotGallery spot={transport} alt={transport.title} />
                               <div className="flex items-start gap-6">
                                 <div className="p-4 rounded-xl bg-white shadow-sm text-orange-500 flex-shrink-0">
                                   <Car size={24} />
                                 </div>
                                 <div className="space-y-2 flex-1">
-                                  <h4 className="font-bold text-[#0A192F] text-lg">{transport.title}</h4>
+                                  <h4 className="font-bold text-ink text-lg">{transport.title}</h4>
                                   <p className="text-zinc-600 leading-relaxed">{cleanDescription(transport.description)}</p>
                                 </div>
                                 <button
@@ -350,13 +350,13 @@ export default function TripDetail() {
                             isExpanded={expandedPillars.has(`${dayNum}-stay`)}
                             onToggle={() => togglePillar(`${dayNum}-stay`)}
                           >
-                            <div className="bg-zinc-50 rounded-2xl p-6 border border-zinc-100 space-y-4 relative">
+                            <div className="bg-tint rounded-2xl p-6 border border-hairline space-y-4 relative">
                               {/* Image gallery — all uploaded photos at top */}
                               <SpotGallery spot={stay} alt={stay.title} />
                               <div className="flex items-start justify-between gap-4">
                                 <div className="space-y-2 flex-1">
-                                  <h4 className="text-2xl font-display font-bold text-[#0A192F]">{stay.title}</h4>
-                                  <p className="text-zinc-500 text-sm leading-relaxed">{cleanDescription(stay.description)}</p>
+                                  <h4 className="text-2xl font-display font-bold text-ink">{stay.title}</h4>
+                                  <p className="text-body text-sm leading-relaxed">{cleanDescription(stay.description)}</p>
                                   {stay.link_url && (
                                     <a href={stay.link_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-orange-500 font-bold text-sm hover:underline">
                                       Official Booking Site
@@ -381,13 +381,13 @@ export default function TripDetail() {
                             isExpanded={expandedPillars.has(`${dayNum}-dining`)}
                             onToggle={() => togglePillar(`${dayNum}-dining`)}
                           >
-                            <div className="bg-zinc-50 rounded-2xl p-6 border border-zinc-100 space-y-4 relative">
+                            <div className="bg-tint rounded-2xl p-6 border border-hairline space-y-4 relative">
                               {/* Image gallery — all uploaded photos at top */}
                               <SpotGallery spot={dining} alt={dining.title} />
                               <div className="flex items-start justify-between gap-4">
                                 <div className="space-y-2 flex-1">
-                                  <h4 className="text-2xl font-display font-bold text-[#0A192F]">{dining.title}</h4>
-                                  <p className="text-zinc-500 text-sm leading-relaxed">{cleanDescription(dining.description)}</p>
+                                  <h4 className="text-2xl font-display font-bold text-ink">{dining.title}</h4>
+                                  <p className="text-body text-sm leading-relaxed">{cleanDescription(dining.description)}</p>
                                   {dining.link_url && (
                                     <a href={dining.link_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-orange-500 font-bold text-sm hover:underline">
                                       View Menu
@@ -414,14 +414,14 @@ export default function TripDetail() {
                           >
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                               {activities.map((activity: any) => (
-                                <div key={activity.id} className="bg-zinc-50 rounded-2xl overflow-hidden border border-zinc-100 flex flex-col">
+                                <div key={activity.id} className="bg-tint rounded-2xl overflow-hidden border border-hairline flex flex-col">
                                   <div className="p-4 pb-0">
                                     {/* Image gallery — all uploaded photos */}
                                     <SpotGallery spot={activity} alt={activity.title} />
                                   </div>
                                   <div className="p-4 space-y-2 flex-1">
                                     <div className="flex items-start justify-between gap-2">
-                                      <h4 className="font-bold text-[#0A192F] text-lg">{activity.title}</h4>
+                                      <h4 className="font-bold text-ink text-lg">{activity.title}</h4>
                                       <button
                                         onClick={(e) => { e.stopPropagation(); setSpotToSave(activity.id); }}
                                         className="flex-shrink-0 w-10 h-10 rounded-full bg-orange-500 text-white flex items-center justify-center shadow-lg hover:scale-110 transition-transform"
@@ -429,7 +429,7 @@ export default function TripDetail() {
                                         <Plus size={20} />
                                       </button>
                                     </div>
-                                    <p className="text-zinc-500 text-sm leading-relaxed">{cleanDescription(activity.description)}</p>
+                                    <p className="text-body text-sm leading-relaxed">{cleanDescription(activity.description)}</p>
                                   </div>
                                 </div>
                               ))}

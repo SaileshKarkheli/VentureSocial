@@ -66,7 +66,7 @@ export const NotificationBell: React.FC = () => {
       <button 
         id="notification-bell-toggle"
         onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-        className="relative p-4 rounded-2xl bg-white text-zinc-900 border border-zinc-200 shadow-xl hover:bg-zinc-50 transition-all group"
+        className="relative p-4 rounded-2xl bg-white text-ink border border-hairline shadow-xl hover:bg-tint transition-all group"
       >
         <Bell size={24} className="group-hover:scale-110 transition-transform pointer-events-none" />
         {unreadCount > 0 && (

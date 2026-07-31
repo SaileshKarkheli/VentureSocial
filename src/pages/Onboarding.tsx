@@ -46,17 +46,17 @@ export default function Onboarding() {
   };
 
   return (
-    <div className="min-h-screen bg-zinc-50 flex flex-col items-center justify-center p-6 md:p-12">
+    <div className="min-h-screen bg-tint flex flex-col items-center justify-center p-6 md:p-12">
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         className="max-w-3xl w-full"
       >
         <div className="text-center mb-10">
-          <h1 className="text-3xl md:text-4xl font-display font-bold text-[#0A192F] mb-3">
+          <h1 className="text-3xl md:text-4xl font-display font-bold text-ink mb-3">
             Welcome, {userProfile?.full_name?.split(' ')[0] || 'Traveler'}!
           </h1>
-          <p className="text-zinc-500 text-lg">
+          <p className="text-body text-lg">
             Let's set up your VentureSocial profile. What kind of travel interests you?
           </p>
         </div>
@@ -74,16 +74,16 @@ export default function Onboarding() {
                 className={`cursor-pointer bg-white p-6 rounded-3xl border-2 transition-all duration-300 ${
                   isSelected 
                     ? 'border-orange-500 shadow-xl scale-105' 
-                    : 'border-zinc-100 shadow-sm hover:border-zinc-300 hover:shadow-md'
+                    : 'border-hairline shadow-sm hover:border-zinc-300 hover:shadow-md'
                 }`}
               >
                 <div className={`w-12 h-12 rounded-2xl flex items-center justify-center mb-4 transition-colors ${
-                  isSelected ? 'bg-orange-500 text-white' : 'bg-zinc-100 text-zinc-400'
+                  isSelected ? 'bg-orange-500 text-white' : 'bg-cream text-muted'
                 }`}>
                   <interest.icon size={24} />
                 </div>
-                <h3 className="text-lg font-bold text-[#0A192F] mb-2">{interest.title}</h3>
-                <p className="text-zinc-500 text-sm leading-relaxed">{interest.desc}</p>
+                <h3 className="text-lg font-bold text-ink mb-2">{interest.title}</h3>
+                <p className="text-body text-sm leading-relaxed">{interest.desc}</p>
               </motion.div>
             );
           })}
@@ -93,7 +93,7 @@ export default function Onboarding() {
           <button
             onClick={handleFinish}
             disabled={selected.length === 0 || isSaving}
-            className="flex items-center gap-2 bg-[#0A192F] text-white font-bold py-4 px-12 rounded-xl shadow-xl shadow-blue-500/20 hover:bg-black transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none"
+            className="flex items-center gap-2 bg-ink text-white font-bold py-4 px-12 rounded-xl shadow-xl shadow-orange-500/20 hover:bg-black transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none"
           >
             {isSaving && <Loader2 size={18} className="animate-spin" />}
             Finish Setup

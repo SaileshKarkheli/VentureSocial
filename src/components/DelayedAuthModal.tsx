@@ -42,7 +42,7 @@ export default function DelayedAuthModal() {
   if (!isTriggered || isAuthenticated) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#0A192F]/60 backdrop-blur-sm p-4">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-ink/60 backdrop-blur-sm p-4">
       <motion.div 
         initial={{ opacity: 0, scale: 0.95, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -53,8 +53,8 @@ export default function DelayedAuthModal() {
           <Lock size={32} className="relative z-10" />
         </div>
         <div>
-          <h3 className="text-2xl font-display font-bold text-[#0A192F] mb-2">Keep Exploring</h3>
-          <p className="text-zinc-500 text-sm">
+          <h3 className="text-2xl font-display font-bold text-ink mb-2">Keep Exploring</h3>
+          <p className="text-body text-sm">
             You've seen a glimpse of the journey! Sign in or create a free account to continue browsing, saving itineraries, and planning your next trip.
           </p>
         </div>
